@@ -16,6 +16,11 @@ const MAX_WORKERS =
 		: MAX_WORKERS_DEFAULT;
 
 export default defineConfig({
+	// The dev MCP server (`tools/mcp-server`) lives at the harness root post-
+	// restructure and is reached via a local `app/tools/mcp-server` symlink. Its
+	// jsdom-env tests resolve to that real (out-of-app-root) path, so allow the
+	// parent dir to be served by vite's dev-server file pipeline.
+	server: { fs: { allow: [".", ".."] } },
 	test: {
 		include: [
 			"packages/*/src/**/*.test.{ts,tsx}",
