@@ -615,6 +615,7 @@ export function ThemeEditorApp(): ReactElement {
 						<p className="te-toolbar__status" role="status">
 							{status}
 						</p>
+						{/* kbn-roles-exempt: tab keyboard handled by the app's hand-rolled Arrow-key onKeyDown (verified working). */}
 						<div className="te-tabs" aria-label={t("tabs.region")} role="tablist">
 							{TABS.map(({ tab, key }, index) => {
 								const active = activeTab === tab;

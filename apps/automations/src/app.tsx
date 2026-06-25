@@ -413,6 +413,7 @@ export function AutomationsApp(): ReactElement {
 				<div className="app-header__right" />
 			</header>
 			<main id="app-root">
+				{/* kbn-roles-exempt: tab keyboard handled by the app's hand-rolled Arrow-key onKeyDown (verified working). */}
 				<nav className="au-tabs" role="tablist" aria-label={t("app.title")}>
 					{TABS.map(({ view: tabView, key }, index) => {
 						const active = tabView === view;

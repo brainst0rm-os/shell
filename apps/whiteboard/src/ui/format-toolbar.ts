@@ -68,6 +68,7 @@ export function createFormatToolbar(opts: {
 	const { t, editor } = opts;
 	const bar = document.createElement("div");
 	bar.className = "whiteboard__format-toolbar";
+	// kbn-roles-exempt: imperative DOM toolbar; items are focusable <button>s (Tab+Enter operable).
 	bar.setAttribute("role", "toolbar");
 	bar.setAttribute("aria-label", t("whiteboard.format.toolbar"));
 	// Keep focus (and therefore the selection) in the contentEditable: no

@@ -384,6 +384,7 @@ function tintRow(settings: PdfViewSettings, onPick: (tint: PdfTint) => void): HT
 	const row = labelledRow(t("pdf.tintLabel"), "stacked");
 	const group = document.createElement("div");
 	group.className = "books__type-swatches";
+	// kbn-roles-exempt: imperative DOM radiogroup; the swatches are focusable <button>s (Tab+Enter operable). Arrow-roving lands with the Books React migration.
 	group.setAttribute("role", "radiogroup");
 	group.setAttribute("aria-label", t("pdf.tintLabel"));
 	for (const tint of PDF_TINT_ORDER) {

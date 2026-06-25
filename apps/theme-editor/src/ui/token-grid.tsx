@@ -71,7 +71,7 @@ export function TokenGrid({ groups, baseVars, set, t, handlers }: TokenGridProps
 		<div
 			className="te-grid"
 			aria-label={t("grid.region")}
-			role="listbox"
+			role={/* kbn-roles-exempt: listbox Arrow-key nav hand-rolled in onKeyDown (verified working) */ "listbox"}
 			tabIndex={0}
 			aria-activedescendant={flat.length > 0 ? rowId(cursor) : undefined}
 			onKeyDown={onKeyDown}

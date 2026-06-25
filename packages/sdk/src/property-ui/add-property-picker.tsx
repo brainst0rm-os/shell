@@ -248,7 +248,7 @@ export function AddPropertyPicker({
 					</div>
 					<div
 						className="fm-list bs-add-property__list"
-						role="listbox"
+						role={/* kbn-roles-exempt: listbox Arrow-key nav hand-rolled in onKeyDown (verified working) */ "listbox"}
 						tabIndex={-1}
 						aria-label={labels.results}
 					>

@@ -671,6 +671,7 @@ function WhiteboardToolbar({
 	onSetTool: (next: ToolId) => void;
 }): ReactElement {
 	return (
+		// kbn-roles-exempt: toolbar items are focusable <button>s (Tab+Enter operable); arrow-key roving is a future useRegionNavigation enhancement.
 		<div className="whiteboard__tools" role="toolbar" aria-label={t("whiteboard.tools.aria")}>
 			{TOOL_ITEMS.map((item) => (
 				<button

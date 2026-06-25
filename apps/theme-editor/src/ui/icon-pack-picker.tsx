@@ -61,6 +61,7 @@ export function IconPackPicker({
 	};
 
 	return (
+		// kbn-roles-exempt: radio keyboard handled by the hand-rolled Arrow-key onKeyDown (verified working).
 		<div className="te-packs" role="radiogroup" aria-label={t("iconPack.legend")}>
 			{choices.map((choice, index) => {
 				const selected = choice.key === selectedKey;

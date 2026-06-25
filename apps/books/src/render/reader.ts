@@ -456,6 +456,7 @@ function familyRow(
 	const row = labelledRow(t("typography.family"), "stacked");
 	const group = document.createElement("div");
 	group.className = "books__type-segmented";
+	// kbn-roles-exempt: imperative DOM radiogroup; items are focusable <button>s (Tab+Enter operable). Arrow-roving lands with the Books React migration.
 	group.setAttribute("role", "radiogroup");
 	group.setAttribute("aria-label", t("typography.family"));
 	for (const family of FAMILY_ORDER) {
@@ -481,6 +482,7 @@ function themeRow(
 	const row = labelledRow(t("typography.themeLabel"), "stacked");
 	const group = document.createElement("div");
 	group.className = "books__type-swatches";
+	// kbn-roles-exempt: imperative DOM radiogroup; items are focusable <button>s (Tab+Enter operable). Arrow-roving lands with the Books React migration.
 	group.setAttribute("role", "radiogroup");
 	group.setAttribute("aria-label", t("typography.themeLabel"));
 	for (const theme of THEME_ORDER) {

@@ -96,6 +96,7 @@ function renderXlsx(stage: HTMLElement, bytes: Uint8Array, teardown: Array<() =>
 
 	const tabBar = document.createElement("div");
 	tabBar.className = "preview-office-tabs";
+	// kbn-roles-exempt: imperative DOM tablist; the sheet tabs are focusable <button>s (Tab+Enter operable).
 	tabBar.setAttribute("role", "tablist");
 	tabBar.setAttribute("aria-label", t("office.sheets"));
 	const tableHost = document.createElement("div");

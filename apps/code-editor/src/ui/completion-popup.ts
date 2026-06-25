@@ -71,6 +71,7 @@ export function createCompletionPopup(opts: {
 	const element = document.createElement("ul");
 	element.className = POPUP_CLASS;
 	element.id = listboxId;
+	// kbn-roles-exempt: imperative DOM completion listbox; Arrow/Enter nav is driven by the editor keymap (aria-activedescendant on the editor), not this popup.
 	element.setAttribute("role", "listbox");
 	element.setAttribute("aria-label", opts.listLabel);
 	element.hidden = true;

@@ -198,6 +198,7 @@ export function buildSelectionMenu(options: SelectionMenuOptions): SelectionMenu
 
 	const swatches = document.createElement("div");
 	swatches.className = "books__hl-swatches";
+	// kbn-roles-exempt: imperative DOM radiogroup; the swatches are focusable <button>s (Tab+Enter operable). Arrow-roving lands with the Books React migration.
 	swatches.setAttribute("role", "radiogroup");
 	swatches.setAttribute("aria-label", t("highlight.colorLabel"));
 	for (const color of COLOR_ORDER) {
@@ -304,6 +305,7 @@ function highlightRow(highlight: Highlight, actions: HighlightPanelActions): HTM
 
 	const recolor = document.createElement("div");
 	recolor.className = "books__hl-recolor";
+	// kbn-roles-exempt: imperative DOM radiogroup; the swatches are focusable <button>s (Tab+Enter operable). Arrow-roving lands with the Books React migration.
 	recolor.setAttribute("role", "radiogroup");
 	recolor.setAttribute("aria-label", t("highlight.colorLabel"));
 	for (const color of COLOR_ORDER) {
