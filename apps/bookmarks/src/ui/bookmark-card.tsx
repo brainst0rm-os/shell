@@ -178,6 +178,7 @@ export function BookmarkCard({
 	const className = dragging ? "bookmarks__card bookmarks__card--dragging" : "bookmarks__card";
 
 	return (
+		// kbn-onclick-exempt: whole-card click is a mouse convenience; the title button below owns keyboard activation of the same open action.
 		<li
 			{...listItemProps}
 			className={className}

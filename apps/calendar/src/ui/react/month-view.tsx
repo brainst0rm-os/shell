@@ -407,5 +407,7 @@ function RibbonSegmentView({
 			</button>
 		);
 	}
+	// continuation segment of a multi-day ribbon — aria-hidden (the start segment's button represents the event to AT); click is a mouse convenience, keyboard lives on that start button.
+	// kbn-onclick-exempt: aria-hidden ribbon continuation; keyboard activation is on the start segment's button.
 	return <div {...common} aria-hidden="true" onClick={() => onItemClick(seg.item)} />;
 }
