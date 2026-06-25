@@ -54,4 +54,4 @@ Design docs, the implementation plan, and internal references are maintained pri
 
 ## License
 
-[FSL-1.1-Apache-2.0](LICENSE.md) © Brainstorm — source-available, converts to Apache-2.0 two years after each release.
+[AGPL-3.0-or-later](LICENSE.md) © Brainstorm — free and open source; network use triggers the copyleft source-disclosure obligation.
