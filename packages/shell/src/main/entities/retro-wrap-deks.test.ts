@@ -130,6 +130,32 @@ describe("retroWrapNullDeks", () => {
 		expect(b).toEqual({ wrapped: 0, skipped: 0 });
 	});
 
+	it("skips shell-internal singletons with non-safe ids (never attempts a wrap)", async () => {
+		seedLegacy(env, "ent_a", 1);
+		seedLegacy(env, "brainstorm/root-folder/v1", 2);
+
+		const wrapCalls: string[] = [];
+		const r = await retroWrapNullDeks({
+			repo: env.repo,
+			dekStore: env.dekStore,
+			installEntityWrap: async (id) => {
+				wrapCalls.push(id);
+			},
+		});
+
+		// Only the safe-id row is wrapped; the root-folder singleton is dropped
+		// up front — never handed to installEntityWrap, so no `entityId must
+		// match` throw and no skipped count.
+		expect(r).toEqual({ wrapped: 1, skipped: 0 });
+		expect(wrapCalls).toEqual(["ent_a"]);
+
+		// The singleton row keeps its null dek_id (local-only, never syncs).
+		const root = env.db
+			.prepare("SELECT dek_id FROM entities WHERE id = ?")
+			.get("brainstorm/root-folder/v1") as { dek_id: string | null };
+		expect(root.dek_id).toBeNull();
+	});
+
 	it("wraps every null-dek row + leaves wrapped rows untouched", async () => {
 		seedLegacy(env, "ent_a", 1);
 		seedLegacy(env, "ent_b", 2);

@@ -53,6 +53,7 @@
  */
 
 import type { EntitiesRepository } from "../storage/entities-repo";
+import { isSafeEntityId } from "../storage/entity-id";
 import type { EntityDekStore } from "./entity-dek-store";
 
 export type RetroWrapResult = {
@@ -94,7 +95,15 @@ export async function retroWrapNullDeks(opts: RetroWrapOptions): Promise<RetroWr
 		return result;
 	}
 
-	for (const id of ids) {
+	// Shell-internal singletons (the bootstrapped root folder, id
+	// `brainstorm/root-folder/v1`) carry non-safe entity ids. The sync wire
+	// path rejects those at its trust boundary (`assertSafeEntityId`), so such
+	// rows are local-only by construction and can neither need nor receive a
+	// per-entity wrap. Drop them up front instead of attempting a wrap that
+	// always throws `entityId must match …` on every boot.
+	const syncableIds = ids.filter(isSafeEntityId);
+
+	for (const id of syncableIds) {
 		try {
 			// Stage 10.3a — the Y.Doc wrap install is async (worker round-
 			// trip) so it lives OUTSIDE the SQLite transaction. The DEK +
