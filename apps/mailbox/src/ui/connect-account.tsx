@@ -7,6 +7,7 @@
  * sensitive is kept in this renderer beyond the form state itself.
  */
 
+import { Orientation, SelectionAttribute, useCompositeKeyboard } from "@brainstorm/sdk/a11y";
 import { Checkbox } from "@brainstorm/sdk/checkbox";
 import { Popover, PopoverSize } from "@brainstorm/sdk/popover";
 import { useState } from "react";
@@ -58,6 +59,22 @@ export function ConnectAccountDialog(props: {
 	const [smtpTls, setSmtpTls] = useState(true);
 	const [busy, setBusy] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+
+	// Horizontal radiogroup keyboard model (←/→/Home/End move + select, roving
+	// tabindex, aria-checked) — roles flow through the hook, not literals.
+	const connectModes = [ConnectMode.Gmail, ConnectMode.Imap] as const;
+	const selectMode = (index: number) => setMode(connectModes[index] ?? ConnectMode.Gmail);
+	const modeKeyboard = useCompositeKeyboard({
+		orientation: Orientation.Horizontal,
+		count: connectModes.length,
+		activeIndex: Math.max(0, connectModes.indexOf(mode)),
+		onActiveIndexChange: selectMode,
+		onActivate: selectMode,
+		role: "radiogroup",
+		itemRole: "radio",
+		selectionAttribute: SelectionAttribute.AriaChecked,
+		...(busy ? { disabled: new Set([0, 1]) } : {}),
+	});
 
 	const imapReady =
 		address.trim().length > 0 &&
@@ -138,12 +155,11 @@ export function ConnectAccountDialog(props: {
 		>
 			<form className="mb-connect" onSubmit={submit}>
 				{props.onConnectImap ? (
-					<div className="mb-connect__modes" role="radiogroup" aria-label={t("connect.mode")}>
+					<div className="mb-connect__modes" {...modeKeyboard.containerProps} aria-label={t("connect.mode")}>
 						<button
 							type="button"
+							{...modeKeyboard.getItemProps(0)}
 							className={`mb-connect__mode${mode === ConnectMode.Gmail ? " is-on" : ""}`}
-							role="radio"
-							aria-checked={mode === ConnectMode.Gmail}
 							onClick={() => setMode(ConnectMode.Gmail)}
 							disabled={busy}
 						>
@@ -151,9 +167,8 @@ export function ConnectAccountDialog(props: {
 						</button>
 						<button
 							type="button"
+							{...modeKeyboard.getItemProps(1)}
 							className={`mb-connect__mode${mode === ConnectMode.Imap ? " is-on" : ""}`}
-							role="radio"
-							aria-checked={mode === ConnectMode.Imap}
 							onClick={() => setMode(ConnectMode.Imap)}
 							disabled={busy}
 						>
