@@ -26,9 +26,19 @@ describe("ValueType / PropertyView / PropertyFormat enums", () => {
 		);
 	});
 
-	it("PropertyFormat lists the eight supported formats", () => {
+	it("PropertyFormat lists the nine supported formats", () => {
 		expect(Object.values(PropertyFormat).sort()).toEqual(
-			["code", "currency", "duration", "email", "markdown", "percent", "phone", "url"].sort(),
+			[
+				"code",
+				"currency",
+				"duration",
+				"email",
+				"formula",
+				"markdown",
+				"percent",
+				"phone",
+				"url",
+			].sort(),
 		);
 	});
 

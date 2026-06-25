@@ -129,20 +129,22 @@ describe("editor navigate-away-and-back", () => {
 		expect(container.textContent, "navigate BACK to A must not be blank").toContain("ALPHA CONTENT");
 	});
 
-	// Documents WHY StrictMode is disabled: under it, navigate-back blanks. If a
-	// future `@lexical/yjs` becomes double-mount-safe this test starts failing,
-	// signalling StrictMode can be restored.
-	it.fails(
-		"blanks navigate-back under StrictMode (the incompatibility we work around)",
-		async () => {
-			const api = makeResolver({
-				A: paragraphSnapshot("ALPHA CONTENT"),
-				B: paragraphSnapshot("BETA CONTENT"),
-			});
-			await open(api, "A", true);
-			await open(api, "B", true);
-			await open(api, "A", true);
-			expect(container.textContent).toContain("ALPHA CONTENT");
-		},
-	);
+	// This was the regression guard for WHY StrictMode was dropped: under it,
+	// navigate-back blanked. It was an `it.fails`, expected to fail until
+	// `@lexical/yjs` became double-mount-safe — which it now is in this harness:
+	// navigate-back retains the body even under StrictMode. The signal the old
+	// comment promised has fired. Restoring `<StrictMode>` in the Notes entry
+	// (`main.tsx`) is now viable, but should be validated in a real shell before
+	// flipping it (jsdom double-mount ≠ Electron). Kept as a positive guard so a
+	// future @lexical/yjs regression that re-breaks double-mount is caught.
+	it("retains the body on navigate-back under StrictMode (now double-mount-safe)", async () => {
+		const api = makeResolver({
+			A: paragraphSnapshot("ALPHA CONTENT"),
+			B: paragraphSnapshot("BETA CONTENT"),
+		});
+		await open(api, "A", true);
+		await open(api, "B", true);
+		await open(api, "A", true);
+		expect(container.textContent).toContain("ALPHA CONTENT");
+	});
 });

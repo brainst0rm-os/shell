@@ -13,7 +13,10 @@ import { type Root, createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BrowserApp } from "./app";
 
-vi.mock("@brainstorm/sdk/menus", () => ({ mountMenuHost: vi.fn(() => () => {}) }));
+vi.mock("@brainstorm/sdk/menus", () => ({
+	mountMenuHost: vi.fn(() => () => {}),
+	closeTypeaheadMenu: vi.fn(),
+}));
 vi.mock("@brainstorm/sdk/object-menu", () => ({ openAnchoredMenu: vi.fn() }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;

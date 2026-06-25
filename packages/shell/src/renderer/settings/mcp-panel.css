@@ -100,7 +100,7 @@
 /* stdio argv editor — one argument per line, monospace for path legibility. */
 .settings__mcp-args {
 	resize: vertical;
-	min-height: var(--space-9);
+	min-height: var(--space-8);
 	font-family: var(--font-family-mono);
 	font-size: var(--text-size-sm);
 	line-height: 1.5;

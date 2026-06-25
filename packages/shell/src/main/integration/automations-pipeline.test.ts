@@ -218,11 +218,17 @@ describe("Automations pipeline — fire → run → real entity → persisted ru
 		expect(runs2).toHaveLength(1);
 	});
 
-	it("persists a failed run when a step has no interpreter (gated kind)", async () => {
+	it("persists a failed run when a step fails at runtime (AI service unavailable)", async () => {
+		// The broker interpreter ports now wire the AI port, so an AICall is no
+		// longer an unsupported kind — it reaches the real interpreter, which
+		// fails `service-unavailable:ai` because no AI service is registered in
+		// this harness. (The pure unsupported-step-kind path is covered by
+		// automations-host.test.ts.) Either way the run must persist as Failed
+		// with the error captured.
 		const h = host({
 			loadWorkflow: async () => ({
 				steps: [{ id: "x", kind: StepKind.AICall, instructions: "n/a" }],
-				capabilities: ["ai.use"], // clears the cap gate → reaches the gated interpreter
+				capabilities: ["ai.use"], // clears the cap gate → reaches the interpreter
 			}),
 		});
 		const result = await h.runWorkflow("wf-bad", "manual", null);
@@ -232,7 +238,7 @@ describe("Automations pipeline — fire → run → real entity → persisted ru
 			query: { type: WORKFLOW_RUN_TYPE_URL },
 		})) as Array<{ properties: Record<string, unknown> }>;
 		expect(runs[0]?.properties.status).toBe(WorkflowRunStatus.Failed);
-		expect(String(runs[0]?.properties.error)).toContain("unsupported-step-kind");
+		expect(String(runs[0]?.properties.error)).toContain("service-unavailable:ai");
 	});
 });
 
