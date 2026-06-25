@@ -3,7 +3,7 @@
 // and print the XmlText "root" structure so we can see what's actually inside.
 
 import { readFileSync } from "node:fs";
-import * as Y from "~/brainstorm/node_modules/.bun/yjs@13.6.30/node_modules/yjs/src/index.js";
+import * as Y from "yjs";
 
 const path = process.argv[2];
 if (!path) {

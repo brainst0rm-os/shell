@@ -36,3 +36,7 @@ tests/dogfood/.screenshots-data/
 # Points outside this repo (../../tools/mcp-server); never ship it in the
 # standalone/published app — the dev shell resolves it via the harness layout.
 /tools/mcp-server
+
+# test output (machine hostname + local paths leak in reports)
+tests/perf/results/
+tests/e2e/results/
