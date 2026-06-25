@@ -46,7 +46,11 @@ function spawnSeedCli(
 	cwd: string,
 ): Promise<{ ok: true } | { ok: false; reason: string }> {
 	return new Promise((resolve) => {
-		const child = spawn("bun", ["run", seedCliPath, "--vault", vaultPath], {
+		// `--defer-sidecar`: this shell holds entities.db open, so the CLI must NOT
+		// open a second writer connection (cross-process WAL contention → "database
+		// is locked", F-278). It parks the projection in the seed sidecar, which
+		// the caller drains in-process on this shell's single connection.
+		const child = spawn("bun", ["run", seedCliPath, "--vault", vaultPath, "--defer-sidecar"], {
 			cwd,
 			stdio: "pipe",
 		});
