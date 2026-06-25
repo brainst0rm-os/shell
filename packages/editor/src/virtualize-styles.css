@@ -1,0 +1,4 @@
+.bs-editor__block {
+	content-visibility: auto;
+	contain-intrinsic-size: auto var(--bs-block-intrinsic-h, 24px);
+}

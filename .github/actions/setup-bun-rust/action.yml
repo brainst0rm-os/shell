@@ -1,0 +1,49 @@
+name: "Setup Bun + Rust toolchain"
+description: "Shared setup for Brainstorm CI matrix — Bun, Rust, target triple, electron cache."
+
+inputs:
+  rust-target:
+    description: "Rust target triple to install (e.g. aarch64-apple-darwin). Optional — only needed for cross-compile."
+    required: false
+    default: ""
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: latest
+
+    - name: Setup Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Add Rust target
+      if: inputs.rust-target != ''
+      shell: bash
+      run: rustup target add ${{ inputs.rust-target }}
+
+    - name: Cache Bun deps
+      uses: actions/cache@v4
+      with:
+        path: ~/.bun/install/cache
+        key: bun-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/bun.lock', '**/bun.lockb') }}
+        restore-keys: bun-${{ runner.os }}-${{ runner.arch }}-
+
+    - name: Cache Cargo target
+      uses: actions/cache@v4
+      with:
+        path: packages/native/target
+        key: cargo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/native/Cargo.lock') }}
+        restore-keys: cargo-${{ runner.os }}-${{ runner.arch }}-
+
+    - name: Cache electron-builder
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/electron-builder
+        key: electron-builder-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/shell/package.json') }}
+        restore-keys: electron-builder-${{ runner.os }}-${{ runner.arch }}-
+
+    - name: Install deps
+      shell: bash
+      run: bun install --frozen-lockfile

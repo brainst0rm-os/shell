@@ -1,0 +1,121 @@
+{
+  "meta": {
+    "title": "City Approves New Transit Line",
+    "byline": "Pat Reporter",
+    "siteName": "The Daily Example",
+    "excerpt": "The council voted on Tuesday to fund a new light-rail corridor connecting the harbour district to the university.",
+    "lang": "en",
+    "publishedAt": null
+  },
+  "blocks": [
+    {
+      "type": "paragraph",
+      "version": 1,
+      "direction": null,
+      "format": "",
+      "indent": 0,
+      "children": [
+        {
+          "type": "text",
+          "version": 1,
+          "text": "The council voted on Tuesday to fund a new light-rail corridor connecting the harbour district to the university.",
+          "format": 0,
+          "detail": 0,
+          "mode": "normal",
+          "style": ""
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "version": 1,
+      "direction": null,
+      "format": "",
+      "indent": 0,
+      "children": [
+        {
+          "type": "text",
+          "version": 1,
+          "text": "This paragraph carries enough genuine prose for Mozilla Readability to score the article body above the surrounding navigation and sidebar chrome, which is the whole point of the readable-extraction pass.",
+          "format": 0,
+          "detail": 0,
+          "mode": "normal",
+          "style": ""
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "version": 1,
+      "direction": null,
+      "format": "",
+      "indent": 0,
+      "children": [
+        {
+          "type": "text",
+          "version": 1,
+          "text": "This paragraph carries enough genuine prose for Mozilla Readability to score the article body above the surrounding navigation and sidebar chrome, which is the whole point of the readable-extraction pass.",
+          "format": 0,
+          "detail": 0,
+          "mode": "normal",
+          "style": ""
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "version": 1,
+      "direction": null,
+      "format": "",
+      "indent": 0,
+      "tag": "h2",
+      "children": [
+        {
+          "type": "text",
+          "version": 1,
+          "text": "Funding",
+          "format": 0,
+          "detail": 0,
+          "mode": "normal",
+          "style": ""
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "version": 1,
+      "direction": null,
+      "format": "",
+      "indent": 0,
+      "children": [
+        {
+          "type": "text",
+          "version": 1,
+          "text": "This paragraph carries enough genuine prose for Mozilla Readability to score the article body above the surrounding navigation and sidebar chrome, which is the whole point of the readable-extraction pass.",
+          "format": 0,
+          "detail": 0,
+          "mode": "normal",
+          "style": ""
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "version": 1,
+      "direction": null,
+      "format": "",
+      "indent": 0,
+      "children": [
+        {
+          "type": "text",
+          "version": 1,
+          "text": "Construction is expected to begin next spring, with the first trains running in three years.",
+          "format": 0,
+          "detail": 0,
+          "mode": "normal",
+          "style": ""
+        }
+      ]
+    }
+  ]
+}

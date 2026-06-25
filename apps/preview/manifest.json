@@ -1,0 +1,148 @@
+{
+  "id": "io.brainstorm.preview",
+  "name": "Preview",
+  "version": "0.1.0",
+  "sdk": "1",
+  "description": "Quick-Look-style multi-format media previewer. Thin sandboxed shell whose render-pane embeds a per-kind renderer module (image / video / audio / text / markdown / code / pdf). The inspector edits the previewed file's vault properties and comments.",
+  "icon": "icon.svg",
+  "entry": "dist/index.html",
+  "capabilities": [
+    "storage.kv",
+    "entities.read:*",
+    "entities.write:brainstorm/File/v1",
+    "entities.write:brainstorm/Comment/v1",
+    "intents.dispatch:open"
+  ],
+  "registrations": {
+    "openers": [
+      { "kind": "secondary", "mime": "image/png" },
+      { "kind": "secondary", "mime": "image/jpeg" },
+      { "kind": "secondary", "mime": "image/gif" },
+      { "kind": "secondary", "mime": "image/webp" },
+      { "kind": "secondary", "mime": "image/avif" },
+      { "kind": "secondary", "mime": "image/svg+xml" },
+      { "kind": "secondary", "mime": "video/mp4" },
+      { "kind": "secondary", "mime": "video/webm" },
+      { "kind": "secondary", "mime": "video/quicktime" },
+      { "kind": "secondary", "mime": "audio/mpeg" },
+      { "kind": "secondary", "mime": "audio/wav" },
+      { "kind": "secondary", "mime": "audio/ogg" },
+      { "kind": "secondary", "mime": "audio/flac" },
+      { "kind": "secondary", "mime": "text/plain" },
+      { "kind": "secondary", "mime": "text/markdown" },
+      { "kind": "primary", "mime": "application/pdf" },
+      { "kind": "secondary", "mime": "model/gltf-binary" },
+      { "kind": "secondary", "mime": "model/gltf+json" },
+      { "kind": "secondary", "mime": "model/obj" },
+      { "kind": "secondary", "mime": "image/x-canon-cr2" },
+      { "kind": "secondary", "mime": "image/x-nikon-nef" },
+      { "kind": "secondary", "mime": "image/x-sony-arw" },
+      { "kind": "secondary", "mime": "image/x-adobe-dng" },
+      { "kind": "secondary", "mime": "image/x-olympus-orf" },
+      { "kind": "secondary", "mime": "image/x-panasonic-rw2" },
+      { "kind": "secondary", "mime": "image/x-fuji-raf" },
+      {
+        "kind": "secondary",
+        "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      },
+      {
+        "kind": "secondary",
+        "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      },
+      {
+        "kind": "secondary",
+        "mime": "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+      },
+      { "kind": "secondary", "mime": "image/heic" },
+      { "kind": "secondary", "mime": "image/heif" }
+    ],
+    "intents": [
+      { "verb": "open", "mime": "image/png", "priority": "secondary" },
+      { "verb": "open", "mime": "image/jpeg", "priority": "secondary" },
+      { "verb": "open", "mime": "image/gif", "priority": "secondary" },
+      { "verb": "open", "mime": "image/webp", "priority": "secondary" },
+      { "verb": "open", "mime": "image/avif", "priority": "secondary" },
+      { "verb": "open", "mime": "image/svg+xml", "priority": "secondary" },
+      { "verb": "open", "mime": "video/mp4", "priority": "secondary" },
+      { "verb": "open", "mime": "video/webm", "priority": "secondary" },
+      { "verb": "open", "mime": "video/quicktime", "priority": "secondary" },
+      { "verb": "open", "mime": "audio/mpeg", "priority": "secondary" },
+      { "verb": "open", "mime": "audio/wav", "priority": "secondary" },
+      { "verb": "open", "mime": "audio/ogg", "priority": "secondary" },
+      { "verb": "open", "mime": "audio/flac", "priority": "secondary" },
+      { "verb": "open", "mime": "text/plain", "priority": "secondary" },
+      { "verb": "open", "mime": "text/markdown", "priority": "secondary" },
+      { "verb": "open", "mime": "application/pdf", "priority": "primary" },
+      { "verb": "open", "mime": "model/gltf-binary", "priority": "secondary" },
+      { "verb": "open", "mime": "model/gltf+json", "priority": "secondary" },
+      { "verb": "open", "mime": "model/obj", "priority": "secondary" },
+      { "verb": "open", "mime": "image/x-canon-cr2", "priority": "secondary" },
+      { "verb": "open", "mime": "image/x-nikon-nef", "priority": "secondary" },
+      { "verb": "open", "mime": "image/x-sony-arw", "priority": "secondary" },
+      { "verb": "open", "mime": "image/x-adobe-dng", "priority": "secondary" },
+      { "verb": "open", "mime": "image/x-olympus-orf", "priority": "secondary" },
+      { "verb": "open", "mime": "image/x-panasonic-rw2", "priority": "secondary" },
+      { "verb": "open", "mime": "image/x-fuji-raf", "priority": "secondary" },
+      {
+        "verb": "open",
+        "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "priority": "secondary"
+      },
+      {
+        "verb": "open",
+        "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "priority": "secondary"
+      },
+      {
+        "verb": "open",
+        "mime": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        "priority": "secondary"
+      },
+      { "verb": "open", "mime": "image/heic", "priority": "secondary" },
+      { "verb": "open", "mime": "image/heif", "priority": "secondary" },
+      { "verb": "quick-look", "mime": "image/png", "priority": "primary" },
+      { "verb": "quick-look", "mime": "image/jpeg", "priority": "primary" },
+      { "verb": "quick-look", "mime": "image/gif", "priority": "primary" },
+      { "verb": "quick-look", "mime": "image/webp", "priority": "primary" },
+      { "verb": "quick-look", "mime": "image/avif", "priority": "primary" },
+      { "verb": "quick-look", "mime": "image/svg+xml", "priority": "primary" },
+      { "verb": "quick-look", "mime": "video/mp4", "priority": "primary" },
+      { "verb": "quick-look", "mime": "video/webm", "priority": "primary" },
+      { "verb": "quick-look", "mime": "video/quicktime", "priority": "primary" },
+      { "verb": "quick-look", "mime": "audio/mpeg", "priority": "primary" },
+      { "verb": "quick-look", "mime": "audio/wav", "priority": "primary" },
+      { "verb": "quick-look", "mime": "audio/ogg", "priority": "primary" },
+      { "verb": "quick-look", "mime": "audio/flac", "priority": "primary" },
+      { "verb": "quick-look", "mime": "text/plain", "priority": "primary" },
+      { "verb": "quick-look", "mime": "text/markdown", "priority": "primary" },
+      { "verb": "quick-look", "mime": "application/pdf", "priority": "primary" },
+      { "verb": "quick-look", "mime": "model/gltf-binary", "priority": "primary" },
+      { "verb": "quick-look", "mime": "model/gltf+json", "priority": "primary" },
+      { "verb": "quick-look", "mime": "model/obj", "priority": "primary" },
+      { "verb": "quick-look", "mime": "image/x-canon-cr2", "priority": "primary" },
+      { "verb": "quick-look", "mime": "image/x-nikon-nef", "priority": "primary" },
+      { "verb": "quick-look", "mime": "image/x-sony-arw", "priority": "primary" },
+      { "verb": "quick-look", "mime": "image/x-adobe-dng", "priority": "primary" },
+      { "verb": "quick-look", "mime": "image/x-olympus-orf", "priority": "primary" },
+      { "verb": "quick-look", "mime": "image/x-panasonic-rw2", "priority": "primary" },
+      { "verb": "quick-look", "mime": "image/x-fuji-raf", "priority": "primary" },
+      {
+        "verb": "quick-look",
+        "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "priority": "primary"
+      },
+      {
+        "verb": "quick-look",
+        "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "priority": "primary"
+      },
+      {
+        "verb": "quick-look",
+        "mime": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        "priority": "primary"
+      },
+      { "verb": "quick-look", "mime": "image/heic", "priority": "primary" },
+      { "verb": "quick-look", "mime": "image/heif", "priority": "primary" }
+    ]
+  }
+}

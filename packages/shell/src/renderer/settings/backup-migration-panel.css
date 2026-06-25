@@ -1,0 +1,106 @@
+/* Settings → Backup & Migration (IE-3). Each flow is a card on the settings
+ * glass surface — same surface/border/radius/shadow treatment as the sibling
+ * membership cards so the two panels read as one family. Chrome + controls come
+ * from the shared settings + Button/TextField primitives. */
+
+.settings__section.backup-migration {
+	gap: var(--space-3);
+}
+
+.backup-migration__group {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	padding: var(--space-4);
+	background: var(--color-surface-default);
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-sm);
+	transition: border-color var(--motion-duration-normal) var(--motion-easing-standard),
+		box-shadow var(--motion-duration-normal) var(--motion-easing-standard);
+}
+
+.backup-migration__group:hover {
+	border-color: var(--color-border-default);
+	box-shadow: var(--shadow-md);
+}
+
+/* Header row: an accent-tinted icon chip anchors the section, with the title
+ * and one-line description stacked beside it. */
+.backup-migration__group-head {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--space-3);
+}
+
+.backup-migration__group-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	width: 32px;
+	height: 32px;
+	border-radius: var(--radius-md);
+	background: var(--color-accent-subtle);
+	color: var(--color-accent-strong);
+}
+
+.backup-migration__group-text {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+	min-width: 0;
+}
+
+.backup-migration__group-title {
+	margin: 0;
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-semibold);
+	color: var(--color-text-primary);
+}
+
+/* The section hint reads as supporting copy under the title — bump it from the
+ * xs settings default to sm and a touch more line-height for legibility. */
+.backup-migration__group-text .settings__hint {
+	font-size: var(--text-size-sm);
+	line-height: 1.45;
+	color: var(--color-text-secondary);
+}
+
+/* Single idle action sits content-width, left-aligned, rather than stretching
+ * the full card (the default flex-column stretch). */
+.backup-migration__group > .button {
+	align-self: flex-start;
+}
+
+.backup-migration__stack {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.backup-migration__progress {
+	display: flex;
+	gap: var(--space-2);
+	align-items: center;
+	justify-content: space-between;
+}
+
+.backup-migration__table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+}
+
+.backup-migration__table th,
+.backup-migration__table td {
+	padding: var(--space-1);
+	text-align: left;
+	border-bottom: var(--border-width) solid var(--color-border-subtle);
+}
+
+.backup-migration__table th {
+	font-weight: var(--text-weight-medium);
+	color: var(--color-text-tertiary);
+}

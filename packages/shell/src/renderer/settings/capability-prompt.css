@@ -1,0 +1,46 @@
+/* Capability-prompt — content-only styling; chrome (backdrop / panel / title /
+ * close / Escape) is supplied by the shared <Popover> primitive. */
+
+.capability-prompt__app,
+.capability-prompt__capability {
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+	margin: 0;
+}
+
+.capability-prompt__app code,
+.capability-prompt__capability code {
+	font-family: var(--text-family-code);
+	background: var(--color-background-subtle);
+	padding: var(--space-0_5);
+	border-radius: var(--radius-sm);
+	color: var(--color-text-primary);
+}
+
+.capability-prompt__capability code {
+	font-size: var(--text-size-md);
+}
+
+.capability-prompt__reason {
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+	margin: 0;
+}
+
+.capability-prompt__actions {
+	display: flex;
+	gap: var(--space-2);
+	justify-content: flex-end;
+	margin-top: var(--space-2);
+}
+
+/* Sticky-Denied is a destructive choice the user reaches for separately;
+ * keep it isolated on the far inline-start so an accidental click next to
+ * "Allow" can't fat-finger a persisted denial. (In RTL, this naturally
+ * flips to the far right — same UX intent, mirrored geometry.) */
+.capability-prompt__action--destructive {
+	margin-inline-end: auto;
+}
+
+/* Capability-prompt buttons use the shared <Button> primitive — see
+ * renderer/ui/button.tsx. */

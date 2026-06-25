@@ -1,0 +1,186 @@
+{
+  "meta": {
+    "title": "Formatting Showcase",
+    "byline": null,
+    "siteName": null,
+    "excerpt": "This paragraph mixes bold, italic, inline code(), and a relative link with enough prose around them to keep Readability happy and the paragraph in the main column.",
+    "lang": "en",
+    "publishedAt": null
+  },
+  "blocks": [
+    {
+      "type": "paragraph",
+      "version": 1,
+      "direction": null,
+      "format": "",
+      "indent": 0,
+      "children": [
+        {
+          "type": "text",
+          "version": 1,
+          "text": "This paragraph mixes ",
+          "format": 0,
+          "detail": 0,
+          "mode": "normal",
+          "style": ""
+        },
+        {
+          "type": "text",
+          "version": 1,
+          "text": "bold",
+          "format": 1,
+          "detail": 0,
+          "mode": "normal",
+          "style": ""
+        },
+        {
+          "type": "text",
+          "version": 1,
+          "text": ", ",
+          "format": 0,
+          "detail": 0,
+          "mode": "normal",
+          "style": ""
+        },
+        {
+          "type": "text",
+          "version": 1,
+          "text": "italic",
+          "format": 2,
+          "detail": 0,
+          "mode": "normal",
+          "style": ""
+        },
+        {
+          "type": "text",
+          "version": 1,
+          "text": ", inline ",
+          "format": 0,
+          "detail": 0,
+          "mode": "normal",
+          "style": ""
+        },
+        {
+          "type": "text",
+          "version": 1,
+          "text": "code()",
+          "format": 16,
+          "detail": 0,
+          "mode": "normal",
+          "style": ""
+        },
+        {
+          "type": "text",
+          "version": 1,
+          "text": ", and a ",
+          "format": 0,
+          "detail": 0,
+          "mode": "normal",
+          "style": ""
+        },
+        {
+          "type": "link",
+          "version": 1,
+          "direction": null,
+          "format": "",
+          "indent": 0,
+          "url": "https://example.test/guide",
+          "rel": null,
+          "target": null,
+          "title": null,
+          "children": [
+            {
+              "type": "text",
+              "version": 1,
+              "text": "relative link",
+              "format": 0,
+              "detail": 0,
+              "mode": "normal",
+              "style": ""
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "version": 1,
+          "text": " with enough prose around them to keep Readability happy and the paragraph in the main column.",
+          "format": 0,
+          "detail": 0,
+          "mode": "normal",
+          "style": ""
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "version": 1,
+      "direction": null,
+      "format": "",
+      "indent": 0,
+      "children": [
+        {
+          "type": "text",
+          "version": 1,
+          "text": "This paragraph carries enough genuine prose for Mozilla Readability to score the article body above the surrounding navigation and sidebar chrome, which is the whole point of the readable-extraction pass.",
+          "format": 0,
+          "detail": 0,
+          "mode": "normal",
+          "style": ""
+        }
+      ]
+    },
+    {
+      "type": "quote",
+      "version": 1,
+      "direction": null,
+      "format": "",
+      "indent": 0,
+      "children": [
+        {
+          "type": "text",
+          "version": 1,
+          "text": "A quoted passage that adds a little weight to the article body.",
+          "format": 0,
+          "detail": 0,
+          "mode": "normal",
+          "style": ""
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "version": 1,
+      "direction": null,
+      "format": "",
+      "indent": 0,
+      "children": [
+        {
+          "type": "image",
+          "version": 1,
+          "src": "https://example.test/diagram.png",
+          "altText": "A diagram",
+          "caption": "",
+          "width": "inherit"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "version": 1,
+      "direction": null,
+      "format": "",
+      "indent": 0,
+      "children": [
+        {
+          "type": "text",
+          "version": 1,
+          "text": "This paragraph carries enough genuine prose for Mozilla Readability to score the article body above the surrounding navigation and sidebar chrome, which is the whole point of the readable-extraction pass.",
+          "format": 0,
+          "detail": 0,
+          "mode": "normal",
+          "style": ""
+        }
+      ]
+    }
+  ]
+}

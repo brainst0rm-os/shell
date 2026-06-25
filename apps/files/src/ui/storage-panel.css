@@ -1,0 +1,106 @@
+/* Storage inventory panel (the "what's taking disk" overlay). Co-located so
+ * it commits with the component and stays out of the shared styles.css. */
+.storage-panel {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-height: 0;
+	width: 100%;
+}
+
+.storage-panel__summary {
+	margin: 0 0 var(--space-2);
+	color: var(--text-dim);
+	font-size: var(--text-size-sm);
+}
+
+.storage-panel__empty {
+	padding: var(--space-4) 0;
+	color: var(--text-faint);
+	font-size: var(--text-size-md);
+	text-align: center;
+}
+
+.storage-panel__list {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: var(--space-0_5);
+	min-height: 0;
+	margin: 0;
+	padding: 0;
+	overflow-y: auto;
+	list-style: none;
+}
+
+.storage-row {
+	display: block;
+}
+
+.storage-row__inner {
+	display: grid;
+	/* minmax(0, 1fr) — a bare `1fr` keeps its default `min-width: auto`, so a
+	   long nowrap filename forces the track wider than the panel and the whole
+	   popover scrolls sideways; minmax(0,…) lets the name column shrink and the
+	   ellipsis do its job. */
+	grid-template-columns: 32px minmax(0, 1fr) auto auto;
+	align-items: center;
+	gap: var(--space-3);
+	padding: var(--space-2);
+	border-radius: var(--radius-sm);
+}
+
+.storage-row__inner:hover {
+	background: var(--hover);
+}
+
+/* Upload blobs bound to a File entity open in Preview; reset the button to
+   the row layout and signal it's actionable. */
+.storage-row__open {
+	width: 100%;
+	appearance: none;
+	border: none;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+}
+
+.storage-row__thumb {
+	width: 32px;
+	height: 32px;
+	border-radius: var(--radius-sm);
+	object-fit: cover;
+	background: var(--bg-subtle);
+}
+
+.storage-row__thumb--glyph {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--text-dim);
+}
+
+.storage-row__name {
+	overflow: hidden;
+	color: var(--text);
+	font-size: var(--text-size-md);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.storage-row__kind {
+	color: var(--text-faint);
+	font-size: var(--text-size-xs);
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.storage-row__size {
+	min-width: 72px;
+	color: var(--text-dim);
+	font-size: var(--text-size-sm);
+	font-variant-numeric: tabular-nums;
+	text-align: right;
+}

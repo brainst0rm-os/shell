@@ -1,0 +1,1270 @@
+/* Brainstorm — Whiteboard first-party app (9.17.1.5 preview drop).
+ *
+ * Shell-theme aliasing per [[apps-inherit-shell-theme]]; font sizes via
+ * tokens per [[font-sizes-use-tokens]].
+ */
+/* Theming is the shell's job, not the app's. The shell preload injects
+ * the active theme tokens AND the alias layer (--accent / --bg / --text /
+ * --edge / …) + base type + component styles via a single stylesheet —
+ * packages/shell/src/preload/app-theme.ts, the single source of truth.
+ * This app declares ZERO theme values. Don't reintroduce a :root alias
+ * block or root font/colour here. */
+:root {
+	color-scheme: light dark;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	overflow: hidden;
+}
+
+button {
+	font: inherit;
+	color: inherit;
+}
+
+/* Header chrome (flex skeleton, left/right groups, drag region, skin) is the
+ * shared `.app-header` rule in `@brainstorm/sdk/app-theme.css`. */
+
+/* Board-identity row is a wrapping <div> — outside the shell rule's
+ * tag/class list, so be explicit. */
+.whiteboard__board-name-row {
+	-webkit-app-region: no-drag;
+}
+
+/* Grid: [board-list | canvas] over [canvas | hint]. The old toolbar row
+ * is gone — its controls moved into the shared `.app-header`. The nav
+ * is positioned absolutely at a stable width so its `translateX(-100%)`
+ * slide resolves to a constant pixel offset; the grid's
+ * `grid-template-columns` transition animates the canvas column's width
+ * in sync so the canvas smoothly fills the freed space instead of
+ * snapping. Panels slide on GPU transform per
+ * [[animate-transform-not-width]]. */
+.whiteboard {
+	/* Footer row matches the shared 44px chrome baseline (header, panel
+	 * heads, Books/dashboard footers); one var keeps the grid row, the
+	 * nav-resize handle and the hint bar in lockstep. */
+	--wb-footer-height: 44px;
+	height: calc(100vh - var(--app-header-height, 44px));
+	display: grid;
+	grid-template-columns: var(--whiteboard-nav-width, 248px) minmax(0, 1fr);
+	grid-template-rows: minmax(0, 1fr) var(--wb-footer-height);
+	transition: grid-template-columns var(--motion-duration-normal, 0.18s) ease;
+	position: relative;
+	overflow: hidden;
+	background: linear-gradient(to right, var(--border) 1px, transparent 1px) 0 0 / 24px 24px,
+		linear-gradient(to bottom, var(--border) 1px, transparent 1px) 0 0 / 24px 24px;
+}
+
+.whiteboard[data-nav-open="false"] {
+	grid-template-columns: 0 minmax(0, 1fr);
+}
+
+/* The transition above is the TOGGLE-button animation; the shell's
+   app-theme zeroes transition-duration globally under `body.is-resizing`
+   so a mouse-resize drag stays synced to the cursor. */
+
+/* ── Left object-navigation sidebar ──────────────────────────────────── */
+
+.whiteboard__nav {
+	position: absolute;
+	top: 0;
+	inset-inline-start: 0;
+	bottom: 0;
+	width: var(--whiteboard-nav-width, 248px);
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	background: var(--bg);
+	border-inline-end: var(--border-width) solid var(--border);
+	overflow: hidden;
+	z-index: 5;
+	transition: transform var(--motion-duration-normal, 0.18s) ease;
+	will-change: transform;
+}
+
+.whiteboard[data-nav-open="false"] .whiteboard__nav {
+	transform: translateX(-100%);
+	border-color: transparent;
+}
+
+/* Sidebar header row — holds the board search. Keeps the project-wide
+ * 44px panel-header baseline + 1px subtle bottom border so it lines up
+ * with the app-header across the column boundary. */
+.whiteboard__search {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	flex: none;
+	height: 44px;
+	padding: 0 var(--space-2);
+	border-bottom: var(--border-width) solid var(--color-border-subtle, var(--border));
+}
+
+.whiteboard__search > .bs-searchbar {
+	flex: 1;
+	min-width: 0;
+}
+
+.whiteboard__nav-list {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	padding: 0 var(--space-2) var(--space-3);
+}
+
+.whiteboard__nav-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	width: 100%;
+	padding: var(--space-1);
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text);
+	font-size: var(--text-size-md);
+	text-align: start;
+	cursor: pointer;
+}
+
+.whiteboard__nav-row:hover {
+	background: var(--hover);
+}
+
+.whiteboard__nav-row--active {
+	background: var(--active, var(--hover));
+}
+
+.whiteboard__nav-row:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}
+
+.whiteboard__nav-row-icon {
+	display: inline-flex;
+	flex: none;
+}
+
+.whiteboard__nav-row-name {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.whiteboard__nav-empty {
+	padding: var(--space-2);
+	color: var(--text-faint);
+	font-size: var(--text-size-sm);
+}
+
+/* Drag handle on the column boundary; hidden when the panel is closed. */
+.whiteboard__nav-resize {
+	position: absolute;
+	top: 0;
+	bottom: var(--wb-footer-height, 44px);
+	/* PHYSICAL-AXIS INTENTIONAL: resize handle straddles the panel edge geometrically */
+	left: var(--whiteboard-nav-width, 248px);
+	width: 6px;
+	margin-left: -3px;
+	cursor: col-resize;
+	z-index: 6;
+	background: transparent;
+	touch-action: none;
+}
+
+.whiteboard[data-nav-open="false"] .whiteboard__nav-resize {
+	display: none;
+}
+
+.whiteboard__board-name-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	min-width: 0;
+	max-width: min(360px, 32vw);
+}
+
+/* The board's own icon is click-to-change (shared SDK picker); the
+   button hugs the 16px glyph with a subtle hover/focus affordance. */
+.whiteboard__board-icon-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: var(--space-1);
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: inherit;
+	cursor: pointer;
+}
+
+.whiteboard__board-icon-btn:hover {
+	background: var(--hover);
+}
+
+.whiteboard__board-icon-btn:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+	border-color: transparent;
+}
+
+/* Title face comes from the shared `.app-header__title`; the
+ * `.whiteboard__board-name` class remains in markup purely as a test
+ * hook for the dogfood rename probes. */
+
+/* In-place rename input (F-198) — swaps into the title on double-click;
+ * keeps the title's face so the swap doesn't jump. */
+.whiteboard__board-name-input {
+	font: inherit;
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-semibold, 600);
+	color: var(--text);
+	background: var(--bg-elev, transparent);
+	border: var(--border-width) solid var(--color-border-subtle, var(--border));
+	border-radius: var(--radius-sm);
+	padding: var(--space-0_5);
+	min-width: 160px;
+	max-width: 100%;
+	-webkit-app-region: no-drag;
+}
+
+.whiteboard__board-name-input:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}
+
+/* Header content-action icon buttons — one chrome for add / style / arrange /
+ * export / layers so the right group reads as a single consistent row of
+ * 28×28 borderless icon chips (mirrors the cross-app `.bs-object-menu__more`
+ * look), instead of the old mix of bordered chips + bare text buttons. The
+ * panel toggle + ⋯ that trail the row keep their own SDK chrome. */
+.whiteboard__hdr-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	background: transparent;
+	border: 0;
+	border-radius: var(--radius-sm);
+	color: var(--text-dim);
+	cursor: pointer;
+	-webkit-app-region: no-drag;
+	transition:
+		background-color var(--motion-duration-fast, 120ms) ease,
+		color var(--motion-duration-fast, 120ms) ease;
+}
+
+.whiteboard__hdr-btn:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+/* Disabled trigger (F-200: Style with nothing selected). Stays focusable
+ * so the explanatory label reaches keyboard / screen-reader users; the
+ * click handler no-ops. */
+.whiteboard__hdr-btn[aria-disabled="true"] {
+	opacity: 0.4;
+	cursor: default;
+}
+
+.whiteboard__hdr-btn[aria-disabled="true"]:hover {
+	background: transparent;
+	color: var(--text-dim);
+}
+
+/* Active panel-toggle state (layers panel open) — the accent treatment the
+ * shared `.bs-panel-toggle` uses, so a pressed header button reads the same
+ * across apps. */
+.whiteboard__hdr-btn[aria-pressed="true"] {
+	background: var(--accent-soft);
+	color: var(--accent);
+}
+
+.whiteboard__hdr-btn:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}
+
+/* Transient export feedback (no status pill in this header). */
+.whiteboard__hdr-btn.is-success {
+	color: var(--accent);
+}
+
+.whiteboard__hdr-btn.is-error {
+	color: var(--danger, #e5484d);
+}
+
+/* Group divider between content actions and the trailing toggles + ⋯. */
+.whiteboard__hdr-sep {
+	width: 1px;
+	align-self: center;
+	height: 18px;
+	margin: 0 var(--space-1);
+	background: var(--color-border-subtle, var(--border));
+	-webkit-app-region: no-drag;
+}
+
+/* Floating camera control — bottom-right of the canvas, glass surface to
+ * match the back/forward + Graph's zoom control on the opposite corner.
+ * Horizontal capsule (zoom-in / % / zoom-out | fit) pairs with the
+ * horizontal authoring toolbar at bottom-centre — both read as one
+ * floating ribbon along the canvas floor. */
+.whiteboard__zoom {
+	position: absolute;
+	inset-inline-end: 14px;
+	bottom: 14px;
+	z-index: 4;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: var(--space-0_5);
+	padding: var(--space-1);
+	background: var(--color-glass-background, var(--bg-elev));
+	backdrop-filter: blur(var(--glass-blur, 8px)) saturate(var(--glass-saturate, 180%));
+	-webkit-backdrop-filter: blur(var(--glass-blur, 8px)) saturate(var(--glass-saturate, 180%));
+	border: var(--border-width) solid var(--color-glass-border, var(--border));
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-sm, 0 2px 6px rgba(0, 0, 0, 0.18));
+}
+
+.whiteboard__zoom-btn,
+.whiteboard__zoom-fit {
+	width: var(--control-height-sm, 24px);
+	height: var(--control-height-sm, 24px);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background: transparent;
+	border: 0;
+	border-radius: var(--radius-sm);
+	color: var(--text-dim);
+	cursor: pointer;
+}
+
+.whiteboard__zoom-btn:hover,
+.whiteboard__zoom-fit:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.whiteboard__zoom-btn:focus-visible,
+.whiteboard__zoom-fit:focus-visible,
+.whiteboard__zoom-level:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}
+
+.whiteboard__zoom-level {
+	height: var(--control-height-sm, 24px);
+	padding: 0 var(--space-1);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background: transparent;
+	border: 0;
+	border-radius: var(--radius-sm);
+	color: var(--text-dim);
+	font-size: var(--text-size-xs);
+	font-variant-numeric: tabular-nums;
+	cursor: pointer;
+}
+
+.whiteboard__zoom-level:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.whiteboard__zoom-sep {
+	width: 1px;
+	align-self: stretch;
+	margin: var(--space-1) var(--space-0_5);
+	background: var(--color-glass-border, var(--border));
+}
+
+/* ── Authoring toolbar (instruments panel) ───────────────────────────── */
+
+/* Floating horizontal capsule at the canvas bottom-centre — primary
+ * authoring surface. Mirrors the zoom-control glass chrome so the two
+ * read as one ribbon. The Add menu in the header is the discoverable
+ * fallback for less-frequent kinds. */
+.whiteboard__tools {
+	position: absolute;
+	/* PHYSICAL-AXIS INTENTIONAL: symmetric centring */
+	left: 50%;
+	bottom: 14px;
+	transform: translateX(-50%);
+	z-index: 4;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: var(--space-0_5);
+	padding: var(--space-1);
+	background: var(--color-glass-background, var(--bg-elev));
+	backdrop-filter: blur(var(--glass-blur, 8px)) saturate(var(--glass-saturate, 180%));
+	-webkit-backdrop-filter: blur(var(--glass-blur, 8px)) saturate(var(--glass-saturate, 180%));
+	border: var(--border-width) solid var(--color-glass-border, var(--border));
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-sm, 0 2px 6px rgba(0, 0, 0, 0.18));
+}
+
+.whiteboard__tool {
+	width: 32px;
+	height: 32px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background: transparent;
+	border: 0;
+	border-radius: var(--radius-sm);
+	color: var(--text-dim);
+	cursor: pointer;
+}
+
+.whiteboard__tool:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.whiteboard__tool[aria-pressed="true"] {
+	background: var(--accent-soft, var(--hover));
+	color: var(--accent);
+}
+
+.whiteboard__tool:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}
+
+.whiteboard__tools-sep {
+	width: 1px;
+	align-self: stretch;
+	margin: var(--space-1) var(--space-0_5);
+	background: var(--color-glass-border, var(--border));
+}
+
+.whiteboard__canvas-wrap[data-tool="sticky"],
+.whiteboard__canvas-wrap[data-tool="text"],
+.whiteboard__canvas-wrap[data-tool="frame"],
+.whiteboard__canvas-wrap[data-tool="pen"] {
+	cursor: crosshair;
+}
+
+/* ── Canvas ──────────────────────────────────────────────────────────── */
+
+/* The React-owned grid cell the canvas lives in (column 2). The engine fills
+ * it with `.whiteboard__canvas-wrap`; the floating toolbar / zoom controls /
+ * layers panel are absolute children of this positioned host. */
+.whiteboard__canvas-host {
+	grid-column: 2 / 3;
+	grid-row: 1 / 2;
+	position: relative;
+	overflow: hidden;
+	min-width: 0;
+}
+
+.whiteboard__canvas-wrap {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	touch-action: none;
+	cursor: default;
+}
+
+.whiteboard__layers-host {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	z-index: 7;
+}
+
+.whiteboard__layers-host > * {
+	pointer-events: auto;
+}
+
+.whiteboard__canvas-wrap--panning {
+	cursor: grabbing;
+}
+
+.whiteboard__canvas {
+	position: relative;
+	z-index: 1;
+	transform-origin: 0 0;
+}
+
+/* GPU connector layer (9.17.5). The Pixi `<canvas>` is appended here and
+ * absolutely fills the wrap behind the node layer; it is pointer-inert
+ * (edge picking is geometric — see engine.ts `bindCanvasDoubleClick`), so it never
+ * eats node / canvas gestures. No SVG anywhere on the board now. */
+.whiteboard__edge-host {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	overflow: hidden;
+	z-index: 0;
+}
+
+/* The connector canvas is pinned strictly below the node layer
+ * (`.whiteboard__canvas`, z-index:1, transformed → own stacking context).
+ * A WebGL canvas composites on its own layer; without an explicit z-index
+ * the cleared GL surface can composite over the transformed node layer
+ * (the 9.17.5 "nodes are black boxes / no edges" regression). The inline
+ * style in `mountPixiEdges` is authoritative; this mirrors it so the
+ * contract is visible in the stylesheet and survives a class rename. */
+.whiteboard__edges--pixi {
+	display: block;
+	z-index: -1;
+	background: transparent;
+}
+
+/* World-transformed overlay (inside `.whiteboard__canvas`) carrying the
+ * single edge-label `<input>` when one is open — replaces the old SVG
+ * `<foreignObject>` editor. */
+.whiteboard__edge-overlay {
+	position: absolute;
+	top: 0;
+	inset-inline-start: 0;
+	pointer-events: none;
+}
+
+.whiteboard__edge-label-input {
+	position: absolute;
+	box-sizing: border-box;
+	margin: 0;
+	padding: var(--space-0_5);
+	border: var(--border-width) solid var(--accent);
+	border-radius: var(--radius-sm);
+	background: var(--bg);
+	color: var(--text);
+	font-size: var(--text-size-xs);
+	font-family: inherit;
+	text-align: center;
+	outline: none;
+	pointer-events: auto;
+}
+
+.whiteboard__nodes {
+	position: absolute;
+	top: 0;
+	inset-inline-start: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+}
+
+/* Alignment guides (9.17.14) — thin accent lines drawn while a drag is
+ * magnetised to a neighbour. Live in the world-transformed canvas, so their
+ * positions/extent are canvas-space; thickness is set inline as `1 / zoom`px. */
+.whiteboard__guides {
+	position: absolute;
+	top: 0;
+	inset-inline-start: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+	z-index: 5;
+}
+
+.whiteboard__guide {
+	position: absolute;
+	background: var(--accent, #6b73f0);
+	box-shadow: 0 0 0 0.5px color-mix(in srgb, var(--accent, #6b73f0) 40%, transparent);
+}
+
+/* ── Nodes ───────────────────────────────────────────────────────────── */
+
+/* Every node-chrome token carries a design-token fallback (the
+ * DefaultDark value from @brainstorm/tokens — same precedent as the
+ * `--node-tint, #f6cd6b` sticky fallback already in this file). The
+ * shell injects the live theme tokens via a preload `<style>` element;
+ * a sandboxed app preload can apply that sheet a frame late or out of
+ * the node layer's scope ([app-preload-tokens-via-style-el]). Without a
+ * fallback, `background: var(--bg-elev)` collapses to `transparent`
+ * (the node reads as a black box over the page) and `color: var(--text)`
+ * collapses to the inherited/initial colour (text vanishes) — exactly
+ * the "black empty box, no text" regression. Sticky was immune only
+ * because its fill + text are theme-independent literals; the fallbacks
+ * give every kind that same floor. */
+.whiteboard__node {
+	position: absolute;
+	pointer-events: auto;
+	border: var(--border-width, 1px) solid var(--border-strong, #424242);
+	background: var(--bg-elev, #232323);
+	border-radius: var(--radius-md);
+	display: flex;
+	flex-direction: column;
+	padding: var(--space-2, var(--space-2)) var(--space-3, var(--space-3));
+	color: var(--text, #f7f7f7);
+	font-size: var(--text-size-md);
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+	user-select: none;
+	cursor: grab;
+	transition: box-shadow 0.12s ease, border-color 0.12s ease;
+}
+
+.whiteboard__node:hover {
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.whiteboard__node:active {
+	cursor: grabbing;
+}
+
+.whiteboard__node--selected {
+	border-color: var(--accent, #6b73f0);
+	box-shadow: 0 0 0 1px var(--accent, #6b73f0);
+}
+
+/* KBN-A-whiteboard: a node is a Tab stop; show a keyboard focus ring so the
+ * user can see which node the keyboard is on (suppressed on pointer focus). */
+.whiteboard__node:focus {
+	outline: none;
+}
+.whiteboard__node:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 2px;
+}
+
+/* The selection / nudge announcement target's sr-only clip is applied inline
+ * by the shared `attachLiveRegion` (@brainstorm/sdk/a11y) — no rule needed. */
+
+/* Layers panel (9.17.13 / F-197) — right-edge glass overlay floating over
+ * the canvas (the `glass--strong` class supplies the blurred surface). */
+.whiteboard__layers {
+	position: absolute;
+	top: var(--space-3, 12px);
+	right: var(--space-3, 12px);
+	bottom: var(--space-3, 12px);
+	width: 240px;
+	z-index: 6;
+	display: flex;
+	flex-direction: column;
+	border: var(--border-width) solid var(--color-glass-border, var(--border));
+	border-radius: var(--radius-md);
+	box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+	overflow: hidden;
+}
+
+/* F-197 root cause: the `display: flex` above outranks the UA `[hidden]`
+ * rule, so the "closed" panel painted as an empty box over every board. */
+.whiteboard__layers[hidden] {
+	display: none;
+}
+
+/* Shared panel-header baseline: 44px, 1px subtle bottom border. */
+.whiteboard__layers-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	height: 44px;
+	flex-shrink: 0;
+	box-sizing: border-box;
+	padding: 0 var(--space-2, var(--space-2)) 0 var(--space-3, var(--space-3));
+	border-bottom: var(--border-width) solid var(--color-border-subtle, var(--border));
+}
+
+.whiteboard__layers-title {
+	margin: 0;
+	font-weight: var(--text-weight-semibold, 600);
+}
+
+.whiteboard__layers-close {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text-dim, var(--text));
+	cursor: pointer;
+}
+
+.whiteboard__layers-close:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.whiteboard__layers-close:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}
+
+.whiteboard__layers-list {
+	list-style: none;
+	margin: 0;
+	padding: var(--space-1, var(--space-1));
+	overflow-y: auto;
+	flex: 1 1 auto;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+}
+
+.whiteboard__layer {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1, var(--space-1));
+	padding: var(--space-0_5);
+	border-radius: var(--radius-sm);
+}
+
+/* Same neutral hover token every shared menu / list row uses (`--hover`), so
+ * the layers list doesn't read as a different surface from the app's menus.
+ * Declared before the selected rule so an accent-selected row keeps its tint
+ * while hovered. */
+.whiteboard__layer:hover {
+	background: var(--hover);
+}
+
+.whiteboard__layer[data-selected="true"] {
+	background: var(--color-accent-subtle, color-mix(in srgb, var(--accent, #6b73f0) 14%, transparent));
+}
+
+.whiteboard__layer[data-hidden="true"] .whiteboard__layer-label {
+	opacity: 0.5;
+	font-style: italic;
+}
+
+.whiteboard__layer-vis {
+	flex: 0 0 auto;
+	width: 18px;
+	height: 18px;
+	border: none;
+	background: none;
+	cursor: pointer;
+	border-radius: var(--radius-xs);
+	padding: 0;
+	position: relative;
+}
+
+/* A filled dot = visible; a hollow ring = hidden. */
+.whiteboard__layer-vis::before {
+	content: "";
+	position: absolute;
+	inset: 5px;
+	border-radius: 50%;
+	border: 1.5px solid currentColor;
+	background: currentColor;
+}
+
+.whiteboard__layer-vis[data-hidden="true"]::before {
+	background: transparent;
+}
+
+.whiteboard__layer-label {
+	flex: 1 1 auto;
+	min-width: 0;
+	text-align: left;
+	background: none;
+	border: none;
+	font: inherit;
+	color: inherit;
+	cursor: pointer;
+	padding: var(--space-0_5);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.whiteboard__layer-label[data-locked="true"] {
+	color: var(--text-dim, var(--text-dim, #888));
+}
+
+.whiteboard__layers-empty {
+	padding: var(--space-2, var(--space-2));
+	color: var(--text-dim, var(--text-dim, #888));
+	font-size: var(--text-size-sm);
+	font-style: italic;
+}
+
+/* Primitive shapes (9.17.10) — the node chrome steps aside; the fill div is the
+   shape, tinted from the sticky palette, rounded for the ellipse. */
+.whiteboard__node--shape-rectangle,
+.whiteboard__node--shape-ellipse,
+.whiteboard__node--shape-triangle,
+.whiteboard__node--shape-diamond,
+.whiteboard__node--shape-line,
+.whiteboard__node--shape-arrow {
+	border: none;
+	background: transparent;
+	padding: 0;
+}
+
+.whiteboard__shape-fill {
+	width: 100%;
+	height: 100%;
+	background: var(--node-tint, var(--accent, #6b73f0));
+	border: var(--border-width) solid color-mix(in srgb, var(--node-tint, #6b73f0) 70%, #000);
+	box-sizing: border-box;
+}
+
+.whiteboard__node--shape-ellipse .whiteboard__shape-fill {
+	border-radius: 50%;
+}
+
+/* SVG geometry shapes (9.17.10): line / arrow are stroked, triangle / diamond
+   are filled — both tinted from the node palette via --node-tint. */
+.whiteboard__shape-svg {
+	display: block;
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+}
+
+.whiteboard__shape-svg--fill polygon {
+	fill: var(--node-tint, var(--accent, #6b73f0));
+	stroke: color-mix(in srgb, var(--node-tint, #6b73f0) 70%, #000);
+	stroke-width: 1;
+}
+
+.whiteboard__shape-svg--stroke line {
+	stroke: var(--node-tint, var(--accent, #6b73f0));
+	stroke-width: 2;
+	stroke-linecap: round;
+}
+
+.whiteboard__shape-svg-head {
+	fill: var(--node-tint, var(--accent, #6b73f0));
+}
+
+/* Freehand ink (9.17.9): the node chrome steps aside; a stroked polyline is
+   the content, tinted from the palette. */
+.whiteboard__node--ink {
+	border: none;
+	background: transparent;
+	padding: 0;
+}
+
+.whiteboard__ink-svg {
+	display: block;
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+}
+
+.whiteboard__ink-svg polyline {
+	fill: none;
+	stroke: var(--node-tint, var(--accent, #6b73f0));
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+/* Locked nodes (9.17.15) — selectable but not draggable; the cursor signals it. */
+.whiteboard__node--locked {
+	cursor: default;
+}
+
+.whiteboard__node--locked.whiteboard__node--selected {
+	box-shadow: 0 0 0 1px var(--accent, #6b73f0);
+	border-style: dashed;
+}
+
+.whiteboard__node:focus-visible {
+	outline: 2px solid var(--accent, #6b73f0);
+	outline-offset: -2px;
+}
+
+.whiteboard__node-body {
+	flex: 1;
+	min-height: 0;
+	white-space: pre-wrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	/* Per-node text size / colour / font / weight / style (9.17.12); absent =
+	   inherited default. */
+	font-size: var(--node-text-size, inherit);
+	color: var(--node-text-color, inherit);
+	font-family: var(--node-font, inherit);
+	font-weight: var(--node-font-weight, inherit);
+	font-style: var(--node-font-style, inherit);
+}
+
+.whiteboard__node-body--placeholder {
+	color: var(--text-faint, #7a7a7a);
+}
+
+.whiteboard__node-body--editing {
+	outline: none;
+	cursor: text;
+	overflow: auto;
+}
+
+/* Rich-run spans (9.17.12 rest). The styling itself is inline (centralized
+ * palettes in `types/node` via `render/rich-dom`); the class exists for the
+ * read-back walk + selection styling consistency. */
+.whiteboard__rich-run {
+	white-space: pre-wrap;
+}
+
+/* ── Inline formatting toolbar (9.17.12 rest) ─────────────────────────── */
+
+/* Floating glass capsule pinned above the node being edited — mirrors the
+ * zoom-control chrome so the canvas ribbons stay one family. */
+.whiteboard__format-toolbar {
+	position: absolute;
+	z-index: 6;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: var(--space-0_5);
+	padding: var(--space-1);
+	background: var(--color-glass-background, var(--bg-elev));
+	backdrop-filter: blur(var(--glass-blur, 8px)) saturate(var(--glass-saturate, 180%));
+	-webkit-backdrop-filter: blur(var(--glass-blur, 8px)) saturate(var(--glass-saturate, 180%));
+	border: var(--border-width) solid var(--color-glass-border, var(--border));
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-sm, 0 2px 6px rgba(0, 0, 0, 0.18));
+}
+
+.whiteboard__format-btn {
+	width: var(--control-height-sm, 24px);
+	height: var(--control-height-sm, 24px);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background: transparent;
+	border: 0;
+	border-radius: var(--radius-sm);
+	color: var(--text-dim);
+	cursor: pointer;
+}
+
+.whiteboard__format-btn:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.whiteboard__format-btn[aria-pressed="true"] {
+	background: var(--color-accent-subtle, var(--hover));
+	color: var(--color-accent-default, var(--text));
+}
+
+.whiteboard__format-btn:focus-visible,
+.whiteboard__format-swatch:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}
+
+.whiteboard__format-size {
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium, 500);
+}
+
+.whiteboard__format-swatch {
+	width: var(--control-height-sm, 24px);
+	height: var(--control-height-sm, 24px);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background: transparent;
+	border: 0;
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+}
+
+.whiteboard__format-swatch::before {
+	content: "";
+	width: 12px;
+	height: 12px;
+	border-radius: 50%;
+	background: var(--swatch-color, transparent);
+}
+
+/* The "default ink" swatch — an outlined dot in the theme text colour. */
+.whiteboard__format-swatch--default::before {
+	border: 1.5px solid var(--text-dim);
+	background: transparent;
+}
+
+.whiteboard__format-swatch:hover {
+	background: var(--hover);
+}
+
+.whiteboard__format-swatch[aria-pressed="true"] {
+	background: var(--color-accent-subtle, var(--hover));
+}
+
+.whiteboard__format-divider {
+	width: 1px;
+	align-self: stretch;
+	margin: var(--space-1) var(--space-0_5);
+	background: var(--color-glass-border, var(--border));
+}
+
+/* ── Presence overlay (9.17.19) ───────────────────────────────────────── */
+
+/* Lives inside the camera-transformed canvas: children position in raw
+ * canvas coordinates; never intercepts pointer input. */
+.whiteboard__presence {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	z-index: 7;
+}
+
+/* Cursor chrome counter-scales so it reads the same size at every zoom.
+ * The peer colour is an inline style (deliberately not a theme token —
+ * see @brainstorm/sdk/peer-presence). */
+.whiteboard__presence-cursor {
+	position: absolute;
+	display: flex;
+	align-items: flex-start;
+	gap: var(--space-0_5);
+	transform: scale(var(--wb-inv-zoom, 1));
+	transform-origin: top left;
+}
+
+.whiteboard__presence-pointer {
+	width: 16px;
+	height: 16px;
+	flex-shrink: 0;
+	filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
+}
+
+.whiteboard__presence-name {
+	margin-top: var(--space-3);
+	padding: var(--space-0_5);
+	border-radius: var(--radius-md);
+	color: #ffffff;
+	font-size: var(--text-size-xs);
+	line-height: 1.5;
+	white-space: nowrap;
+	max-width: 160px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.whiteboard__presence-selection {
+	position: absolute;
+	border: var(--border-width-thick) solid;
+	border-radius: var(--radius-md);
+	opacity: 0.85;
+}
+
+/* Text-format variants — size/weight via tokens, never raw px. */
+.whiteboard__node--text-heading .whiteboard__node-body {
+	font-size: var(--text-size-lg);
+	font-weight: var(--text-weight-semibold, 600);
+}
+
+.whiteboard__node--text-quote {
+	border-inline-start: 3px solid var(--accent, #6b73f0);
+}
+
+.whiteboard__node--text-quote .whiteboard__node-body {
+	font-style: italic;
+	color: var(--text-dim, #a3a3a3);
+}
+
+.whiteboard__node--sticky {
+	background: var(--node-tint, #f6cd6b);
+	color: rgba(0, 0, 0, 0.85);
+	border-color: rgba(0, 0, 0, 0.08);
+}
+
+/* The global placeholder color (`--text-faint`, a light grey tuned for dark
+ * surfaces) is near-illegible on a light sticky — the "New note" placeholder
+ * all but vanished (F-044). On a sticky, ink the placeholder as a muted DARK
+ * grey so it reads against the tint while staying clearly secondary to the
+ * 0.85 real text. */
+.whiteboard__node--sticky .whiteboard__node-body--placeholder {
+	color: rgba(0, 0, 0, 0.45);
+}
+
+.whiteboard__node--text {
+	background: var(--bg-elev, #232323);
+	color: var(--text, #f7f7f7);
+}
+
+.whiteboard__node--image {
+	background: var(--bg, #161616);
+	padding: 0;
+	overflow: hidden;
+}
+
+.whiteboard__node--image .whiteboard__node-body {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.whiteboard__node--image img {
+	width: 100%;
+	height: 100%;
+	/* object-fit set inline per the node's ImageFit (contain/cover/fill). */
+}
+
+/* Shown when an image src is broken / blocked — keeps the node legible
+ * instead of rendering an empty box. */
+.whiteboard__node-image-fallback {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+	padding: var(--space-2);
+	box-sizing: border-box;
+	text-align: center;
+	color: var(--text-dim, #a3a3a3);
+	font-size: var(--text-size-sm);
+	background: var(--bg-subtle, #1c1c1c);
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* Frame: the dashed rect is a passthrough surface so a press inside it
+ * reaches the contained nodes; only the title header is the grab/select
+ * surface (re-asserts pointer-events). Header shares the 44px panel-
+ * header baseline + 1px subtle border per the project chrome rule. */
+.whiteboard__node--frame {
+	background: transparent;
+	border: var(--border-width, 1px) solid var(--border-subtle, var(--border, #333));
+	padding: 0;
+	box-shadow: none;
+	pointer-events: none;
+}
+
+.whiteboard__node--frame:hover {
+	box-shadow: none;
+}
+
+.whiteboard__node--frame .whiteboard__handle {
+	pointer-events: none;
+}
+
+.whiteboard__frame-header {
+	pointer-events: auto;
+	cursor: grab;
+	display: flex;
+	align-items: center;
+	height: 44px;
+	padding: 0 var(--space-3, var(--space-3));
+	background: var(--node-tint, var(--bg-elev, #232323));
+	color: var(--text, #f7f7f7);
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-semibold, 600);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	border-bottom: var(--border-width) solid var(--border-subtle, var(--border, #333));
+	border-radius: var(--radius-md) var(--radius-md) 0 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.whiteboard__frame-header:active {
+	cursor: grabbing;
+}
+
+.whiteboard__node--group {
+	background: color-mix(in srgb, var(--accent, #6b73f0) 6%, transparent);
+	border: var(--border-width, 1px) dashed var(--accent, #6b73f0);
+	pointer-events: none;
+}
+
+.whiteboard__node--group.whiteboard__node--selected {
+	background: color-mix(in srgb, var(--accent, #6b73f0) 12%, transparent);
+}
+
+.whiteboard__node--embedded {
+	background: var(--bg-elev, #232323);
+	border-color: var(--accent, #6b73f0);
+	overflow: hidden;
+}
+
+/* The live BP-block embed (9.17.4) fills the node over the placeholder chrome;
+ * the SDK block-frame iframe inside it stretches to the container. */
+.whiteboard__embed-mount {
+	position: absolute;
+	inset: 0;
+	display: flex;
+}
+
+.whiteboard__embed-mount iframe {
+	flex: 1 1 auto;
+	width: 100%;
+	height: 100%;
+	border: 0;
+}
+
+/* ── Handles ─────────────────────────────────────────────────────────── */
+
+.whiteboard__handle {
+	position: absolute;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--bg);
+	border: 1.5px solid var(--accent);
+	opacity: 0;
+	transition: opacity 0.12s ease;
+	pointer-events: none;
+}
+
+.whiteboard__node:hover .whiteboard__handle,
+.whiteboard__node--selected .whiteboard__handle {
+	opacity: 1;
+	/* Only grabbable once visible — an invisible handle must not eat
+	 *  pointer events meant for the node body / canvas. */
+	pointer-events: auto;
+	cursor: crosshair;
+}
+
+/* PHYSICAL-AXIS INTENTIONAL: cardinal connection handles (top/right/bottom/left)
+ * straddle the node edges geometrically; top/bottom also use symmetric
+ * `left: 50%` + `translateX(-50%)` centring. Locale-invariant by design. */
+.whiteboard__handle--top {
+	top: -5px;
+	left: 50%;
+	transform: translateX(-50%);
+}
+
+.whiteboard__handle--right {
+	right: -5px;
+	top: 50%;
+	transform: translateY(-50%);
+}
+
+.whiteboard__handle--bottom {
+	bottom: -5px;
+	left: 50%;
+	transform: translateX(-50%);
+}
+
+.whiteboard__handle--left {
+	left: -5px;
+	top: 50%;
+	transform: translateY(-50%);
+}
+
+/* ── Hint footer ─────────────────────────────────────────────────────── */
+
+.whiteboard__hint {
+	grid-column: 2 / 3;
+	grid-row: 2 / 3;
+	display: flex;
+	align-items: center;
+	padding: 0 var(--space-4);
+	border-top: var(--border-width) solid var(--border);
+	background: var(--bg);
+	color: var(--text-faint);
+	font-size: var(--text-size-xs);
+	height: var(--wb-footer-height, 44px);
+}

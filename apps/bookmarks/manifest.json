@@ -1,0 +1,64 @@
+{
+  "id": "io.brainstorm.bookmarks",
+  "name": "Bookmarks",
+  "version": "0.1.0",
+  "sdk": "1",
+  "description": "Saved-link library + readable view. Scrapes each saved link's favicon (its icon) and OpenGraph share image (its cover), and captures the page's readable content for offline reading, through the shell network broker.",
+  "icon": "icon.svg",
+  "entry": "dist/index.html",
+  "capabilities": [
+    "storage.kv",
+    "entities.read:brainstorm/Bookmark/v1",
+    "entities.write:brainstorm/Bookmark/v1",
+    "entities.write:brainstorm/Comment/v1",
+    "entities.read:*",
+    "intents.dispatch:open",
+    "intents.dispatch:compose",
+    "intents.dispatch:quick-look",
+    "network.preview",
+    "network.readable",
+    "blocks.provide:io.brainstorm.bookmarks/bookmark",
+    "properties.read",
+    "properties.write"
+  ],
+  "registrations": {
+    "entityTypes": [
+      {
+        "id": "brainstorm/Bookmark/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/bookmarks/bookmark/v1.json",
+        "schema": {
+          "type": "object",
+          "required": ["id", "url", "title", "tags", "savedAt", "createdAt", "updatedAt"],
+          "properties": {
+            "id": { "type": "string" },
+            "url": { "type": "string" },
+            "title": { "type": "string" },
+            "description": { "type": "string" },
+            "icon": { "type": ["object", "null"] },
+            "faviconUrl": { "type": ["string", "null"] },
+            "coverImageUrl": { "type": ["string", "null"] },
+            "tags": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "savedAt": { "type": "number" },
+            "readAt": { "type": ["number", "null"] },
+            "archivedAt": { "type": ["number", "null"] },
+            "notes": { "type": "string" },
+            "colorHint": { "type": ["string", "null"] },
+            "createdAt": { "type": "number" },
+            "updatedAt": { "type": "number" }
+          }
+        }
+      }
+    ],
+    "openers": [{ "kind": "primary", "entityType": "brainstorm/Bookmark/v1" }],
+    "blocks": [{ "id": "io.brainstorm.bookmarks/bookmark", "name": "Bookmark card" }],
+    "intents": [
+      { "verb": "open", "entityType": "brainstorm/Bookmark/v1", "priority": "primary" },
+      { "verb": "compose", "entityType": "brainstorm/Bookmark/v1", "priority": "primary" },
+      { "verb": "quick-look", "entityType": "brainstorm/Bookmark/v1", "priority": "primary" }
+    ],
+    "widgets": [{ "id": "recent-bookmarks", "name": "Recent Bookmarks", "size": "medium" }]
+  }
+}

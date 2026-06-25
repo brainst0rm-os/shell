@@ -1,0 +1,276 @@
+import { Buffer } from "node:buffer";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import * as Y from "yjs";
+import { makeEnvelope } from "../../ipc/envelope";
+import {
+	__ydocCacheResetForTest,
+	__ydocCacheSizeForTest,
+	handleParentPortMessage,
+	handleYDocEnvelope,
+} from "./index";
+
+function mk(method: string, args: unknown) {
+	return makeEnvelope({
+		msg: `m${Math.random().toString(36).slice(2, 8)}`,
+		app: "shell",
+		service: "ydoc",
+		method,
+		args: [args],
+		caps: [],
+	});
+}
+
+function captureUpdate(doc: Y.Doc, mutate: () => void): Uint8Array {
+	let captured: Uint8Array | null = null;
+	const handler = (update: Uint8Array) => {
+		captured = update;
+	};
+	doc.on("update", handler);
+	try {
+		mutate();
+	} finally {
+		doc.off("update", handler);
+	}
+	if (!captured) throw new Error("expected an update");
+	return captured;
+}
+
+describe("ydoc worker", () => {
+	let vaultDir: string;
+
+	beforeEach(async () => {
+		vaultDir = await mkdtemp(join(tmpdir(), "brainstorm-ydocworker-"));
+	});
+
+	afterEach(async () => {
+		await rm(vaultDir, { recursive: true, force: true });
+	});
+
+	it("load() on a fresh entity returns an empty snapshot", async () => {
+		const reply = await handleYDocEnvelope(
+			mk("load", { vaultPath: vaultDir, entityId: "ent_fresh" }),
+		);
+		expect(reply.ok).toBe(true);
+		if (!reply.ok) throw new Error("expected ok");
+		const value = reply.value as { snapshotB64: string; truncatedTail: boolean };
+		expect(value.truncatedTail).toBe(false);
+		expect(typeof value.snapshotB64).toBe("string");
+	});
+
+	it("applyUpdate persists + later load recovers the state", async () => {
+		const writer = new Y.Doc();
+		const u = captureUpdate(writer, () => writer.getText("body").insert(0, "hello"));
+		await handleYDocEnvelope(mk("load", { vaultPath: vaultDir, entityId: "ent_a" }));
+		const apply = await handleYDocEnvelope(
+			mk("applyUpdate", {
+				vaultPath: vaultDir,
+				entityId: "ent_a",
+				updateB64: Buffer.from(u).toString("base64"),
+			}),
+		);
+		expect(apply.ok).toBe(true);
+
+		// Close the in-memory replica then load again — must come from disk.
+		await handleYDocEnvelope(mk("close", { vaultPath: vaultDir, entityId: "ent_a" }));
+		const reply = await handleYDocEnvelope(mk("load", { vaultPath: vaultDir, entityId: "ent_a" }));
+		if (!reply.ok) throw new Error("expected ok");
+		const value = reply.value as { snapshotB64: string };
+		const reader = new Y.Doc();
+		Y.applyUpdate(reader, new Uint8Array(Buffer.from(value.snapshotB64, "base64")));
+		expect(reader.getText("body").toString()).toBe("hello");
+	});
+
+	it("snapshot() returns the current full state", async () => {
+		const writer = new Y.Doc();
+		const u = captureUpdate(writer, () => writer.getText("t").insert(0, "abc"));
+		await handleYDocEnvelope(
+			mk("applyUpdate", {
+				vaultPath: vaultDir,
+				entityId: "ent_snap",
+				updateB64: Buffer.from(u).toString("base64"),
+			}),
+		);
+		const reply = await handleYDocEnvelope(
+			mk("snapshot", { vaultPath: vaultDir, entityId: "ent_snap" }),
+		);
+		if (!reply.ok) throw new Error("expected ok");
+		const { snapshotB64 } = reply.value as { snapshotB64: string };
+		const reader = new Y.Doc();
+		Y.applyUpdate(reader, new Uint8Array(Buffer.from(snapshotB64, "base64")));
+		expect(reader.getText("t").toString()).toBe("abc");
+	});
+
+	it("recover() reports the on-disk tail entry count", async () => {
+		const writer = new Y.Doc();
+		for (let i = 0; i < 3; i++) {
+			const u = captureUpdate(writer, () => writer.getArray("xs").push([i]));
+			await handleYDocEnvelope(
+				mk("applyUpdate", {
+					vaultPath: vaultDir,
+					entityId: "ent_rec",
+					updateB64: Buffer.from(u).toString("base64"),
+				}),
+			);
+		}
+		const reply = await handleYDocEnvelope(
+			mk("recover", { vaultPath: vaultDir, entityId: "ent_rec" }),
+		);
+		if (!reply.ok) throw new Error("expected ok");
+		const { tailEntries, truncatedTail } = reply.value as {
+			tailEntries: number;
+			truncatedTail: boolean;
+		};
+		expect(tailEntries).toBe(3);
+		expect(truncatedTail).toBe(false);
+	});
+
+	it("rejects unknown methods with Unavailable", async () => {
+		const reply = await handleYDocEnvelope(
+			mk("doesNotExist", { vaultPath: vaultDir, entityId: "ent_x" }),
+		);
+		expect(reply.ok).toBe(false);
+		if (reply.ok) throw new Error("expected error reply");
+		expect(reply.error.kind).toBe("Unavailable");
+	});
+
+	it("rejects envelopes routed to the wrong service", async () => {
+		const wrongService = makeEnvelope({
+			msg: "wrong-svc",
+			app: "shell",
+			service: "storage",
+			method: "load",
+			args: [{ vaultPath: vaultDir, entityId: "ent_x" }],
+			caps: [],
+		});
+		const reply = await handleYDocEnvelope(wrongService);
+		expect(reply.ok).toBe(false);
+		if (reply.ok) throw new Error("expected error reply");
+		expect(reply.error.kind).toBe("Invalid");
+	});
+
+	it("rejects malformed envelopes", async () => {
+		const reply = await handleYDocEnvelope({ shape: "wrong" });
+		expect(reply.ok).toBe(false);
+		if (reply.ok) throw new Error("expected error reply");
+		expect(reply.error.kind).toBe("Invalid");
+	});
+
+	it("rejects calls missing the argument object", async () => {
+		const noArgs = makeEnvelope({
+			msg: "no-args",
+			app: "shell",
+			service: "ydoc",
+			method: "load",
+			args: [],
+			caps: [],
+		});
+		const reply = await handleYDocEnvelope(noArgs);
+		expect(reply.ok).toBe(false);
+	});
+
+	// 10.9b defense-in-depth — the worker is the single persistence funnel
+	// (entityId → YDocStore.pathFor → mkdir/writeFile). A traversing id must
+	// be rejected here too, so a future caller that forgets the service-side
+	// guard still can't escape the vault docs dir.
+	it("rejects a path-traversing entityId on every persistence handler", async () => {
+		for (const method of ["load", "applyUpdate", "setEntityState", "close", "recover"]) {
+			const reply = await handleYDocEnvelope(
+				mk(method, { vaultPath: vaultDir, entityId: "../../../../tmp/evil", updateB64: "" }),
+			);
+			expect(reply.ok).toBe(false);
+		}
+	});
+
+	describe("doc-cache LRU", () => {
+		beforeEach(() => {
+			__ydocCacheResetForTest(2);
+		});
+
+		afterEach(() => {
+			__ydocCacheResetForTest();
+		});
+
+		it("evicts the least-recently-used doc once the cap is exceeded", async () => {
+			await handleYDocEnvelope(mk("load", { vaultPath: vaultDir, entityId: "ent_a" }));
+			await handleYDocEnvelope(mk("load", { vaultPath: vaultDir, entityId: "ent_b" }));
+			expect(__ydocCacheSizeForTest()).toBe(2);
+			await handleYDocEnvelope(mk("load", { vaultPath: vaultDir, entityId: "ent_c" }));
+			expect(__ydocCacheSizeForTest()).toBe(2);
+		});
+
+		it("touch-on-use keeps the recently-used doc resident across an eviction", async () => {
+			const writer = new Y.Doc();
+			const u = captureUpdate(writer, () => writer.getText("t").insert(0, "live"));
+			await handleYDocEnvelope(
+				mk("applyUpdate", {
+					vaultPath: vaultDir,
+					entityId: "ent_keep",
+					updateB64: Buffer.from(u).toString("base64"),
+				}),
+			);
+			await handleYDocEnvelope(mk("load", { vaultPath: vaultDir, entityId: "ent_filler" }));
+			// Touch ent_keep so it becomes the most-recently-used. ent_filler now sits
+			// at the head of the LRU and should be evicted by the next load.
+			await handleYDocEnvelope(mk("snapshot", { vaultPath: vaultDir, entityId: "ent_keep" }));
+			await handleYDocEnvelope(mk("load", { vaultPath: vaultDir, entityId: "ent_new" }));
+			// ent_keep is still resident — a snapshot must succeed without reloading
+			// from disk, and the doc state is intact.
+			const reply = await handleYDocEnvelope(
+				mk("snapshot", { vaultPath: vaultDir, entityId: "ent_keep" }),
+			);
+			if (!reply.ok) throw new Error("expected ok");
+			const reader = new Y.Doc();
+			Y.applyUpdate(
+				reader,
+				new Uint8Array(Buffer.from((reply.value as { snapshotB64: string }).snapshotB64, "base64")),
+			);
+			expect(reader.getText("t").toString()).toBe("live");
+		});
+
+		it("close() destroys + removes the cached doc", async () => {
+			await handleYDocEnvelope(mk("load", { vaultPath: vaultDir, entityId: "ent_close" }));
+			expect(__ydocCacheSizeForTest()).toBe(1);
+			await handleYDocEnvelope(mk("close", { vaultPath: vaultDir, entityId: "ent_close" }));
+			expect(__ydocCacheSizeForTest()).toBe(0);
+		});
+
+		it("evicted doc reloads cleanly from disk on next access", async () => {
+			const writer = new Y.Doc();
+			const u = captureUpdate(writer, () => writer.getText("t").insert(0, "disk"));
+			await handleYDocEnvelope(
+				mk("applyUpdate", {
+					vaultPath: vaultDir,
+					entityId: "ent_evicted",
+					updateB64: Buffer.from(u).toString("base64"),
+				}),
+			);
+			// Force eviction of ent_evicted by overflowing the LRU.
+			await handleYDocEnvelope(mk("load", { vaultPath: vaultDir, entityId: "ent_b" }));
+			await handleYDocEnvelope(mk("load", { vaultPath: vaultDir, entityId: "ent_c" }));
+			// ent_evicted has been pushed out. Re-load must come from disk.
+			const reply = await handleYDocEnvelope(
+				mk("load", { vaultPath: vaultDir, entityId: "ent_evicted" }),
+			);
+			if (!reply.ok) throw new Error("expected ok");
+			const reader = new Y.Doc();
+			Y.applyUpdate(
+				reader,
+				new Uint8Array(Buffer.from((reply.value as { snapshotB64: string }).snapshotB64, "base64")),
+			);
+			expect(reader.getText("t").toString()).toBe("disk");
+		});
+	});
+
+	// Electron's `process.parentPort` delivers a MessageEvent (`{ data, ports }`)
+	// to the child's 'message' listener — not the raw posted value. Mirrors the
+	// regression covered by the storage worker test.
+	it("handleParentPortMessage unwraps the MessageEvent .data field", async () => {
+		const envelope = mk("load", { vaultPath: vaultDir, entityId: "ent_pp" });
+		const reply = await handleParentPortMessage({ data: envelope });
+		expect(reply.ok).toBe(true);
+		expect(reply.msg).toBe(envelope.msg);
+	});
+});

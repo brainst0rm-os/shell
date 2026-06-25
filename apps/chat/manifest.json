@@ -1,0 +1,58 @@
+{
+  "id": "io.brainstorm.chat",
+  "name": "Chat",
+  "version": "0.1.0",
+  "sdk": "1",
+  "description": "Team chat — channels of messages in your vault. Human↔human conversation over the shared Message substrate, synced across the people you collaborate with.",
+  "icon": "icon.svg",
+  "entry": "dist/index.html",
+  "capabilities": [
+    "storage.kv",
+    "entities.read:*",
+    "entities.write:io.brainstorm.chat/Channel/v1",
+    "entities.write:brainstorm/Message/v1",
+    "roster.read",
+    "roster.write"
+  ],
+  "registrations": {
+    "entityTypes": [
+      {
+        "id": "io.brainstorm.chat/Channel/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/chat/channel/v1.json",
+        "schema": {
+          "type": "object",
+          "required": ["name", "createdAt"],
+          "properties": {
+            "name": { "type": "string" },
+            "topic": { "type": "string" },
+            "createdAt": { "type": "string" },
+            "participants": { "type": "array", "items": { "type": "object" } }
+          }
+        }
+      },
+      {
+        "id": "brainstorm/Message/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/conversation/message/v1.json",
+        "schema": {
+          "type": "object",
+          "required": ["conversation", "role", "body", "createdAt"],
+          "properties": {
+            "conversation": { "type": "string" },
+            "role": { "type": "string", "enum": ["system", "user", "assistant", "tool"] },
+            "body": { "type": "string" },
+            "sender": { "type": "object" },
+            "citations": { "type": "array", "items": { "type": "string" } },
+            "toolCalls": { "type": "array" },
+            "aiProvenance": { "type": "object" },
+            "createdAt": { "type": "string" },
+            "seq": { "type": "number" }
+          }
+        }
+      }
+    ],
+    "openers": [{ "kind": "primary", "entityType": "io.brainstorm.chat/Channel/v1" }],
+    "intents": [
+      { "verb": "open", "entityType": "io.brainstorm.chat/Channel/v1", "priority": "primary" }
+    ]
+  }
+}

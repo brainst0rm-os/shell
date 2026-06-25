@@ -1,0 +1,67 @@
+/* Export popover form chrome. The dialog shell + backdrop come from
+ * popover.css; this only lays out the format radiogroup + options form. */
+
+.bs-export-popover {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+}
+
+.bs-export-popover__formats,
+.bs-export-popover__option--checklist {
+	border: var(--border-width) solid var(--color-glass-border);
+	border-radius: var(--radius-sm);
+	padding: var(--space-2);
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.bs-export-popover__legend,
+.bs-export-popover__option-label {
+	padding: 0;
+	font-weight: var(--text-weight-semibold);
+	color: var(--color-text-secondary);
+}
+
+.bs-export-popover__options {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+}
+
+/* Layout (display/align/gap/cursor/label colour) for the radio + checkbox rows
+ * comes from the shared `.radio` / `.checkbox` primitives. */
+
+.bs-export-popover__option--select {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+	color: var(--color-text-primary);
+}
+
+
+.bs-export-popover__footer {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--space-2);
+}
+
+.bs-export-popover__btn {
+	border: var(--border-width) solid var(--color-glass-border);
+	background: transparent;
+	color: var(--color-text-primary);
+	border-radius: var(--radius-sm);
+	padding: var(--space-2) var(--space-2);
+	cursor: pointer;
+}
+
+/* The export button's glossy primary face comes from the shared
+ * `data-bs-primary` hook in @brainstorm/sdk/app-theme.css. */
+
+.bs-export-popover__btn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}

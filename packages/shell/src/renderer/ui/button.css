@@ -1,0 +1,388 @@
+/* Button — design-system primitive. Variants apply different fills; sizing
+ * is uniform; hover / active states are token-driven.
+ *
+ * `Glass`, `Primary` and `Destructive` all share ONE glossy treatment
+ * (see "Glossy solid fills" below): a saturated theme-driven 2-colour
+ * face gradient via `--gloss-top` / `--gloss-bottom`. Glass + Primary
+ * use the theme accent; Destructive the error. `Ghost` stays
+ * chromeless.
+ *
+ * Motion: every state change rides a single shared transition list so
+ * background / border / color / scale all glide together at the same
+ * duration + easing. Active state nudges down 1px and dims slightly. */
+
+.button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-2);
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-md);
+	color: var(--color-text-primary);
+	font-family: inherit;
+	font-weight: var(--text-weight-medium);
+	cursor: pointer;
+	white-space: nowrap;
+	will-change: transform, background-color;
+	transition:
+		background var(--motion-duration-normal) var(--motion-easing-standard),
+		border-color var(--motion-duration-normal) var(--motion-easing-standard),
+		color var(--motion-duration-normal) var(--motion-easing-standard),
+		transform var(--motion-duration-fast) var(--motion-easing-decelerated),
+		box-shadow var(--motion-duration-slow) var(--motion-easing-decelerated);
+}
+
+.button:disabled {
+	cursor: not-allowed;
+	opacity: 0.55;
+}
+
+.button:active:not(:disabled) {
+	transform: scale(0.97);
+}
+
+/* ── Sizes ─────────────────────────────────────────────────────────── */
+
+/* Row-heights come from the shared control-height scale so a button lines
+ * up pixel-exact next to any input/select of the same size and can never
+ * drift; padding governs width only (border-box). */
+.button--sm {
+	height: var(--control-height-sm);
+	padding: 0 var(--space-2);
+	font-size: var(--text-size-xs);
+}
+
+.button--md {
+	height: var(--control-height-md);
+	padding: 0 var(--space-2);
+	font-size: var(--text-size-md);
+}
+
+.button--lg {
+	height: var(--control-height-lg);
+	padding: 0 var(--space-4);
+	font-size: var(--text-size-md);
+}
+
+/* ── Variants ──────────────────────────────────────────────────────── */
+
+/* Glass face colours live with the other glossy variants below. */
+
+/* Ghost — invisible until hover. */
+.button--ghost {
+	background: transparent;
+	border-color: transparent;
+	color: var(--color-text-secondary);
+}
+
+.button--ghost:hover:not(:disabled) {
+	background: var(--color-interactive-hover);
+	color: var(--color-text-primary);
+}
+
+.button--ghost:active:not(:disabled) {
+	background: var(--color-interactive-active);
+}
+
+/* Ghost + danger — a quiet destructive secondary (Delete / Remove / Clear in a
+ * dialog footer): red text so it reads destructive, but gloss-free so it never
+ * competes with the filled primary action it sits beside. */
+.button--ghost.button--danger {
+	color: var(--color-state-error);
+}
+
+.button--ghost.button--danger:hover:not(:disabled) {
+	background: color-mix(in srgb, var(--color-state-error) 14%, transparent);
+	color: var(--color-state-error);
+}
+
+/* Neutral — flat solid surface, gloss-free. Inverts with the theme so it
+ * reads as "white" on dark themes and as a dark chip on light themes, giving
+ * a strong-but-non-emphasized partner to the glossy accent button (the
+ * Cancel ↔ Confirm pair in a dialog). The drop-shadow matches the layer
+ * count of the glossy variants so hovers can interpolate cleanly. */
+.button--neutral {
+	background: var(--color-background-inverse);
+	color: var(--color-text-inverse);
+	border-color: transparent;
+	box-shadow: 0 2px 8px rgba(9, 12, 60, 0.14), 0 1px 3px rgba(9, 12, 60, 0.1);
+}
+
+.button--neutral:hover:not(:disabled) {
+	box-shadow: 0 4px 14px rgba(9, 12, 60, 0.2), 0 2px 5px rgba(9, 12, 60, 0.12);
+}
+
+.button--neutral:active:not(:disabled) {
+	box-shadow: 0 1px 3px rgba(9, 12, 60, 0.18), 0 1px 2px rgba(9, 12, 60, 0.1);
+}
+
+/* Glossy solid fills — shared by Glass, Primary and Destructive.
+ *
+ * The FACE is a saturated theme-driven TWO-colour gradient,
+ * `--gloss-top` → `--gloss-bottom`, top-to-bottom. There is deliberately
+ * NO white/light top stop and NO full-width top sheen band: a light top
+ * edge is exactly what made this read as "white on top". The glass cue
+ * instead comes only from the 1px inset edge glint + soft blurred
+ * speculars:
+ *   • .button::before        — soft blurred top reflection (shine-top)
+ *   • .button__gloss::before — bottom reflected glow        (shine-bottom)
+ *   • .button__gloss::after  — bottom contact line          (shine-bottom)
+ *
+ * Glass + Primary share the same theme-accent face (the gradient is
+ * theme-dependent — every theme defines its own two stops). Destructive
+ * derives a red face from `state.error`. Hover is animated by the
+ * speculars + box-shadow ONLY — the face gradient is held constant
+ * (CSS can't interpolate between two `linear-gradient()`s; swapping it
+ * on :hover would snap). `overflow: hidden` clips the blurred speculars
+ * so they hug the inner border. */
+.button--glass,
+.button--primary,
+.button--destructive {
+	position: relative;
+	z-index: 1;
+	overflow: hidden;
+	border: none;
+	color: var(--color-accent-text);
+	text-shadow: 0 0.5px 0.5px rgba(0, 0, 0, 0.25);
+	background-image: linear-gradient(to bottom, var(--gloss-top), var(--gloss-bottom));
+	box-shadow:
+		0 4px 12px rgba(9, 12, 60, 0.15),
+		0 2px 8px rgba(9, 12, 60, 0.15),
+		0 1px 3px rgba(9, 12, 60, 0.1),
+		inset 0 1px 1px var(--color-gloss-inner-top),
+		inset 0 -1px 3px var(--color-gloss-inner-bottom);
+}
+
+/* Glass + Primary — the theme-accent face. Glass is the default button
+ * everywhere; Primary the emphasis variant. Both ride the theme's two
+ * gloss stops; `--color-accent-text` is per-theme tuned to contrast that
+ * accent (dark ink on the yellow High-Contrast accent, light on the
+ * blues), so it stays legible without a hard-coded constant. */
+.button--glass,
+.button--primary {
+	--gloss-top: var(--color-gloss-top);
+	--gloss-bottom: var(--color-gloss-bottom);
+}
+
+/* Destructive face derives from the error token (top lifted toward
+ * white, bottom dropped toward black) so the gloss has somewhere to
+ * travel; reuses the shared speculars. */
+.button--destructive {
+	--gloss-top: color-mix(in srgb, var(--color-state-error) 82%, white);
+	--gloss-bottom: color-mix(in srgb, var(--color-state-error) 84%, black);
+	color: var(--color-text-inverse);
+}
+
+/* Keep the glyphs above the sheen + speculars. */
+.button--glass > .button__label,
+.button--glass > .button__icon,
+.button--primary > .button__label,
+.button--primary > .button__icon,
+.button--destructive > .button__label,
+.button--destructive > .button__icon {
+	position: relative;
+	z-index: 1;
+}
+
+.button--glass::before,
+.button--glass > .button__gloss::before,
+.button--glass > .button__gloss::after,
+.button--primary::before,
+.button--primary > .button__gloss::before,
+.button--primary > .button__gloss::after,
+.button--destructive::before,
+.button--destructive > .button__gloss::before,
+.button--destructive > .button__gloss::after {
+	content: "";
+	position: absolute;
+	left: 50%;
+	transform: translateX(-50%);
+	border-radius: 50%;
+	pointer-events: none;
+	will-change: transform, opacity, filter;
+	/* Glow eases in softly: opacity + the blur bloom + the scale all glide
+	 * on the decelerated curve so the highlight swells rather than snaps. */
+	transition: opacity var(--motion-duration-slow) var(--motion-easing-decelerated), filter
+		var(--motion-duration-slow) var(--motion-easing-decelerated), transform
+		var(--motion-duration-slow) var(--motion-easing-decelerated);
+}
+
+/* Soft blurred top reflection — sits mostly off the top edge so it
+ * reads as a faint sheen, never an opaque top band. */
+.button--glass::before,
+.button--primary::before,
+.button--destructive::before {
+	top: -4px;
+	width: 56%;
+	height: 5px;
+	background-color: var(--color-gloss-shine-top);
+	opacity: 0.35;
+	filter: blur(6px);
+}
+
+/* Bottom reflected glow. */
+.button--glass > .button__gloss::before,
+.button--primary > .button__gloss::before,
+.button--destructive > .button__gloss::before {
+	bottom: -4px;
+	width: 60%;
+	height: 8px;
+	background-color: var(--color-gloss-shine-bottom);
+	opacity: 0.75;
+	filter: blur(6px);
+}
+
+/* Bottom contact hairline. */
+.button--glass > .button__gloss::after,
+.button--primary > .button__gloss::after,
+.button--destructive > .button__gloss::after {
+	bottom: 0;
+	width: 72%;
+	height: 1px;
+	background-color: var(--color-gloss-shine-bottom);
+	opacity: 0.9;
+	filter: blur(1px);
+}
+
+/* Hover lift. The layer COUNT and the inset/non-inset ordering must match
+ * the base box-shadow exactly (5 layers, 3 drop + 2 inset) — CSS only
+ * interpolates box-shadow lists of equal length, so a 4-layer hover would
+ * snap instead of glide. Layers 1–3 grow + the top one picks up the gloss
+ * colour for the lift glow; the two insets are held constant. */
+.button--glass:hover:not(:disabled),
+.button--primary:hover:not(:disabled),
+.button--destructive:hover:not(:disabled) {
+	box-shadow:
+		0 8px 20px -2px var(--gloss-bottom),
+		0 4px 12px rgba(9, 12, 60, 0.18),
+		0 2px 6px rgba(9, 12, 60, 0.14),
+		inset 0 1px 1px var(--color-gloss-inner-top),
+		inset 0 -1px 3px var(--color-gloss-inner-bottom);
+}
+
+.button--glass:hover:not(:disabled)::before,
+.button--primary:hover:not(:disabled)::before,
+.button--destructive:hover:not(:disabled)::before {
+	opacity: 0.85;
+}
+
+.button--glass:hover:not(:disabled) > .button__gloss::before,
+.button--primary:hover:not(:disabled) > .button__gloss::before,
+.button--destructive:hover:not(:disabled) > .button__gloss::before {
+	opacity: 0.9;
+	transform: translateX(-50%) scale(1.25);
+}
+
+.button--glass:hover:not(:disabled) > .button__gloss::after,
+.button--primary:hover:not(:disabled) > .button__gloss::after,
+.button--destructive:hover:not(:disabled) > .button__gloss::after {
+	opacity: 1;
+}
+
+.button--glass:disabled::before,
+.button--glass:disabled > .button__gloss::before,
+.button--glass:disabled > .button__gloss::after,
+.button--primary:disabled::before,
+.button--primary:disabled > .button__gloss::before,
+.button--primary:disabled > .button__gloss::after,
+.button--destructive:disabled::before,
+.button--destructive:disabled > .button__gloss::before,
+.button--destructive:disabled > .button__gloss::after {
+	opacity: 0;
+}
+
+/* ── Icon slot ─────────────────────────────────────────────────────── */
+
+.button__icon {
+	display: inline-flex;
+	align-items: center;
+	flex-shrink: 0;
+}
+
+.button__label {
+	min-width: 0;
+}
+
+/* Decorative gloss layer — fills the button and hosts the two bottom
+ * speculars (only styled under the glossy variants). Absolute in EVERY
+ * variant so it never becomes a flex item: an in-flow empty span would
+ * make the `gap` add phantom leading space (visible on Ghost). */
+.button__gloss {
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	pointer-events: none;
+}
+
+/* ── Loading state ─────────────────────────────────────────────────────
+ * The button keeps its intrinsic size: the label + icons stay laid out
+ * (so width never collapses) but go invisible, and the spinner is
+ * centred over them. `aria-busy` on the button announces the state, so
+ * the spinner itself is decorative. */
+
+.button--loading {
+	cursor: progress;
+}
+
+.button--loading > .button__label,
+.button--loading > .button__icon {
+	visibility: hidden;
+}
+
+.button__spinner {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 2;
+	/* Match the label cap-height so the loader reads as the same weight
+	 * as the text it replaces, in the button's text colour. */
+	font-size: 1.15em;
+}
+
+.button:not(.button--glass):not(.button--primary):not(.button--destructive) {
+	position: relative;
+}
+
+/* Shortcut hint — Stage 6.10d. Compact kbd stack pinned to the right side of
+ * the button label. Mirrors the cheatsheet / Settings → Keyboard kbd glyph
+ * (single source of truth in chord-display.ts) so all three surfaces read
+ * as the same design language. The hint is decorative (the canonical chord
+ * is exposed via `aria-keyshortcuts` on the button itself), so the wrapper
+ * is `aria-hidden`. */
+
+.button__shortcut {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	margin-inline-start: var(--space-2);
+	flex-shrink: 0;
+}
+
+.button__key {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 18px;
+	height: 18px;
+	padding: 0 var(--space-1);
+	font-family: var(--text-family-ui);
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+	line-height: 1;
+	border-radius: var(--radius-sm);
+	/* Tinted recess against the button face so the hint reads as
+	 * secondary chrome on glass / primary / destructive variants without
+	 * a hard-coded background — `currentColor` follows the variant's
+	 * label colour, the alpha keeps it muted. */
+	color: inherit;
+	opacity: 0.7;
+	background: color-mix(in srgb, currentColor 10%, transparent);
+	border: var(--border-width) solid color-mix(in srgb, currentColor 18%, transparent);
+}
+
+/* Loading state hides the hint alongside the label/icon. */
+.button--loading > .button__shortcut {
+	visibility: hidden;
+}

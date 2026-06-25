@@ -1,0 +1,105 @@
+{
+  "id": "io.brainstorm.browser",
+  "name": "Web Browser",
+  "version": "0.1.0",
+  "sdk": "1",
+  "description": "In-app web browser with tabbed chrome, reader mode, and clip-to-vault capture as bookmarks.",
+  "icon": "icon.svg",
+  "entry": "dist/index.html",
+  "capabilities": [
+    "web.browse",
+    "web.capture",
+    "network.readable",
+    "entities.read:brainstorm/BrowsingSession/v1",
+    "entities.write:brainstorm/BrowsingSession/v1",
+    "entities.read:brainstorm/BrowsingHistory/v1",
+    "entities.write:brainstorm/BrowsingHistory/v1",
+    "entities.read:brainstorm/Bookmark/v1",
+    "entities.write:brainstorm/Bookmark/v1"
+  ],
+  "registrations": {
+    "openers": [{ "kind": "primary", "scheme": "https" }, { "kind": "primary", "scheme": "http" }],
+    "entityTypes": [
+      {
+        "id": "brainstorm/BrowsingSession/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/browser/browsing-session/v1.json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "windowId",
+            "tabs",
+            "activeTabId",
+            "recentlyClosed",
+            "retainHistory",
+            "createdAt",
+            "updatedAt"
+          ],
+          "properties": {
+            "windowId": { "type": "string" },
+            "activeTabId": { "type": ["string", "null"] },
+            "retainHistory": { "type": "boolean" },
+            "createdAt": { "type": "number" },
+            "updatedAt": { "type": "number" },
+            "tabs": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["id", "url", "title", "pinned", "history", "historyIndex"],
+                "properties": {
+                  "id": { "type": "string" },
+                  "url": { "type": "string" },
+                  "title": { "type": "string" },
+                  "faviconUrl": { "type": ["string", "null"] },
+                  "pinned": { "type": "boolean" },
+                  "history": { "type": "array", "items": { "type": "string" } },
+                  "historyIndex": { "type": "number" }
+                }
+              }
+            },
+            "recentlyClosed": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["id", "url", "title", "pinned", "history", "historyIndex"],
+                "properties": {
+                  "id": { "type": "string" },
+                  "url": { "type": "string" },
+                  "title": { "type": "string" },
+                  "faviconUrl": { "type": ["string", "null"] },
+                  "pinned": { "type": "boolean" },
+                  "history": { "type": "array", "items": { "type": "string" } },
+                  "historyIndex": { "type": "number" }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "brainstorm/BrowsingHistory/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/browser/browsing-history/v1.json",
+        "schema": {
+          "type": "object",
+          "required": ["visits", "createdAt", "updatedAt"],
+          "properties": {
+            "createdAt": { "type": "number" },
+            "updatedAt": { "type": "number" },
+            "visits": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["url", "title", "visitCount", "lastVisitedAt"],
+                "properties": {
+                  "url": { "type": "string" },
+                  "title": { "type": "string" },
+                  "visitCount": { "type": "number" },
+                  "lastVisitedAt": { "type": "number" }
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,463 @@
+/**
+ * `@brainstorm/sdk/menus.css` — the theme bridge that maps fancy-menus'
+ * public `--fm-*` design-system surface onto Brainstorm's `--color-*` /
+ * `--radius-*` / `--shadow-*` / `--z-*` tokens.
+ *
+ * Because every value resolves through `var(--color-…)`, the menu chrome
+ * recolours reactively when the active theme switches (light ⇄ dark ⇄
+ * sepia ⇄ …) — no JS recompute, no inline ThemeTokens snapshot that goes
+ * stale on a theme change.
+ *
+ * Load order matters: import the package runtime stylesheet FIRST, then
+ * this bridge, so the bridge's `:root` block wins the same-specificity
+ * cascade over the package defaults:
+ *
+ *   import "@react-fancy-menus/core/runtime.css";
+ *   import "@brainstorm/sdk/menus.css";
+ *
+ * (Both arrive as JS-injected <style> tags, so cascade order follows import
+ * order — see [[feedback_sdk_css_cascade_trap]].)
+ */
+
+:root {
+	/* ─── Surface ─────────────────────────────────────────────────────── */
+	/* Frosted glass to match every other Brainstorm overlay (Popover,
+	   launcher). The translucent fill + the backdrop-filter on `.fm-menu`
+	   below produce the aerial-glass look; a solid fill would read as a
+	   flat card fighting the wallpaper. */
+	--fm-surface-bg: var(--color-glass-background-strong, var(--color-surface-overlay));
+	--fm-surface-fg: var(--color-text-primary);
+	--fm-surface-border: var(--color-glass-border, var(--color-border-default));
+	--fm-surface-radius: var(--radius-lg);
+	--fm-surface-shadow: var(--shadow-lg);
+
+	/* ─── Stack ───────────────────────────────────────────────────────── */
+	--fm-z-dimmer: var(--z-popover, 50);
+	--fm-z-menu: var(--z-command-palette, 70);
+
+	/* ─── Accent / state ──────────────────────────────────────────────── */
+	--fm-accent: var(--color-accent-default);
+	--fm-accent-fg: var(--color-accent-text);
+	--fm-destructive: var(--color-state-error);
+	--fm-muted-fg: var(--color-text-tertiary);
+	--fm-divider-color: var(--color-border-subtle);
+
+	/* ─── Rows ────────────────────────────────────────────────────────── */
+	/* Hover + keyboard-active both use the NEUTRAL interactive states (active
+	   is the stronger tier so it stays distinguishable from hover) — NOT the
+	   accent tint, which read as a stray bluish highlight against the neutral
+	   dark chrome. Every value is a theme token, so it recolours per theme. */
+	--fm-row-hover-bg: var(--color-interactive-hover);
+	--fm-row-active-bg: var(--color-interactive-active);
+	--fm-row-active-fg: var(--color-text-primary);
+	--fm-row-radius: var(--radius-md);
+
+	/* ─── Density ─────────────────────────────────────────────────────── */
+	/* A touch roomier than the library defaults so menus read at the same
+	   comfortable density as the rest of the Brainstorm chrome. */
+	--fm-body-padding-x: var(--space-2);
+	--fm-body-padding-y: var(--space-2);
+	--fm-row-padding-x: var(--space-2);
+	--fm-row-padding-y: var(--space-2);
+	--fm-row-gap: var(--space-2);
+	--fm-row-min-h: 32px;
+	--fm-font-size-row: var(--text-size-sm);
+	--fm-line-height-row: 1.35;
+	--fm-font-size-caption: var(--text-size-xs);
+	--fm-font-size-section: 11px;
+	--fm-font-weight-section: var(--text-weight-medium, 600);
+	--fm-letter-section: 0.04em;
+	--fm-section-padding-x: var(--space-2);
+	--fm-section-padding-top: var(--space-2);
+	--fm-section-padding-bot: var(--space-1);
+
+	/* ─── Motion ──────────────────────────────────────────────────────── */
+	--fm-ease-decelerate: var(--motion-easing-decelerated, cubic-bezier(0, 0, 0.2, 1));
+	--fm-ease-smooth: var(--motion-easing-standard, cubic-bezier(0.4, 0, 0.2, 1));
+	--fm-duration-open: var(--motion-duration-fast, 120ms);
+	--fm-duration-close: var(--motion-duration-fast, 90ms);
+	--fm-duration-hover: 90ms;
+}
+
+/* Aerial frosted glass behind the menu shell — mirrors `.glass--strong`
+   used by the shared Popover so menus sit in the same visual family. */
+.fm-menu {
+	/* A menu is a transient top-most action layer: it must stack ABOVE any
+	 * surface it can be opened from, including dialog/popover overlays
+	 * (`.db-popover` is z-index 101, the legacy object-menu 102). The
+	 * fancy-menus runtime leaves z-index `auto`, so a menu that overlaps its
+	 * own host popover (e.g. the column-adder flipping up over View settings)
+	 * loses the stacking contest and its rows can't be clicked. Pin it above
+	 * those overlays but below the full-screen pickers (icon-picker 1000). */
+	z-index: 130;
+	backdrop-filter: blur(var(--glass-blur, 20px)) saturate(var(--glass-saturate, 180%));
+	-webkit-backdrop-filter: blur(var(--glass-blur, 20px)) saturate(var(--glass-saturate, 180%));
+}
+
+/* The menu stack portals to `document.body`, so its full-screen dimmer and
+ * the menu panel render OVER each app's `.app-header`, which is an Electron
+ * `-webkit-app-region: drag` strip. A drag region is only carved out by a
+ * descendant/overlapping element that declares `no-drag`; the runtime sets
+ * neither on its overlays, so even though the dimmer stacks above the header
+ * (z 50 > the header's auto stacking context), the OS-level drag region keeps
+ * swallowing the pointerdown — the outside-click that should dismiss the menu
+ * never reaches the dimmer, and clicking the header does nothing (seen first
+ * on Whiteboard, but every app shares the draggable header). Mark both
+ * overlays no-drag so they receive clicks over the header strip. */
+.fm-dimmer,
+.fm-menu {
+	-webkit-app-region: no-drag;
+}
+
+/* A dimmer in its 90ms close fade is invisible but, by default, still
+ * pointer-capturing — an outside click landing during that window hits a
+ * dead, about-to-vanish overlay instead of the app, so the menu reads as
+ * "stuck open" and the click under it never lands (the Tasks ⋯-menu →
+ * sidebar dead-click). The menu is logically closed the instant `close()`
+ * runs, so the fading dimmer must stop intercepting input immediately. */
+.fm-dimmer--closing {
+	pointer-events: none;
+}
+
+/* Bodyless caret typeaheads — the editor's slash / mention / emoji / link /
+ * transclusion / embed / code-lang / property-picker menus mount `.fm-list`
+ * STRAIGHT inside `.fm-menu`, skipping the runtime's `.fm-body` wrapper (the
+ * body auto-focuses its list on mount, which would steal focus from the
+ * editor). Skipping the body also drops its symmetric inset, so rows sit flush
+ * to the glass edge and the runtime's `.fm-list { min-height: 40px }` empty-
+ * state floor leaves dead space below a filtered-down single row (zero padding
+ * above, a slab below). Re-add the body inset + collapse the floor here, once.
+ * The direct-child combinator matches ONLY these bodyless menus — the runtime's
+ * own menus nest `.fm-list` under `.fm-body`, so they're untouched; horizontal
+ * toolbars (`.fm-list--horizontal`) are excluded since they own their density. */
+.fm-menu > .fm-list:not(.fm-list--horizontal) {
+	padding: var(--fm-body-padding-y) var(--fm-body-padding-x);
+	min-height: 0;
+}
+
+/* The active row is scrolled into view on open and on arrow-key nav via
+ * `scrollIntoView({ block: "nearest" })` (slash / mention / emoji / … all do
+ * this). Without a scroll inset, "nearest" aligns the first row flush to the
+ * scrollport top — scrolling away the list's own top padding, so the menu
+ * reads as having no top breathing room while the bottom keeps its inset.
+ * Reserve the body inset on whichever element is the scroll container: the
+ * bodyless caret menus scroll on the `.fm-menu` host (app-set `overflow-y`),
+ * the runtime's bodied menus scroll on `.fm-list`. `scroll-padding` is inert
+ * on a non-scrolling element, so naming both is safe. */
+.fm-menu,
+.fm-menu > .fm-list:not(.fm-list--horizontal) {
+	scroll-padding-block: var(--fm-body-padding-y);
+}
+
+/* ─── Row polish ────────────────────────────────────────────────────────
+ * Snappy hover/active transition, muted icon glyphs that brighten on the
+ * active row, and a fixed icon column so labels align whether or not a
+ * neighbouring row carries a glyph. */
+.fm-row {
+	transition:
+		background-color var(--fm-duration-hover, 90ms) var(--fm-ease-smooth),
+		color var(--fm-duration-hover, 90ms) var(--fm-ease-smooth);
+}
+/* The fancy-menus runtime renders rows as `<div role="option">`, so its base
+ * `.fm-row` rule never resets native control chrome. The editor's caret
+ * typeaheads (slash / mention / emoji / transclusion / embed / add-property)
+ * and inline toolbars can't use the runtime — its list body auto-focuses on
+ * mount and would steal focus from the editor — so they hand-roll the rows as
+ * `<button class="fm-row">` to keep the editor focused. A bare `<button>`
+ * carries a UA border + grey fill (glaring as a light outline in dark themes),
+ * which the div-only base rule leaves untouched. Normalize button rows here so
+ * they read pixel-identical to the runtime's div rows. */
+button.fm-row {
+	appearance: none;
+	-webkit-appearance: none;
+	border: 0;
+	margin: 0;
+	background: transparent;
+	font-family: inherit;
+	text-align: left;
+}
+.fm-row__icon {
+	width: 18px;
+	min-width: 18px;
+	color: var(--color-text-tertiary);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+.fm-row[data-active="true"] .fm-row__icon,
+.fm-row:hover .fm-row__icon {
+	color: var(--color-text-primary);
+}
+.fm-row__caption {
+	color: var(--color-text-tertiary);
+}
+
+/* Section header — quiet group label. `none` overrides the runtime's
+   `text-transform: uppercase` (runtime.css), which read as shouty all-caps. */
+.fm-section {
+	color: var(--color-text-tertiary);
+	text-transform: none;
+}
+
+/* The list virtualizes each item into its own `div[data-index]` wrapper, so a
+   section is ALWAYS `:first-child` of its wrapper — `.fm-section:first-child`
+   can't single out the menu's first item. The first list item is `data-index=0`;
+   when a menu opens on a section, zero its top padding so the body/list
+   padding-top isn't stacked with the section's (double gap above the title). */
+.fm-list [data-index="0"] .fm-section {
+	padding-top: 0;
+}
+
+/* Selected option rows (the select-menu case) — the shared context menu tags
+   the currently-chosen option with this class; the row carries a check glyph
+   and the glyph paints accent so the state reads at a glance. */
+.fm-row.fm-row--selected .fm-row__icon {
+	color: var(--color-accent-default);
+}
+
+/* Destructive action rows (Remove / Delete) — the shared context menu tags
+   them with this class since fancy-menus' ItemRow has no destructive flag. */
+.fm-row.fm-row--destructive {
+	color: var(--color-state-error);
+}
+.fm-row.fm-row--destructive .fm-row__icon {
+	color: var(--color-state-error);
+}
+.fm-row.fm-row--destructive[data-active="true"],
+.fm-row.fm-row--destructive:hover {
+	background: color-mix(in srgb, var(--color-state-error) 12%, transparent);
+}
+
+/* ───────────────────────────────────────────────────────────────────────
+ * Utility shim.
+ *
+ * fancy-menus styles its core chrome (`.fm-menu`, `.fm-row`, `.fm-list`,
+ * `.fm-section`) via `runtime.css`, but its panel primitives — the
+ * search/filter input, empty-state, loader, form fields, tab bar, month
+ * grid, etc. — render with Tailwind/shadcn utility classes that
+ * `runtime.css` does not ship. Brainstorm has no Tailwind, so those panels
+ * would render unstyled.
+ *
+ * Rather than avoid every panel, we implement the exact (bounded) set of
+ * utilities the runtime uses, scoped under `.fm-menu` so the class names
+ * can't collide with app styles, and mapped to the same `--fm-*` tokens the
+ * bridge above already themes. This makes every panel render correctly in
+ * every renderer, on every surface.
+ * ─────────────────────────────────────────────────────────────────────── */
+
+/* Tailwind-preflight equivalents. The runtime's panel markup assumes the
+ * preflight element resets (zero borders, inherited font, transparent
+ * backgrounds on form controls) — without them the search input renders
+ * with the UA's bordered chrome. Element selectors lose to every utility
+ * class below on specificity, so panels that DO want a border (`.border`,
+ * `.border-input`, …) keep it.
+ *
+ * `button` is matched as `:not(.fm-row)`: the editor's caret typeaheads
+ * (slash / mention / emoji / transclusion / embed / add-property) hand-roll
+ * their rows as `<button class="fm-row">` (the runtime's list body auto-focuses
+ * and would steal focus from the editor). `.fm-menu button` (0,1,1) outweighs
+ * the runtime's `.fm-row { padding: … }` (0,1,0), so a bare `button` reset
+ * would zero the row's `--fm-row-padding-x` and the rows render flush to the
+ * glass edge — every other vertical menu keeps its space-2 row inset. Exempt
+ * the row buttons here; their own normalization lives in `button.fm-row`
+ * above, and they inherit padding from `.fm-row` like the div rows do. */
+.fm-menu input,
+.fm-menu textarea,
+.fm-menu select,
+.fm-menu button:not(.fm-row) {
+	border: 0;
+	margin: 0;
+	padding: 0;
+	font: inherit;
+	color: inherit;
+	background: transparent;
+}
+
+/* Layout */
+.fm-menu .flex { display: flex; }
+.fm-menu .inline-flex { display: inline-flex; }
+.fm-menu .grid { display: grid; }
+.fm-menu .hidden { display: none; }
+.fm-menu .flex-col { flex-direction: column; }
+.fm-menu .flex-1 { flex: 1 1 0%; }
+.fm-menu .shrink-0 { flex-shrink: 0; }
+.fm-menu .items-center { align-items: center; }
+.fm-menu .items-start { align-items: flex-start; }
+.fm-menu .items-baseline { align-items: baseline; }
+.fm-menu .justify-center { justify-content: center; }
+.fm-menu .justify-between { justify-content: space-between; }
+.fm-menu .justify-end { justify-content: flex-end; }
+.fm-menu .place-items-center { place-items: center; }
+.fm-menu .relative { position: relative; }
+.fm-menu .grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.fm-menu .grid-cols-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.fm-menu .grid-cols-7 { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.fm-menu .overflow-x-auto { overflow-x: auto; }
+.fm-menu .overflow-y-auto { overflow-y: auto; }
+.fm-menu .min-w-0 { min-width: 0; }
+.fm-menu .max-w-full { max-width: 100%; }
+.fm-menu .max-h-\[60vh\] { max-height: 60vh; }
+.fm-menu .min-h-\[80px\] { min-height: 80px; }
+.fm-menu .object-cover { object-fit: cover; }
+.fm-menu .resize-none { resize: none; }
+
+/* Gap / padding / margin — Tailwind scale (1 = 0.25rem) */
+.fm-menu .gap-px { gap: var(--space-0_5); }
+.fm-menu .gap-0\.5 { gap: 0.125rem; }
+.fm-menu .gap-1 { gap: 0.25rem; }
+.fm-menu .gap-1\.5 { gap: 0.375rem; }
+.fm-menu .gap-2 { gap: 0.5rem; }
+.fm-menu .gap-3 { gap: 0.75rem; }
+.fm-menu .p-1 { padding: 0.25rem; }
+.fm-menu .p-2 { padding: 0.5rem; }
+.fm-menu .px-1 { padding-inline: 0.25rem; }
+.fm-menu .px-1\.5 { padding-inline: 0.375rem; }
+.fm-menu .px-2 { padding-inline: 0.5rem; }
+.fm-menu .px-3 { padding-inline: 0.75rem; }
+.fm-menu .px-4 { padding-inline: 1rem; }
+.fm-menu .py-0\.5 { padding-block: 0.125rem; }
+.fm-menu .py-1 { padding-block: 0.25rem; }
+.fm-menu .py-1\.5 { padding-block: 0.375rem; }
+.fm-menu .py-2 { padding-block: 0.5rem; }
+.fm-menu .py-3 { padding-block: 0.75rem; }
+.fm-menu .py-8 { padding-block: 2rem; }
+.fm-menu .pt-1 { padding-top: 0.25rem; }
+.fm-menu .pt-2 { padding-top: 0.5rem; }
+.fm-menu .pb-1\.5 { padding-bottom: 0.375rem; }
+.fm-menu .m-2 { margin: 0.5rem; }
+.fm-menu .mb-1 { margin-bottom: 0.25rem; }
+.fm-menu .mt-1 { margin-top: 0.25rem; }
+.fm-menu .mt-2 { margin-top: 0.5rem; }
+.fm-menu .my-1 { margin-block: 0.25rem; }
+.fm-menu .mx-0\.5 { margin-inline: 0.125rem; }
+.fm-menu .mx-2 { margin-inline: 0.5rem; }
+
+/* Sizing — size-N = width + height */
+.fm-menu .size-3 { width: 0.75rem; height: 0.75rem; }
+.fm-menu .size-3\.5 { width: 0.875rem; height: 0.875rem; }
+.fm-menu .size-4 { width: 1rem; height: 1rem; }
+.fm-menu .size-5 { width: 1.25rem; height: 1.25rem; }
+.fm-menu .size-6 { width: 1.5rem; height: 1.5rem; }
+.fm-menu .size-12 { width: 3rem; height: 3rem; }
+.fm-menu .h-4 { height: 1rem; }
+.fm-menu .h-6 { height: 1.5rem; }
+.fm-menu .h-7 { height: 1.75rem; }
+.fm-menu .h-8 { height: 2rem; }
+.fm-menu .w-10 { width: 2.5rem; }
+.fm-menu .w-px { width: 1px; }
+.fm-menu .w-full { width: 100%; }
+
+/* Typography */
+.fm-menu .text-\[8px\] { font-size: 8px; }
+.fm-menu .text-\[10px\] { font-size: 10px; }
+.fm-menu .text-\[11px\] { font-size: 11px; }
+.fm-menu .text-xs { font-size: 0.75rem; line-height: 1rem; }
+.fm-menu .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+.fm-menu .text-\[length\:var\(--fm-font-size-caption\)\] { font-size: var(--fm-font-size-caption); }
+.fm-menu .text-center { text-align: center; }
+.fm-menu .font-medium { font-weight: 500; }
+.fm-menu .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.fm-menu .tabular-nums { font-variant-numeric: tabular-nums; }
+/* The runtime authors some panel labels with the `uppercase` utility (color-
+   picker section labels, etc.); we don't want shouty all-caps anywhere in our
+   menus, so this shim is a no-op rather than a faithful Tailwind reproduction. */
+.fm-menu .uppercase { text-transform: none; }
+.fm-menu .tracking-wider { letter-spacing: 0.05em; }
+.fm-menu .leading-tight { line-height: 1.25; }
+.fm-menu .leading-relaxed { line-height: 1.625; }
+.fm-menu .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fm-menu .break-all { word-break: break-all; }
+
+/* Radius */
+.fm-menu .rounded { border-radius: 0.25rem; }
+.fm-menu .rounded-md { border-radius: var(--fm-row-radius, 0.375rem); }
+
+/* Borders */
+.fm-menu .border { border: var(--border-width) solid var(--fm-surface-border); }
+.fm-menu .border-b { border-bottom: var(--border-width) solid var(--fm-surface-border); }
+.fm-menu .border-t { border-top: var(--border-width) solid var(--fm-surface-border); }
+.fm-menu .border-border,
+.fm-menu .border-input,
+.fm-menu .border-\[color\:var\(--fm-surface-border\)\] { border-color: var(--fm-surface-border); }
+.fm-menu .border-destructive\/40 { border-color: color-mix(in srgb, var(--fm-destructive) 40%, transparent); }
+
+/* Colors — text */
+.fm-menu .text-foreground { color: var(--fm-surface-fg); }
+.fm-menu .text-muted-foreground,
+.fm-menu .text-\[color\:var\(--fm-muted-fg\)\] { color: var(--fm-muted-fg); }
+.fm-menu .text-destructive { color: var(--fm-destructive); }
+.fm-menu .text-primary-foreground { color: var(--fm-accent-fg); }
+.fm-menu .text-\[color\:var\(--fm-accent\)\] { color: var(--fm-accent); }
+.fm-menu .placeholder\:text-muted-foreground::placeholder { color: var(--fm-muted-fg); }
+
+/* Colors — background */
+.fm-menu .bg-transparent { background: transparent; }
+.fm-menu .bg-border { background: var(--fm-surface-border); }
+.fm-menu .bg-primary { background: var(--fm-accent); }
+.fm-menu .bg-secondary { background: var(--fm-row-hover-bg); }
+.fm-menu .bg-muted\/30 { background: color-mix(in srgb, var(--fm-muted-fg) 12%, transparent); }
+.fm-menu .bg-foreground\/5 { background: color-mix(in srgb, var(--fm-surface-fg) 5%, transparent); }
+.fm-menu .bg-destructive\/10 { background: color-mix(in srgb, var(--fm-destructive) 10%, transparent); }
+
+/* Inputs */
+.fm-menu .outline-none { outline: none; }
+.fm-menu .accent-\[color\:var\(--fm-accent\)\] { accent-color: var(--fm-accent); }
+
+/* Hover states */
+.fm-menu .hover\:bg-accent:hover,
+.fm-menu .hover\:bg-\[color\:var\(--fm-row-hover-bg\)\]:hover { background: var(--fm-row-hover-bg); }
+.fm-menu .hover\:text-foreground:hover { color: var(--fm-surface-fg); }
+.fm-menu .hover\:bg-primary\/90:hover { background: color-mix(in srgb, var(--fm-accent) 90%, transparent); }
+.fm-menu .hover\:bg-secondary\/80:hover { background: color-mix(in srgb, var(--fm-row-hover-bg) 80%, transparent); }
+.fm-menu .hover\:bg-destructive\/20:hover { background: color-mix(in srgb, var(--fm-destructive) 20%, transparent); }
+
+/* Motion */
+.fm-menu .animate-spin { animation: fm-spin 1s linear infinite; }
+@keyframes fm-spin { to { transform: rotate(360deg); } }
+
+/* Typeahead menus (slash / mention / emoji — `openTypeaheadMenu`, the shared
+ * controlled-list popup). The base row rule tunes `.fm-row__name` /
+ * `.fm-row__caption` for menus whose caption is a short trailing hint (a
+ * shortcut, a type tag): the name fills the row + ellipsizes, the caption is
+ * fixed-width. A typeahead inverts that — the caption is a long *description*,
+ * so left as-is the fixed-width caption steals the row and clips the command
+ * label. Swap the roles: the label keeps its natural width; the description
+ * fills the remaining space and ellipsizes. (Carried over from the editor's
+ * former hand-rolled `.bs-editor__slash-menu` rules.) */
+.fm-row.bs-typeahead-row .fm-row__name {
+	flex: 0 0 auto;
+	overflow: visible;
+	/* Be the flex container (not just a flex item) so the icon + label group
+	 * centers vertically against the caption instead of sitting on the text
+	 * baseline (the icon is taller than the text, so baseline-align pushed the
+	 * group off-centre). */
+	display: flex;
+	align-items: center;
+}
+.fm-row.bs-typeahead-row .fm-row__caption {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+/* The command icon rides inside the name slot (the row's own `icon` slot wants
+ * an `IconParam`, but editor commands carry a pre-rendered node), so give that
+ * inline group the row gap between the icon column and the label. */
+.fm-row.bs-typeahead-row .fm-row__name > span {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--fm-row-gap, 8px);
+}
+
+/* Search pickers (`openSearchPicker` — `/embed`, Mod+K link, `/property`,
+ * omnibox): a filter input over a host-filtered list. The row label fills +
+ * ellipsizes and the caption is a short trailing type tag, both from the base
+ * `.fm-row` rule, so the only delta is centering the optional inline icon that
+ * rides in the name slot as a pre-rendered node (same reason as the typeahead
+ * row above). */
+.fm-row.bs-search-picker-row .fm-row__name > span {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--fm-row-gap, 8px);
+}

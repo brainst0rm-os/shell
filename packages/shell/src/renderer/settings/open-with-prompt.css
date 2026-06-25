@@ -1,0 +1,66 @@
+/* "Open with…" picker modal (OpenRes-1c slice 6). Chrome (backdrop, panel,
+ * title, close, Escape) comes from the shared <Popover>; the chrome class
+ * names from capability-prompt.css cover the supporting paragraphs +
+ * footer-actions row. This file adds the picker's list of candidate
+ * radio rows, which is unique to this modal. */
+
+.open-with-prompt__list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	margin: var(--space-2) 0;
+}
+
+.open-with-prompt__row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-2) var(--space-2);
+	border-radius: var(--radius-md);
+	border: var(--border-width) solid var(--color-border-subtle);
+	background: var(--color-background-elevated);
+	color: var(--color-text-primary);
+	cursor: pointer;
+	font-size: var(--text-size-md);
+	text-align: start;
+	transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.open-with-prompt__row:hover {
+	background: var(--color-interactive-hover);
+}
+
+.open-with-prompt__row:focus-visible {
+	outline: var(--focus-ring-outline);
+	outline-offset: var(--focus-ring-offset-inset);
+	border-color: transparent;
+}
+
+.open-with-prompt__row--selected {
+	border-color: var(--color-focus-ring);
+	background: var(--color-interactive-active);
+}
+
+.open-with-prompt__row-label {
+	flex: 1 1 auto;
+}
+
+.open-with-prompt__row-hint {
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+	flex: 0 0 auto;
+}
+
+.open-with-prompt__remember {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+	margin: var(--space-2) 0 0 0;
+	cursor: pointer;
+}
+
+.open-with-prompt__remember input {
+	margin: 0;
+}

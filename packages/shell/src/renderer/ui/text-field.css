@@ -1,0 +1,147 @@
+/* TextField / TextArea / Select — shared chrome.
+ *
+ * Focus pattern is the canonical "outline replaces border" treatment from
+ * docs/foundations/35-code-conventions.md (memory:
+ * `feedback_focus_outline_replaces_border`):
+ *   2px outline at `-1px` offset + `border-color: transparent` so the
+ *   focus ring sits exactly where the border was. Stacking the outline
+ *   *outside* the border ("sandwich") is the documented anti-pattern.
+ *
+ * Every bordered text-entry surface in the shell goes through this
+ * primitive — no per-panel re-implementation. */
+
+.text-field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1-5);
+	min-width: 0;
+}
+
+.text-field__label-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	gap: var(--space-2);
+}
+
+.text-field__label {
+	font-size: var(--text-size-md);
+	color: var(--color-text-secondary);
+}
+
+.text-field__counter {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+	font-variant-numeric: tabular-nums;
+}
+
+.text-field__control {
+	position: relative;
+	display: flex;
+	align-items: center;
+	min-width: 0;
+}
+
+.text-field__icon {
+	position: absolute;
+	left: var(--space-2);
+	display: inline-flex;
+	color: var(--color-text-tertiary);
+	pointer-events: none;
+}
+
+.text-field__input {
+	width: 100%;
+	min-width: 0;
+	box-sizing: border-box;
+	padding: var(--space-2) var(--space-2);
+	border-radius: var(--radius-md);
+	border: var(--border-width) solid var(--color-border-subtle);
+	background: var(--color-surface-default);
+	color: var(--color-text-primary);
+	font-family: inherit;
+	font-size: var(--text-size-md);
+	line-height: 1.4;
+}
+
+.text-field--sm .text-field__input {
+	padding: var(--space-1);
+	font-size: var(--text-size-sm);
+	min-height: 28px;
+}
+
+.text-field--md .text-field__input {
+	min-height: 32px;
+}
+
+/* Scoped under the size variants so it outweighs `.text-field--sm/md
+ * .text-field__input { padding: … }` (which sets the `padding` shorthand and
+ * would otherwise reset the icon gap, dropping the placeholder under the
+ * icon). Same (0,2,0) specificity, declared later → wins. */
+.text-field--sm .text-field__input--with-icon,
+.text-field--md .text-field__input--with-icon {
+	padding-left: calc(var(--space-2) + 14px + var(--space-2));
+}
+
+.text-field__input--textarea {
+	min-height: 8rem;
+	/* Parent .text-field__input is 14px; 14×1.5=21 (odd). Even-px rule:
+	 * line-heights resolve to an even integer, so icons or sibling
+	 * surfaces can sit flush at the same height (see e.g. the
+	 * database sidebar list — icon size === text line-height). */
+	line-height: 20px;
+	resize: vertical;
+}
+
+.text-field__input--resize-none {
+	resize: none;
+}
+
+.text-field__input--resize-vertical {
+	resize: vertical;
+}
+
+.text-field__input--resize-both {
+	resize: both;
+}
+
+/* The select control is the shared `.bs-select` trigger (SDK select-menu);
+ * face styles come from the SDK — the field only stretches it to fit. */
+.text-field .bs-select {
+	width: 100%;
+}
+
+.text-field__input:hover:not(:disabled):not(:focus-visible) {
+	border-color: var(--color-border-default);
+}
+
+/* Canonical focus ring: outline SITS on the border (offset -1px, transparent
+ * border) so width stays stable across states. Applies on `:focus-visible`
+ * AND `:focus` so click-focus on text inputs / textareas (where browsers
+ * sometimes withhold `:focus-visible` for non-keyboard interaction) still
+ * gets a visible ring instead of a vanished border. */
+.text-field__input:focus,
+.text-field__input:focus-visible {
+	outline: var(--focus-ring-outline);
+	outline-offset: var(--focus-ring-offset-inset);
+	border-color: transparent;
+}
+
+.text-field__input:disabled {
+	cursor: not-allowed;
+	opacity: 0.6;
+}
+
+.text-field__input::placeholder {
+	color: var(--color-text-tertiary);
+}
+
+.text-field__hint {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+}
+
+.text-field__error {
+	font-size: var(--text-size-xs);
+	color: var(--color-state-error);
+}

@@ -1,0 +1,74 @@
+/**
+ * `.bs-select` — the shared select-control trigger face (React `<SelectMenu>`
+ * + DOM `createSelectMenu`). Sized off the canonical control-height scale so
+ * it lines up pixel-exact next to buttons / inputs of the same size; the
+ * popup itself is fancy-menus chrome (menus.css), not styled here.
+ */
+
+.bs-select {
+	appearance: none;
+	-webkit-appearance: none;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	height: var(--control-height-md);
+	padding: 0 var(--space-2);
+	max-width: 100%;
+	min-width: 0;
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+	background: var(--color-surface-default);
+	color: var(--color-text-primary);
+	font: inherit;
+	font-size: var(--text-size-md);
+	text-align: left;
+	cursor: pointer;
+	transition:
+		border-color var(--motion-duration-fast) var(--motion-easing-standard),
+		background var(--motion-duration-fast) var(--motion-easing-standard);
+}
+
+.bs-select:hover:not(:disabled) {
+	border-color: var(--color-border-default);
+	background: var(--color-interactive-hover);
+}
+
+.bs-select:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 1px;
+}
+
+/* Open/active state — the shared opener stamps `aria-expanded` on the
+   trigger for as long as its menu is up. */
+.bs-select[aria-expanded="true"] {
+	border-color: var(--color-accent-default);
+	background: var(--color-interactive-hover);
+}
+
+.bs-select:disabled {
+	cursor: not-allowed;
+	opacity: 0.55;
+}
+
+.bs-select__value {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.bs-select__value--empty {
+	color: var(--color-text-tertiary);
+}
+
+.bs-select__caret {
+	flex: 0 0 auto;
+	color: var(--color-text-tertiary);
+}
+
+/* Compact rows (dense popovers / inline forms) — pairs with `.button--sm`. */
+.bs-select--sm {
+	height: var(--control-height-sm);
+	font-size: var(--text-size-sm);
+}

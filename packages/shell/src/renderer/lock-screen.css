@@ -1,0 +1,71 @@
+/* App-lock screen (Stage 13.8 surface). Full-viewport masking overlay; the
+ * card chrome is bespoke (a lock screen is not a <Popover> — it cannot be
+ * dismissed) but every value reads from the design-system tokens. */
+
+.lock-screen {
+	position: fixed;
+	inset: 0;
+	z-index: var(--z-modal, 1000);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: var(--space-6);
+	/* OPAQUE on purpose: the overlay must MASK the dashboard, not just blur it.
+	 * A translucent scrim + backdrop-filter leaves the content rendered and
+	 * legible the moment the blur is defeated (e.g. via DevTools) — a privacy
+	 * leak at a locked screen. A solid background guarantees nothing shows. */
+	background: var(--color-background-primary);
+}
+
+.lock-screen__card {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-3);
+	width: 100%;
+	max-width: 320px;
+	padding: var(--space-6) var(--space-5);
+	background: var(--color-background-elevated);
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-overlay, 0 12px 32px rgba(0, 0, 0, 0.32));
+	text-align: center;
+}
+
+.lock-screen__glyph {
+	color: var(--color-text-secondary);
+}
+
+.lock-screen__title {
+	margin: 0;
+	font-size: var(--text-size-lg);
+	font-weight: var(--text-weight-semibold);
+	color: var(--color-text-primary);
+}
+
+.lock-screen__subtitle,
+.lock-screen__message {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+}
+
+.lock-screen__form {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	gap: var(--space-3);
+	width: 100%;
+}
+
+.lock-screen__error {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--color-text-danger, var(--color-text-secondary));
+}
+
+.lock-screen__cooldown {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+}

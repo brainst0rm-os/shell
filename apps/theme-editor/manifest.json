@@ -1,0 +1,84 @@
+{
+  "id": "io.brainstorm.theme-editor",
+  "name": "Theme Editor",
+  "version": "0.1.0",
+  "sdk": "1",
+  "description": "Compose and save themes — token sets, icon packs, typography — with live preview across the shell and apps.",
+  "icon": "icon.svg",
+  "entry": "dist/index.html",
+  "capabilities": [
+    "storage.kv",
+    "entities.read:brainstorm/Theme/v1",
+    "entities.write:brainstorm/Theme/v1",
+    "entities.read:brainstorm/TokenSet/v1",
+    "entities.write:brainstorm/TokenSet/v1",
+    "entities.read:brainstorm/StylePack/v1",
+    "entities.write:brainstorm/StylePack/v1",
+    "entities.read:brainstorm/Typography/v1",
+    "entities.write:brainstorm/Typography/v1",
+    "entities.read:*",
+    "intents.dispatch:open",
+    "theme.preview"
+  ],
+  "registrations": {
+    "entityTypes": [
+      {
+        "id": "brainstorm/Theme/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/theme/theme/v1.json",
+        "schema": {
+          "type": "object",
+          "required": ["name", "appearance", "tokenSet", "iconPack", "typography"],
+          "properties": {
+            "name": { "type": "string" },
+            "appearance": { "type": "string", "enum": ["light", "dark"] },
+            "tokenSet": { "type": "object" },
+            "iconPack": { "type": "object" },
+            "typography": { "type": "object" },
+            "stylePack": { "type": ["object", "null"] }
+          }
+        }
+      },
+      {
+        "id": "brainstorm/TokenSet/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/theme/token-set/v1.json",
+        "schema": {
+          "type": "object",
+          "required": ["name", "appearance", "overrides"],
+          "properties": {
+            "name": { "type": "string" },
+            "appearance": { "type": "string", "enum": ["light", "dark"] },
+            "overrides": { "type": "object" }
+          }
+        }
+      },
+      {
+        "id": "brainstorm/StylePack/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/theme/style-pack/v1.json",
+        "schema": {
+          "type": "object",
+          "required": ["name", "css", "mime"],
+          "properties": {
+            "name": { "type": "string" },
+            "css": { "type": "string" },
+            "mime": { "type": "string", "const": "text/css" }
+          }
+        }
+      },
+      {
+        "id": "brainstorm/Typography/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/theme/typography/v1.json",
+        "schema": {
+          "type": "object",
+          "required": ["name", "scale", "fonts"],
+          "properties": {
+            "name": { "type": "string" },
+            "scale": { "type": "string", "enum": ["default", "compact", "comfortable"] },
+            "fonts": { "type": "object" }
+          }
+        }
+      }
+    ],
+    "openers": [{ "kind": "primary", "entityType": "brainstorm/Theme/v1" }],
+    "intents": [{ "verb": "open", "entityType": "brainstorm/Theme/v1", "priority": "primary" }]
+  }
+}

@@ -1,0 +1,1533 @@
+/* Brainstorm — Graph first-party app (preview state).
+ *
+ * Stage 9.13 preview: sidebar with pattern editor + canvas + history
+ * scrubber. The pixi/d3 swap at 9.13.5 will replace svg-renderer.ts;
+ * this CSS surface stays.
+ */
+
+/* Graph aliases the shell's `--color-*` tokens (pushed by the app
+ * preload via `--brainstorm-tokens=` + `app:tokens-changed`) so theme
+ * switches in shell Settings → Appearance flow through here without the
+ * app re-rendering. Per the [[apps-inherit-shell-theme]] memory: never
+ * roll our own theme system. Fallbacks below the `var(...)` are only
+ * used when the app boots before the preload finishes applying tokens. */
+/* Theming is the shell's job, not the app's. The shell preload injects
+ * the active theme tokens AND the alias layer (--accent / --bg / --text /
+ * …) + component styles via a single stylesheet —
+ * packages/shell/src/preload/app-theme.ts, the single source of truth.
+ * This app declares ZERO theme values; it only consumes the injected
+ * aliases. Don't reintroduce a :root alias block here. */
+:root {
+	color-scheme: light dark;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	background: var(--bg);
+	color: var(--text);
+	font: var(--text-size-md) / 1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+	-webkit-font-smoothing: antialiased;
+	overflow: hidden;
+}
+
+/* Body is the positioning root for `.app-header`, `.graph-main`, and the
+ * history fab/popover. The header floats over the main area (z-index 2)
+ * so the canvas can paint behind it — the glass `backdrop-filter` then
+ * has real content (graph nodes / edges / canvas bg) to blur, rather
+ * than just a uniform body color. Without this, the header reads as a
+ * flat solid panel instead of a glass surface. */
+body {
+	display: block;
+	position: relative;
+}
+
+/* ── App header (44px) ─────────────────────────────────────────────────── */
+
+/* Glass surface mirroring the shell dashboard header
+ * (`.dashboard__header .glass--subtle`). The drag region, no-drag
+ * carve-outs, padding (traffic-light + titleBarOverlay insets) and
+ * user-select are owned by the shell-injected app-theme stylesheet's
+ * `.app-header` rules. App-side rules below only add the glass surface
+ * and absolute positioning. */
+/* The flex skeleton, left/right groups, drag region, height / padding and the
+ * glass surface (the shared default) are the shared `.app-header` rule in
+ * `@brainstorm/sdk/app-theme.css`. Graph only adds the absolute overlay
+ * positioning so the header floats over the canvas. The `:root` prefix
+ * matches the shared SDK rule's specificity (`:root .app-header`, 0,2,0) so
+ * Graph's absolute-overlay delta reliably wins. */
+:root .app-header {
+	position: absolute;
+	top: 0;
+	inset-inline-start: 0;
+	inset-inline-end: 0;
+	z-index: 2;
+}
+
+/* ── Main + overlaid sidebar ───────────────────────────────────────────── */
+
+/* Canvas owns the full main area; the sidebar floats over its right edge
+ * and slides in/out via `transform: translateX`. The earlier `grid-
+ * template-columns` animation reflowed the sidebar's contents every frame
+ * as the column width shrank — text wrapped into a single column mid-
+ * animation. Transform leaves the sidebar's intrinsic layout at 300 px
+ * for the whole slide, so the content reads the same start to finish.
+ * Convention across the project: app inspector/settings panels live on
+ * the right; navigation panels (folder trees, source lists) live on the
+ * left. */
+.graph-main {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	display: grid;
+	grid-template-columns: 1fr;
+	overflow: hidden;
+	min-height: 0;
+}
+
+/* ── Sidebar ───────────────────────────────────────────────────────────── */
+
+.graph-sidebar {
+	position: absolute;
+	/* `.graph-main` now spans the full viewport (so the canvas can paint
+	 *  behind the glass header); push the sidebar down 44px so its top
+	 *  edge meets the header's bottom border instead of sliding under it. */
+	top: 44px;
+	inset-inline-end: 0;
+	bottom: 0;
+	width: var(--graph-sidebar-width, 320px);
+	overflow-x: hidden;
+	overflow-y: auto;
+	padding: var(--space-3);
+	border-inline-start: var(--border-width) solid var(--color-glass-border);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+	transform: translateX(0);
+	transition: transform var(--motion-duration-normal, 200ms) var(--motion-easing-standard, ease);
+	z-index: 2;
+}
+
+.graph-sidebar__resize {
+	position: absolute;
+	top: 0;
+	/* PHYSICAL-AXIS INTENTIONAL: resize handle straddles the panel edge geometrically */
+	left: 0;
+	bottom: 0;
+	width: 6px;
+	margin-left: -3px;
+	cursor: col-resize;
+	z-index: 3;
+	background: transparent;
+	transition: background 120ms ease;
+	touch-action: none;
+}
+
+.graph-sidebar__resize:hover,
+.graph-sidebar__resize:focus-visible,
+body.is-resizing .graph-sidebar__resize {
+	background: var(--color-accent-subtle, rgba(255, 255, 255, 0.1));
+	outline: none;
+}
+
+.graph-main[data-sidebar-collapsed="true"] .graph-sidebar__resize {
+	display: none;
+}
+
+.graph-main[data-sidebar-collapsed="true"] .graph-sidebar {
+	/* Slide the panel off the right edge. The +1 px buys a hair of
+	 * over-travel so the left border doesn't peek back into the canvas
+	 * when the transition settles on subpixel rounding. */
+	transform: translateX(calc(100% + 1px));
+}
+
+/* Suppress slide transitions during hydration so the persisted-state
+ * pass doesn't flash open→closed on every reload. The data-hydrating
+ * flag is cleared after `loadPersistedState` resolves. */
+.graph-main[data-hydrating="true"] .graph-sidebar {
+	transition: none;
+}
+
+/* Two stacked views inside the same sidebar shell: `filters` (pattern,
+ * subjects, connections, matches) and `settings` (display + layout
+ * controls). The header button group toggles `data-sidebar-mode` on the
+ * `.graph-main` element; the inactive view is `hidden` so screen readers
+ * skip it. */
+.graph-sidebar__view {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+}
+
+.graph-sidebar__view[hidden] {
+	display: none;
+}
+
+.sidebar-section h2 {
+	margin: 0 0 var(--space-2);
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-semibold);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--text-dim);
+}
+
+.sidebar-section__hint {
+	margin: 0 0 var(--space-2);
+	font-size: var(--text-size-sm);
+	color: var(--text-dim);
+	line-height: 1.45;
+}
+
+.show-toggles {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+}
+
+/* Filter chips. The native checkbox is visually hidden (kept in the
+ * accessibility tree + focusable); the chip itself carries the state —
+ * type-coloured dot, label, count — so the row reads as a legend, not a
+ * form. */
+.show-toggle {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-1);
+	background: var(--bg);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-full);
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	cursor: pointer;
+	user-select: none;
+	transition:
+		background 120ms ease,
+		border-color 120ms ease,
+		color 120ms ease;
+}
+
+.show-toggle:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.show-toggle:has(.show-toggle__box:checked) {
+	background: var(--color-accent-subtle, var(--hover));
+	border-color: var(--accent, var(--border));
+	color: var(--text);
+}
+
+.show-toggle:has(.show-toggle__box:focus-visible) {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 1px;
+}
+
+.show-toggle__box {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: 0;
+	opacity: 0;
+	pointer-events: none;
+}
+
+/* The node colour for this entity type — the chip doubles as the canvas
+ * colour legend. Dimmed until the chip is checked or hovered so the "off"
+ * state visibly recedes. */
+.show-toggle__dot {
+	flex-shrink: 0;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	opacity: 0.45;
+	transition: opacity 120ms ease;
+}
+
+.show-toggle:hover .show-toggle__dot,
+.show-toggle:has(.show-toggle__box:checked) .show-toggle__dot {
+	opacity: 1;
+}
+
+.show-toggle__count {
+	color: var(--text-dim);
+	font-variant-numeric: tabular-nums;
+}
+
+/* F-212 — plumbing types (BrowsingSession, ListView, Trigger…) render as a
+ * trailing de-emphasised sub-group so they stop posing as peers of the
+ * user's content types. Same toggles, same semantics — only quieter. */
+.show-toggles--system {
+	margin-top: var(--space-2);
+}
+
+.show-toggles__group-label {
+	flex: 1 0 100%;
+	margin: 0;
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--text-faint);
+}
+
+.show-toggles--system .show-toggle {
+	opacity: 0.65;
+}
+
+.show-toggles--system .show-toggle:hover,
+.show-toggles--system .show-toggle:has(.show-toggle__box:checked) {
+	opacity: 1;
+}
+
+.show-toggles__empty {
+	margin: 0;
+	color: var(--text-dim);
+	font-style: italic;
+	font-size: var(--text-size-xs);
+}
+
+.sidebar-advanced {
+	border-top: var(--border-width) solid var(--border);
+	padding-top: var(--space-3);
+	margin-top: var(--space-1);
+}
+
+.sidebar-advanced__summary {
+	cursor: pointer;
+	list-style: none;
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-semibold);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--text-dim);
+	padding: var(--space-0_5) 0;
+}
+
+.sidebar-advanced__summary::-webkit-details-marker {
+	display: none;
+}
+
+.sidebar-advanced__summary::before {
+	content: "▸";
+	display: inline-block;
+	margin-right: var(--space-2);
+	transition: transform 120ms ease;
+}
+
+.sidebar-advanced[open] > .sidebar-advanced__summary::before {
+	transform: rotate(90deg);
+}
+
+.sidebar-advanced[open] {
+	padding-bottom: var(--space-1);
+}
+
+.sidebar-advanced > .sidebar-section:first-of-type {
+	margin-top: var(--space-3);
+}
+
+/* Reset / Templates / Export sit on one row — three stacked full-width
+ * buttons read as a menu, not a toolbar. The advisory (when present)
+ * wraps onto its own line below. */
+.pattern-toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-2);
+}
+
+.pattern-reset {
+	display: inline-flex;
+	align-items: center;
+	height: var(--control-height-sm, 24px);
+	padding: 0 var(--space-2);
+	font-size: var(--text-size-sm);
+	font-family: inherit;
+	color: var(--text);
+	background: var(--bg);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-md);
+	cursor: pointer;
+	transition:
+		background 120ms ease,
+		border-color 120ms ease;
+}
+
+.pattern-reset:hover {
+	background: var(--hover);
+}
+
+.pattern-advisory {
+	flex: 1 0 100%;
+	margin: 0;
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	line-height: 1.4;
+}
+
+/* Export is a `.pattern-reset`-styled toolbar button that opens the
+ *  shared anchored menu (B-1) — no bespoke popup chrome here anymore. */
+
+/* "Add subject / connection / condition" is a low-weight ghost affordance:
+ *  two of these stack right under the lists, so a filled accent button each
+ *  read as the loudest thing in the panel. Dashed border = "add a row";
+ *  it only warms to the accent on hover. */
+.pattern-add {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-2);
+	margin-top: var(--space-2);
+	height: var(--control-height-md, 32px);
+	padding: 0 var(--space-2);
+	font-size: var(--text-size-md);
+	font-family: inherit;
+	color: var(--text-dim);
+	background: transparent;
+	border: var(--border-width) dashed var(--border);
+	border-radius: var(--radius-md);
+	cursor: pointer;
+	transition:
+		color 120ms ease,
+		border-color 120ms ease,
+		background 120ms ease;
+}
+
+.pattern-add:hover:not(:disabled) {
+	color: var(--accent);
+	background: var(--accent-soft);
+	border-color: var(--accent);
+}
+
+.pattern-add:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+
+.pattern-add__icon {
+	width: 13px;
+	height: 13px;
+	flex-shrink: 0;
+}
+
+.pattern-remove {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	color: var(--text-dim);
+	background: transparent;
+	border: none;
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+}
+
+.pattern-remove:hover:not(:disabled) {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.pattern-remove:disabled {
+	opacity: 0.3;
+	cursor: not-allowed;
+}
+
+.pattern-icon {
+	display: inline-flex;
+	width: 14px;
+	height: 14px;
+}
+
+.pattern-icon svg {
+	width: 100%;
+	height: 100%;
+}
+
+.subject-list,
+.edge-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.subject-list__item,
+.edge-list__item {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+	min-width: 0;
+	padding: var(--space-2) var(--space-2);
+	font-size: var(--text-size-md);
+	background: var(--bg);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-sm);
+}
+
+/* The subject item gains a `where` editor below the top control row, so
+ *  it stacks vertically; the top row keeps the original inline layout. */
+.subject-list__item {
+	flex-direction: column;
+	align-items: stretch;
+}
+
+/* Top line of a subject card: only small, fixed-or-shrinkable controls
+ *  (dot · name · count · remove) so the remove button can never be pushed
+ *  out past the card edge. The type picker is a full-width line below.
+ *
+ *  `width: 100%` pins the row to the card's content box (the card is a
+ *  column-flex with `align-items: stretch`, so the row's cross-axis
+ *  follows already; the explicit width is a belt around the suspenders
+ *  when the resizable sidebar pushes near `max`); `min-width: 0` lets the
+ *  name input shrink past its default 20-char intrinsic min so the meta
+ *  + remove never escape the right edge. */
+.subject-list__row {
+	display: flex;
+	align-items: center;
+	flex-wrap: nowrap;
+	gap: var(--space-2);
+	min-width: 0;
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.subject-list__types {
+	margin-top: var(--space-2);
+	width: 100%;
+}
+
+.subject-list__dot {
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.subject-list__name {
+	flex: 1 1 0;
+	min-width: 0;
+	width: 0;
+	padding: var(--space-1);
+	font-size: var(--text-size-md);
+	font-family: inherit;
+	color: var(--text);
+	background: var(--bg-elev, transparent);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-sm);
+}
+
+.subject-list__name:hover {
+	border-color: var(--text-faint);
+}
+
+.subject-list__name:focus {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+	border-color: transparent;
+}
+
+.subject-list__meta,
+.edge-list__meta {
+	margin-inline-start: auto;
+	flex-shrink: 0;
+	padding: var(--space-0_5);
+	color: var(--text-dim);
+	font-size: var(--text-size-xs);
+	font-variant-numeric: tabular-nums;
+	background: var(--hover);
+	border-radius: var(--radius-full);
+}
+
+/* Layout-only — the control face comes from the shared `.bs-select`. */
+.edge-select {
+	min-width: 0;
+	max-width: 100%;
+}
+
+.edge-list__item--empty {
+	color: var(--text-dim);
+	font-style: italic;
+	justify-content: center;
+}
+
+/* Type / link-type picker — native <details> disclosure of checkboxes.
+ * No fancy-menus dep (Stage 8); plain-DOM + keyboard-accessible. */
+.type-picker {
+	flex: 1 1 100px;
+	min-width: 0;
+}
+
+.type-picker__summary {
+	list-style: none;
+	padding: var(--space-1);
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	background: var(--bg-elev, var(--bg));
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.type-picker__summary::-webkit-details-marker {
+	display: none;
+}
+
+.type-picker[open] .type-picker__summary {
+	color: var(--text);
+	border-color: var(--accent);
+}
+
+.type-picker__list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+	margin-top: var(--space-1);
+	max-height: 220px;
+	overflow-y: auto;
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-sm);
+}
+
+.type-picker__option {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-1);
+	font-size: var(--text-size-xs);
+	color: var(--text);
+	cursor: pointer;
+}
+
+.type-picker__option:hover {
+	background: var(--hover);
+}
+
+.type-picker__label {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.type-picker__count {
+	color: var(--text-dim);
+	font-variant-numeric: tabular-nums;
+}
+
+.type-picker__empty {
+	margin: 0;
+	padding: var(--space-2) var(--space-2);
+	color: var(--text-dim);
+	font-style: italic;
+	font-size: var(--text-size-xs);
+}
+
+/* 9.13.9 — subject `where` predicate editor. Mirrors the `.type-picker`
+ *  native-<details> chrome so the sidebar reads as one consistent
+ *  surface. `min-width: 0` is load-bearing: without it the flex default
+ *  `min-width: auto` lets the body row's intrinsic content (the op
+ *  select trigger can't shrink below its longest option label) widen the
+ *  details element past the subject-card edge — the summary then renders wider
+ *  than the type-picker above, leaking out of the sidebar. */
+.where-editor {
+	margin-top: var(--space-2);
+	width: 100%;
+	min-width: 0;
+	box-sizing: border-box;
+}
+
+.where-editor__summary {
+	list-style: none;
+	padding: var(--space-1);
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	background: var(--bg-elev, var(--bg));
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+}
+
+.where-editor__summary::-webkit-details-marker {
+	display: none;
+}
+
+.where-editor__summary:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+	border-color: transparent;
+}
+
+.where-editor[open] .where-editor__summary {
+	color: var(--text);
+	border-color: var(--accent);
+}
+
+.where-editor__body {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	margin-top: var(--space-1);
+	min-width: 0;
+}
+
+/* `flex-wrap` lets the row reflow when the property input + op select
+ *  + value input + remove button can't all fit on one line — instead of
+ *  pushing the remove button (or the select's intrinsic min-content)
+ *  past the card edge. */
+.where-editor__row {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--space-1);
+	min-width: 0;
+}
+
+.where-editor__prop,
+.where-editor__val {
+	flex: 1 1 60px;
+	min-width: 0;
+	padding: var(--space-1);
+	font-size: var(--text-size-xs);
+	font-family: inherit;
+	color: var(--text);
+	background: var(--bg-elev, transparent);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-sm);
+}
+
+.where-editor__prop:focus,
+.where-editor__val:focus {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+	border-color: transparent;
+}
+
+/* Layout-only — the control face comes from the shared `.bs-select`. */
+.where-editor__op {
+	flex: 0 1 auto;
+	min-width: 0;
+	max-width: 100%;
+}
+
+.where-editor__remove {
+	flex-shrink: 0;
+}
+
+.where-editor__add {
+	align-self: flex-start;
+}
+
+.where-editor__notice {
+	margin: 0;
+	padding: var(--space-2) var(--space-2);
+	color: var(--text-dim);
+	font-style: italic;
+	font-size: var(--text-size-xs);
+}
+
+/* Read-only stats render as a quiet key/value list — boxing each row in
+ * its own bordered card made three numbers the heaviest chrome in the
+ * panel. */
+.match-summary {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+	font-size: var(--text-size-sm);
+}
+
+.match-summary__row {
+	display: flex;
+	justify-content: space-between;
+	padding: var(--space-0_5) 0;
+	color: var(--text-dim);
+	font-variant-numeric: tabular-nums;
+}
+
+.match-summary__row span:last-child {
+	font-weight: var(--text-weight-semibold);
+	color: var(--text);
+}
+
+/* ── Settings list ─────────────────────────────────────────────────────── */
+
+.settings-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+/* Settings row — label on the left, control on the right. */
+.settings-toggle {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-2);
+	padding: var(--space-2) var(--space-1);
+	font-size: var(--text-size-md);
+	color: var(--text);
+	cursor: pointer;
+	user-select: none;
+}
+
+
+/* Slider row — same left/right split. The value is read-only output
+ * next to the label so the user always sees the current value without
+ * having to focus the slider thumb. */
+.settings-slider {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	padding: var(--space-2) var(--space-1);
+	font-size: var(--text-size-md);
+	color: var(--text);
+	cursor: pointer;
+	user-select: none;
+}
+
+.settings-slider__row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.settings-slider__row output {
+	font-variant-numeric: tabular-nums;
+	color: var(--text-dim);
+}
+
+.settings-slider input[type="range"] {
+	width: 100%;
+	accent-color: var(--accent);
+}
+
+.settings-button {
+	margin-top: var(--space-1);
+	height: var(--control-height-md, 32px);
+	padding: 0 var(--space-2);
+	font: inherit;
+	font-size: var(--text-size-md);
+	color: var(--text);
+	background: var(--bg);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+}
+
+.settings-button:hover {
+	background: var(--hover);
+	border-color: var(--border-strong);
+}
+
+/* ── Canvas ────────────────────────────────────────────────────────────── */
+
+.graph-canvas-wrap {
+	position: relative;
+	background: var(--bg-canvas);
+	overflow: hidden;
+}
+
+.graph-canvas-container {
+	width: 100%;
+	height: 100%;
+}
+
+/* KBN-A-graph: the canvas is one Tab stop (`role="application"`). Show a
+ * keyboard focus ring inset from the edge so the user can see the canvas
+ * owns the keyboard, without a ring on pointer focus. */
+.graph-canvas-container:focus {
+	outline: none;
+}
+.graph-canvas-container:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -2px;
+}
+
+/* The keyboard-focus announcement target's sr-only clip is applied inline by
+ * the shared `attachLiveRegion` (@brainstorm/sdk/a11y) — no rule needed here. */
+
+.graph-canvas {
+	width: 100%;
+	height: 100%;
+	display: block;
+	color: var(--text);
+	touch-action: none; /* Pointer-driven drag — let the browser stop scrolling. */
+}
+
+/* Hover affordance for draggable nodes. */
+.graph-canvas__nodes circle {
+	cursor: grab;
+}
+
+.graph-canvas[data-dragging="true"] .graph-canvas__nodes circle {
+	cursor: grabbing;
+}
+
+/* Node labels — typography pulled from shell tokens so the graph
+ *  participates in theme changes. Font-family stays as the ui stack
+ *  because SVG text doesn't inherit from a parent renderer's font
+ *  unless explicitly set. */
+.graph-canvas__labels text {
+	font-size: var(--text-size-xs);
+	font-family: var(--text-family-ui);
+}
+
+/* Pixi renderer paints labels as absolutely-positioned HTML divs in the
+ *  world-to-screen overlay (`.graph-canvas__label`, created in
+ *  render/pixi-renderer.ts). Without a width bound a long entity name
+ *  overflows unbounded across the canvas — a silent regression after the
+ *  9.13.5 Pixi swap. The model-level cap (`nodeLabel`) keeps it under 48
+ *  glyphs; this is the pixel-precise second line of defence so even a
+ *  48-glyph CJK name can't smear past the node, per the
+ *  [[long-strings-must-be-clipped]] convention (clip at the data layer
+ *  AND the render layer). Matches the SVG label typography tokens. */
+.graph-canvas__label {
+	max-width: 180px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: var(--text-size-xs);
+	font-family: var(--text-family-ui);
+	/* Labels are suppressed while the layout animates (playback / settle)
+	 * and re-created when it cools; a from-only keyframe fades each div in
+	 * to whatever per-frame opacity the renderer writes inline. */
+	animation: graph-label-in 220ms ease-out;
+}
+
+@keyframes graph-label-in {
+	from {
+		opacity: 0;
+	}
+}
+
+/* `data-show-labels="false"` (set when the Settings toggle flips) hides
+ *  the entire labels layer without forcing a re-render. */
+.graph-canvas[data-show-labels="false"] .graph-canvas__labels {
+	display: none;
+}
+
+/* When edge arrows are disabled, drop the marker-end. The svg renderer
+ *  always sets `marker-end="url(#arrow)"`; hiding the arrow via CSS keeps
+ *  the renderer simple. */
+.graph-canvas[data-show-arrows="false"] .graph-canvas__edges line {
+	marker-end: none;
+}
+
+/* Zoom-driven LOD: at k<0.5 the renderer flips `data-lod-arrows="false"`
+ * onto the SVG element. The arrowhead disappears in one CSS rule rather
+ * than the renderer touching every line's `marker-end` attribute — cheap
+ * way to keep the per-frame DOM-write budget low. */
+.graph-canvas[data-lod-arrows="false"] .graph-canvas__edges line {
+	marker-end: none;
+}
+
+.graph-canvas__edges {
+	color: var(--accent);
+}
+
+/* ── Pan affordance ──────────────────────────────────────────────────────
+ *  When the user is not over a node the canvas reads as draggable (grab
+ *  cursor). `bindCanvasZoomAndPan` flips `data-panning` on pointerdown so
+ *  the cursor becomes `grabbing` during the drag. */
+.graph-canvas {
+	cursor: grab;
+}
+.graph-canvas[data-panning="true"] {
+	cursor: grabbing;
+}
+
+/* ── Local view badge ────────────────────────────────────────────────────
+ *  Visible only when `state.localRootId !== null`. Sits in the upper-left
+ *  of the canvas, doesn't push other chrome around. */
+.local-badge {
+	position: absolute;
+	top: 14px;
+	inset-inline-start: 14px;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-1) var(--space-2) var(--space-1) var(--space-2);
+	background: var(--color-glass-background, var(--bg-elev));
+	backdrop-filter: blur(var(--glass-blur, 8px)) saturate(var(--glass-saturate, 180%));
+	-webkit-backdrop-filter: blur(var(--glass-blur, 8px)) saturate(var(--glass-saturate, 180%));
+	border: var(--border-width) solid var(--color-glass-border, var(--border));
+	border-radius: var(--radius-full);
+	color: var(--text);
+	font-size: var(--text-size-xs);
+	font-family: var(--text-family-ui);
+	box-shadow: var(--shadow-sm, 0 2px 6px rgba(0, 0, 0, 0.18));
+	z-index: 2;
+}
+.local-badge__text {
+	white-space: nowrap;
+	max-width: 240px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.local-badge__close {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	border: none;
+	background: transparent;
+	color: var(--text-dim, var(--text));
+	cursor: pointer;
+}
+.local-badge__close:hover {
+	background: var(--hover, rgba(255, 255, 255, 0.08));
+	color: var(--text);
+}
+
+/* Depth stepper + direction toggle on the local badge (9.13.7).
+ * Reuse the badge's glass surface; a thin separator divides each group
+ * from the focal-node label. */
+.local-badge__stepper,
+.local-badge__segmented {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-0_5);
+	padding-inline-start: var(--space-2);
+	border-inline-start: var(--border-width) solid var(--color-glass-border, var(--border));
+}
+.local-badge__step,
+.local-badge__seg {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 22px;
+	height: 20px;
+	padding: 0 var(--space-2);
+	border: none;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text-dim, var(--text));
+	font-size: var(--text-size-xs);
+	font-family: var(--text-family-ui);
+	cursor: pointer;
+}
+.local-badge__step:hover:not(:disabled),
+.local-badge__seg:hover {
+	background: var(--hover, rgba(255, 255, 255, 0.08));
+	color: var(--text);
+}
+.local-badge__step:disabled {
+	opacity: 0.35;
+	cursor: default;
+}
+.local-badge__step-value {
+	min-width: 44px;
+	text-align: center;
+	white-space: nowrap;
+	color: var(--text);
+}
+.local-badge__seg--active {
+	background: var(--color-accent-default, rgba(255, 255, 255, 0.16));
+	color: var(--accent-fg, var(--text));
+}
+.local-badge__step:focus-visible,
+.local-badge__seg:focus-visible,
+.local-badge__close:focus-visible {
+	outline: 2px solid var(--color-focus-ring, var(--color-accent-default, #6ea8fe));
+	outline-offset: -1px;
+}
+
+/* ── Zoom controls ───────────────────────────────────────────────────────
+ *  Stacked plus / minus / reset buttons in the lower-right of the canvas.
+ *  Glass surface to match the history fab on the opposite corner. */
+.zoom-controls {
+	position: absolute;
+	inset-inline-end: 14px;
+	bottom: 14px;
+	/* The canvas spans the full viewport (sidebar is an absolute glass overlay
+	 * on the right), so a window-edge anchor would put these controls BEHIND
+	 * the open sidebar — ghosting through the frost and unclickable (same
+	 * z-index, later in DOM). Sit them to the LEFT of the open panel; slide
+	 * back to the edge when it collapses, tracked via transform so it follows
+	 * the sidebar's own slide. */
+	transform: translateX(calc(-1 * var(--graph-sidebar-width, 320px)));
+	transition: transform var(--motion-duration-normal, 200ms) var(--motion-easing-standard, ease);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+	background: var(--color-glass-background, var(--bg-elev));
+	backdrop-filter: blur(var(--glass-blur, 8px)) saturate(var(--glass-saturate, 180%));
+	-webkit-backdrop-filter: blur(var(--glass-blur, 8px)) saturate(var(--glass-saturate, 180%));
+	border: var(--border-width) solid var(--color-glass-border, var(--border));
+	border-radius: var(--radius-lg);
+	padding: var(--space-1);
+	box-shadow: var(--shadow-sm, 0 2px 6px rgba(0, 0, 0, 0.18));
+	z-index: 2;
+}
+
+.graph-main[data-sidebar-collapsed="true"] .zoom-controls {
+	transform: translateX(0);
+}
+/* Zoom buttons use the shared `.bs-btn --ghost --sm --icon` primitive (24px
+ * square, transparent until hover) — no bespoke chrome. */
+
+/* ── Hover preview popover ─────────────────────────────────────────────── */
+
+/* Card that appears next to a hovered node after the dwell timer fires
+ * (`PREVIEW_DWELL_MS` in app.ts). Glass-subtle surface so it sits over the
+ * canvas without forcing a re-layout. JS owns position (`left` / `top`
+ * inline styles) and visibility (`aria-hidden`); CSS owns chrome + the
+ * fade transition so hide/show feels smooth. */
+.hover-preview {
+	position: absolute;
+	min-width: 200px;
+	max-width: 280px;
+	padding: var(--space-3) var(--space-2);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	background: var(--color-glass-background, var(--bg-elev));
+	backdrop-filter: blur(var(--glass-blur, 8px)) saturate(var(--glass-saturate, 180%));
+	-webkit-backdrop-filter: blur(var(--glass-blur, 8px)) saturate(var(--glass-saturate, 180%));
+	border: var(--border-width) solid var(--color-glass-border, var(--border));
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-lg, 0 8px 24px rgba(0, 0, 0, 0.3));
+	color: var(--text);
+	pointer-events: none;
+	opacity: 0;
+	transform: translateY(3px) scale(0.98);
+	transition: opacity 150ms ease-out, transform 150ms ease-out;
+	z-index: 3;
+}
+
+.hover-preview[aria-hidden="false"] {
+	opacity: 1;
+	transform: translateY(0) scale(1);
+}
+
+.hover-preview__row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+}
+
+/* The glyph sits in a soft tile so an emoji, a glyph, or the "●" colour
+ * fallback all read as the card's identity mark instead of a stray
+ * character floating beside the title. */
+.hover-preview__glyph {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	background: var(--hover);
+	border-radius: var(--radius-md);
+	font-size: var(--text-size-lg);
+	line-height: 1;
+}
+
+.hover-preview__text {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+	min-width: 0;
+}
+
+.hover-preview__title {
+	font-weight: var(--text-weight-semibold);
+	font-size: var(--text-size-md);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.hover-preview__type {
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+}
+
+.hover-preview__meta {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	gap: var(--space-1) var(--space-3);
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	border-top: var(--border-width) solid var(--color-glass-border, var(--border));
+	padding-top: var(--space-2);
+}
+
+/* The per-reason breakdown ("Mentions ×3 · In project ×2") wraps onto its
+ * own full-width line below the subject / link-count row. */
+.hover-preview__meta > span:nth-child(3) {
+	flex: 1 0 100%;
+	color: var(--text);
+}
+
+/* Property rows (9.13.11 read-only inspector slice) — the "Name: Alice"
+ * glance section under the meta row. */
+.hover-preview__props {
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	border-top: var(--border-width) solid var(--color-glass-border, var(--border));
+	padding-top: var(--space-2);
+	font-size: var(--text-size-xs);
+}
+
+.hover-preview__props[hidden] {
+	display: none;
+}
+
+.hover-preview__prop {
+	display: flex;
+	gap: var(--space-2);
+	justify-content: space-between;
+	min-width: 0;
+}
+
+.hover-preview__prop dt {
+	color: var(--text-dim);
+	white-space: nowrap;
+}
+
+.hover-preview__prop dd {
+	margin: 0;
+	color: var(--text);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	text-align: end;
+}
+
+/* ── Edge hover tooltip (why two objects are connected) ─────────────────── */
+
+.edge-tooltip {
+	position: absolute;
+	max-width: 280px;
+	padding: var(--space-2) var(--space-2);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+	background: var(--color-glass-background, var(--bg-elev));
+	backdrop-filter: blur(var(--glass-blur, 8px)) saturate(var(--glass-saturate, 180%));
+	-webkit-backdrop-filter: blur(var(--glass-blur, 8px)) saturate(var(--glass-saturate, 180%));
+	border: var(--border-width) solid var(--color-glass-border, var(--border));
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-lg, 0 8px 24px rgba(0, 0, 0, 0.3));
+	color: var(--text);
+	pointer-events: none;
+	opacity: 0;
+	transform: translateY(-2px);
+	transition: opacity 120ms ease-out, transform 120ms ease-out;
+	z-index: 3;
+}
+
+.edge-tooltip[aria-hidden="false"] {
+	opacity: 1;
+	transform: translateY(0);
+}
+
+.edge-tooltip__reason {
+	font-weight: var(--text-weight-semibold);
+	font-size: var(--text-size-sm);
+}
+
+.edge-tooltip__ends {
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* ── Edge-colour legend (bottom-left of the canvas) ─────────────────────── */
+
+.edge-legend {
+	position: absolute;
+	left: 14px;
+	/* Stacked above the history "Now" FAB (bottom: 14px + its 32px control
+	 * height + an 8px gap) — both live in the lower-left corner, and at the
+	 * old `bottom: 12px` the FAB sat on top of the legend's last row
+	 * ("Now d attributes", F-159). */
+	bottom: calc(14px + var(--control-height-md, 32px) + 8px);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	padding: var(--space-2) var(--space-2);
+	background: var(--color-glass-background, var(--bg-elev));
+	backdrop-filter: blur(var(--glass-blur, 8px)) saturate(var(--glass-saturate, 180%));
+	-webkit-backdrop-filter: blur(var(--glass-blur, 8px)) saturate(var(--glass-saturate, 180%));
+	border: var(--border-width) solid var(--color-glass-border, var(--border));
+	border-radius: var(--radius-md);
+	pointer-events: none;
+	z-index: 2;
+}
+
+.edge-legend__row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+}
+
+.edge-legend__row--empty {
+	opacity: 0.45;
+}
+
+.edge-legend__swatch {
+	flex: 0 0 auto;
+	width: 14px;
+	height: 3px;
+	border-radius: var(--radius-xs);
+}
+
+.edge-legend__label {
+	flex: 1 1 auto;
+}
+
+.edge-legend__count {
+	flex: 0 0 auto;
+	margin-left: auto;
+	font-variant-numeric: tabular-nums;
+	color: var(--text-faint);
+}
+
+/* ── History playback (single-button collapsible) ──────────────────────── */
+
+/* The FAB sits in the lower-left of the canvas. By default it's just a
+ * clock + the current cutoff date. Click expands the popover above it
+ * with play/speed/scrubber. This matches Obsidian's pattern where the
+ * playback UI is "out of the way until needed" — we previously rendered
+ * the whole scrubber as a permanent bottom strip, which wasted vertical
+ * space the canvas should own. */
+.history-fab {
+	position: absolute;
+	inset-inline-start: 14px;
+	bottom: 14px;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	height: var(--control-height-md, 32px);
+	padding: 0 var(--space-2) 0 var(--space-2);
+	font: inherit;
+	color: var(--text);
+	background: var(--bg-elev);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-full);
+	box-shadow: var(--shadow-md, 0 2px 8px rgba(0, 0, 0, 0.1));
+	cursor: pointer;
+	font-variant-numeric: tabular-nums;
+	z-index: 2;
+}
+
+.history-fab:hover {
+	background: var(--hover);
+	border-color: var(--border-strong);
+}
+
+.history-fab__icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: var(--text-size-md);
+	color: var(--accent);
+}
+
+.history-fab__label {
+	color: var(--text-dim);
+}
+
+.history-fab[aria-expanded="true"] {
+	background: var(--accent-soft);
+	border-color: var(--accent);
+	color: var(--accent-strong);
+}
+
+.history-fab[aria-expanded="true"] .history-fab__label,
+.history-fab[aria-expanded="true"] .history-fab__icon {
+	color: var(--accent-strong);
+}
+
+.history-popover {
+	position: absolute;
+	inset-inline-start: 14px;
+	bottom: 52px;
+	min-width: 320px;
+	max-width: calc(100% - 28px);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	padding: var(--space-3) var(--space-2);
+	background: var(--bg-elev);
+	border: var(--border-width) solid var(--border-strong);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-lg, 0 8px 24px rgba(0, 0, 0, 0.18));
+	z-index: 2;
+}
+
+.history-popover[hidden] {
+	display: none;
+}
+
+.history-popover__row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+
+.history-popover__date {
+	margin-inline-start: auto;
+	font-size: var(--text-size-sm);
+	color: var(--text);
+	font-variant-numeric: tabular-nums;
+}
+
+.history-popover__count {
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	font-variant-numeric: tabular-nums;
+	text-align: end;
+}
+
+/* Bespoke: a bordered, `--bg`-filled control with a tabular-numeric text
+ * variant (speed / reveal labels) — distinct from any single `.bs-btn`
+ * variant (neutral fills `--bg-elev`, secondary stays transparent/dim). Sizes
+ * to the shared small-control height. */
+.history-scrubber__button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	height: var(--control-height-sm);
+	min-width: var(--control-height-sm);
+	padding: 0 var(--space-2);
+	border-radius: var(--radius-sm);
+	border: var(--border-width) solid var(--border);
+	background: var(--bg);
+	color: var(--text);
+	font-size: var(--text-size-md);
+	font-family: inherit;
+	cursor: pointer;
+}
+
+.history-scrubber__button:hover {
+	background: var(--hover);
+}
+
+.history-scrubber__button--text {
+	font-variant-numeric: tabular-nums;
+	font-weight: var(--text-weight-medium);
+}
+
+/* Event-density strip (9.13.10d) — one bar per time bucket, height ∝
+   count; bars at/under the cutoff read as "revealed" (accent), the rest
+   ambient. Decorative + aria-hidden: the cutoff date + count outputs
+   carry the value for assistive tech. */
+.history-scrubber__hist {
+	display: flex;
+	align-items: flex-end;
+	gap: var(--space-0_5);
+	height: 28px;
+	margin-bottom: var(--space-1, var(--space-1));
+}
+
+.history-scrubber__hist-bar {
+	flex: 1 1 0;
+	min-width: 0;
+	min-height: 1px;
+	border-radius: var(--radius-xs);
+	background: var(--border-strong, var(--border));
+}
+
+.history-scrubber__hist-bar--revealed {
+	background: var(--accent);
+}
+
+.history-scrubber__bar {
+	width: 100%;
+	accent-color: var(--accent);
+}
+
+/* ── Drag-to-create-link (9.13.11) ──────────────────────────────────────── */
+
+/* The rubber-band line is a DOM overlay above the canvas (pointer-events
+ * none) so gesture feedback never invalidates the Pixi edge cache. */
+.link-drag-overlay {
+	position: fixed;
+	inset: 0;
+	width: 100vw;
+	height: 100vh;
+	pointer-events: none;
+	z-index: 60;
+}
+
+.link-drag-overlay line {
+	stroke: var(--accent);
+	stroke-width: 2;
+	stroke-dasharray: 6 4;
+	stroke-linecap: round;
+}
+
+/* Crosshair while the link gesture is live (set on the renderer element). */
+.graph-canvas-container [data-linking="true"],
+.graph-canvas-container [data-linking="true"] * {
+	cursor: crosshair;
+}
+
+/* 9.13.11 — editable inspector for the canvas click-selection. A floating glass
+ * card pinned to the bottom-start corner; the SDK property cells render inside. */
+/* Floating canvas overlay that HOSTS the shared `.bs-props` panel content
+ * (header + scrolling rows). The container owns position / size / glass; the
+ * inner `.bs-props__inner` owns the 44px header + scroll body, so it must be a
+ * bounded flex column for the body's `overflow-y: auto` to engage. */
+.graph-inspector {
+	position: absolute;
+	inset-block-end: var(--space-4);
+	inset-inline-start: var(--space-4);
+	z-index: 5;
+	display: flex;
+	flex-direction: column;
+	inline-size: min(320px, 40vw);
+	max-block-size: 50vh;
+	overflow: hidden;
+	background: var(--bg-elev);
+	border: var(--border-width) solid var(--color-glass-border);
+	border-radius: var(--radius-lg);
+}
+
+.graph-inspector .bs-props__inner {
+	flex: 1 1 auto;
+	min-block-size: 0;
+	height: auto;
+}
+
+/* The active panel (Properties or Comments) fills below the optional tab
+ * strip (shared CommentsRightPanel chrome). */
+.graph-inspector > :not(.bs-panel-tabs) {
+	flex: 1 1 0;
+	min-block-size: 0;
+}
+
+.graph-inspector__count {
+	margin: 0;
+	padding: var(--space-3);
+	font-size: var(--text-size-sm);
+	color: var(--text-dim);
+}

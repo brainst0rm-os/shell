@@ -1,0 +1,216 @@
+/* Dashboard widgets layer (Stage 7.3). The layer fills the dashboard and is
+ * pointer-transparent so empty space falls through to the icon grid below; only
+ * the cards take pointer events. The "add widget" trigger lives in the dashboard
+ * header (see dashboard.tsx). Each card draws a header strip (grip + open ↗ + ⋯)
+ * above the native WebContentsView, which the host parks on the inset rect the
+ * renderer reports. */
+.dashboard-widgets {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	z-index: 1;
+}
+
+.dashboard-widgets__card {
+	position: absolute;
+	pointer-events: auto;
+	display: flex;
+	flex-direction: column;
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-lg);
+	overflow: hidden;
+	background: var(--color-background-elevated);
+	box-shadow: var(--shadow-sm);
+	/* Position/size (left/top/width/height) are driven live by React state during
+	 * a gesture, so they must NOT transition — only the lift shadow eases. */
+	transition: box-shadow 140ms ease;
+}
+
+.dashboard-widgets__card:hover {
+	box-shadow: var(--shadow-md);
+}
+
+/* While dragging the card tracks the cursor via an inline `transform` written
+ * on every pointermove — the base `transition: transform` would ease each of
+ * those writes over 140ms and make the drag lag behind the pointer, so drop
+ * transform from the transition here (the lift shadow still eases). */
+.dashboard-widgets__card--dragging {
+	z-index: 10;
+	box-shadow: var(--shadow-lg);
+	transition: box-shadow 140ms ease;
+}
+
+.dashboard-widgets__header {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	height: var(--widget-header, 30px);
+	flex-shrink: 0;
+	padding: 0 var(--space-1) 0 var(--space-2);
+	border-bottom: var(--border-width) solid var(--color-border-subtle);
+	background: var(--color-background-subtle);
+	user-select: none;
+}
+
+/* Collapsed: only the header strip shows (the native view is hidden + paused),
+ * so the header is the whole card — drop its divider so there's no border
+ * floating at the card's bottom edge. */
+.dashboard-widgets__card--collapsed .dashboard-widgets__header {
+	border-bottom: none;
+}
+
+/* The title IS the drag surface (cursor: grab) — no separate handle glyph (it
+ * just reserved a gap). The trailing action buttons sit outside it so they click
+ * rather than initiate a drag. */
+.dashboard-widgets__grip {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	flex: 1;
+	min-width: 0;
+	height: 100%;
+	cursor: grab;
+	color: var(--color-text-secondary);
+}
+
+/* The owning app's icon in the header (shared AppIcon), like a window title bar. */
+.dashboard-widgets__grip .app-icon {
+	flex-shrink: 0;
+}
+
+.dashboard-widgets__card--dragging .dashboard-widgets__grip {
+	cursor: grabbing;
+}
+
+.dashboard-widgets__title {
+	min-width: 0;
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+	color: var(--color-text-secondary);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.dashboard-widgets__action {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	width: 22px;
+	height: 22px;
+	border: none;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--color-text-tertiary);
+	cursor: pointer;
+	/* Hover-only: the header actions are quiet until the card is hovered (or one
+	 * is keyboard-focused, or holds an open menu — see below). */
+	opacity: 0;
+	transition: opacity 120ms ease, background-color 120ms ease, color 120ms ease;
+}
+
+.dashboard-widgets__card:hover .dashboard-widgets__action,
+.dashboard-widgets__action:focus-visible {
+	opacity: 1;
+}
+
+.dashboard-widgets__action:hover {
+	background: var(--color-interactive-hover);
+	color: var(--color-text-primary);
+}
+
+/* The ⋯ menu button whose menu is open (fancy-menus stamps aria-expanded on the
+ * anchor) stays visible + shows the active background, even once the pointer
+ * leaves the card to use the menu. Scoped to --menu so the collapse toggle (which
+ * carries aria-expanded for its own a11y state) stays hover-only. */
+.dashboard-widgets__action--menu[aria-expanded="true"] {
+	opacity: 1;
+	background: var(--color-interactive-hover);
+	color: var(--color-text-primary);
+}
+
+.dashboard-widgets__action:focus-visible {
+	outline: var(--border-width) solid var(--color-accent-default);
+	outline-offset: 1px;
+}
+
+/* The body hosts the widget iframe (or the loading placeholder). Positioned so
+ * the resize grip can layer over the iframe at the corner. `overflow: hidden` on
+ * the card clips the iframe to the rounded corners. */
+.dashboard-widgets__body {
+	position: relative;
+	flex: 1;
+	min-height: 0;
+	/* Match the card surface so any area the iframe content doesn't paint (below a
+	 * short list) reads as one surface, not a darker band. */
+	background: var(--color-background-elevated);
+}
+
+/* The sandboxed app iframe — a plain DOM child, sized to the body. */
+.dashboard-widgets__frame {
+	display: block;
+	width: 100%;
+	height: 100%;
+	border: none;
+	background: transparent;
+}
+
+/* The iframe is a container tab-stop; keyboard focus on it would otherwise
+ * paint the global `:root :focus-visible` accent ring around the entire widget
+ * body — a big ugly box the user never asked for. The interactive controls
+ * INSIDE the widget carry their own focus rings (the real focus indicator), so
+ * suppress the redundant iframe-level ring. */
+.dashboard-widgets__frame:focus-visible {
+	outline: none;
+}
+
+/* Loading state before the iframe entry URL resolves. */
+.dashboard-widgets__placeholder {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+	color: var(--color-text-tertiary);
+}
+
+/* Resize grip — a DOM child layered over the iframe at the card's bottom-right
+ * corner. A small diagonal glyph, faint until hovered. */
+.dashboard-widgets__resize {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	z-index: 1;
+	pointer-events: auto;
+	display: flex;
+	align-items: flex-end;
+	justify-content: flex-end;
+	width: 18px;
+	height: 18px;
+	padding: 3px;
+	cursor: nwse-resize;
+	touch-action: none;
+	color: var(--color-text-tertiary);
+	/* Hover-only, like the header actions. */
+	opacity: 0;
+	transition: opacity 120ms ease, color 120ms ease;
+}
+
+.dashboard-widgets__resize svg {
+	width: 10px;
+	height: 10px;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.5;
+	stroke-linecap: round;
+}
+
+.dashboard-widgets__card:hover .dashboard-widgets__resize {
+	opacity: 0.75;
+}
+
+.dashboard-widgets__resize:hover {
+	opacity: 1;
+	color: var(--color-text-primary);
+}

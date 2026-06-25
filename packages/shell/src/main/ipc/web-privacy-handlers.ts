@@ -1,0 +1,30 @@
+/**
+ * `web-privacy:*` IPC handlers — the dashboard renderer's read/revoke
+ * surface over the Browser-7 web-privacy runtime (per-site device-permission
+ * grants + the browser engine's per-host egress aggregate) for
+ * Settings → Privacy.
+ *
+ * **Privileged-only**: dashboard-bound `ipcMain.handle` channels, never the
+ * broker (the `network-settings-handlers` pattern). The Browser app itself
+ * reaches the grant store only through the broker's `webview` service,
+ * gated on `web.browse`.
+ */
+
+import { ipcMain } from "electron";
+import {
+	WEB_EGRESS_SUMMARY_CHANNEL,
+	WEB_SITE_PERMISSIONS_LIST_CHANNEL,
+	WEB_SITE_PERMISSIONS_REVOKE_CHANNEL,
+} from "../../web-privacy-wire-types";
+import type { WebPrivacyRuntime } from "../web/web-privacy-runtime";
+
+export function registerWebPrivacyHandlers(runtime: WebPrivacyRuntime): void {
+	ipcMain.handle(WEB_SITE_PERMISSIONS_LIST_CHANNEL, async () => runtime.permissions.list());
+	ipcMain.handle(WEB_SITE_PERMISSIONS_REVOKE_CHANNEL, async (_event, origin: unknown) => {
+		if (typeof origin !== "string" || origin.length === 0) return false;
+		return runtime.permissions.revokeOrigin(origin);
+	});
+	ipcMain.handle(WEB_EGRESS_SUMMARY_CHANNEL, async (_event, limit: unknown) =>
+		runtime.egress.summary(typeof limit === "number" ? limit : undefined),
+	);
+}

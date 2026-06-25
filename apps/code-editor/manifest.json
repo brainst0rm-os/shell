@@ -1,0 +1,59 @@
+{
+  "id": "io.brainstorm.code-editor",
+  "name": "Code Editor",
+  "version": "0.1.0",
+  "sdk": "1",
+  "description": "View and edit code-shaped notes (snippets, configs, REPL fragments) as `CodeFile/v1` entities. Pre-configured editor with syntax highlighting per language; opens any source-code MIME via the `open` intent. v1 is vault-resident only — no source-tree write access.",
+  "icon": "icon.svg",
+  "entry": "dist/index.html",
+  "capabilities": [
+    "storage.kv",
+    "entities.read:brainstorm/CodeFile/v1",
+    "entities.write:brainstorm/CodeFile/v1",
+    "entities.read:*",
+    "intents.dispatch:open",
+    "dashboard.pin",
+    "properties.read"
+  ],
+  "i18n": { "source": "en", "locales": ["en"] },
+  "registrations": {
+    "entityTypes": [
+      {
+        "id": "brainstorm/CodeFile/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/code-editor/code-file/v1.json",
+        "schema": {
+          "type": "object",
+          "required": ["id", "path", "language", "createdAt", "updatedAt"],
+          "properties": {
+            "id": { "type": "string" },
+            "path": { "type": "string" },
+            "language": { "type": "string" },
+            "sizeBytes": { "type": ["number", "null"] },
+            "lineCount": { "type": ["number", "null"] },
+            "isDirty": { "type": "boolean" },
+            "lastOpenedAt": { "type": ["number", "null"] },
+            "createdAt": { "type": "number" },
+            "updatedAt": { "type": "number" }
+          }
+        }
+      }
+    ],
+    "openers": [
+      { "kind": "primary", "entityType": "brainstorm/CodeFile/v1" },
+      { "kind": "primary", "mime": "text/x-typescript" },
+      { "kind": "primary", "mime": "text/javascript" },
+      { "kind": "primary", "mime": "application/json" },
+      { "kind": "primary", "mime": "text/x-python" },
+      { "kind": "primary", "mime": "text/x-rustsrc" },
+      { "kind": "primary", "mime": "text/x-go" },
+      { "kind": "primary", "mime": "text/css" },
+      { "kind": "primary", "mime": "text/html" },
+      { "kind": "primary", "mime": "text/x-yaml" },
+      { "kind": "primary", "mime": "text/x-toml" },
+      { "kind": "primary", "mime": "application/x-sh" },
+      { "kind": "secondary", "mime": "text/plain" },
+      { "kind": "secondary", "mime": "text/markdown" }
+    ],
+    "intents": [{ "verb": "open", "entityType": "brainstorm/CodeFile/v1", "priority": "primary" }]
+  }
+}

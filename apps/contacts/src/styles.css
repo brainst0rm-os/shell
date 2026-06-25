@@ -1,0 +1,627 @@
+/**
+ * Contacts app styles. Structural only — colour / type / spacing all come
+ * from the shared design tokens (loaded via `@brainstorm/sdk/app-theme.css`).
+ * The `.app-header` baseline (44px, bottom border) is the shared rule; the
+ * properties inspector reuses the shared `.bs-props` glass overlay (the app
+ * owns the container, the SDK owns `.bs-props__inner`).
+ */
+
+/* Base resets every app needs (Tasks / Bookmarks / Notes all carry these).
+ * `box-sizing: border-box` so the header's 1px border sits INSIDE the shared
+ * 44px height (content-box made it 45px); `body { margin: 0 }` so the app
+ * isn't inset 8px by the browser default and the header is flush + the right
+ * height. */
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	overflow: hidden;
+}
+
+#root {
+	height: 100vh;
+	overflow: hidden;
+}
+
+/* ── Two-pane layout ──────────────────────────────────────────────────────
+ * One shared `.app-header` on top; below it a persistent, resizable left
+ * sidebar (the contact list) and the detail / placeholder content pane —
+ * the Tasks / Notes / Journal convention. */
+
+.contacts {
+	display: flex;
+	flex-direction: column;
+	height: 100vh;
+	background: var(--bg);
+	color: var(--text);
+}
+
+.contacts__body {
+	flex: 1;
+	display: flex;
+	min-height: 0;
+}
+
+.contacts__sidebar {
+	display: flex;
+	flex-direction: column;
+	flex: 0 0 var(--contacts-sidebar-width, 280px);
+	width: var(--contacts-sidebar-width, 280px);
+	min-height: 0;
+	border-inline-end: var(--border-width) solid var(--color-border-subtle);
+}
+
+.contacts[data-nav-open="false"] .contacts__sidebar {
+	display: none;
+}
+
+/* PHYSICAL-AXIS INTENTIONAL: the resize handle straddles the panel edge geometrically */
+.contacts__resize {
+	flex: 0 0 5px;
+	margin-inline-start: -3px;
+	cursor: col-resize;
+	background: transparent;
+	z-index: 2;
+}
+
+.contacts__resize:hover,
+.contacts__resize:focus-visible,
+body.is-resizing .contacts__resize {
+	background: var(--color-accent-subtle);
+}
+
+.contacts__content {
+	position: relative; /* anchor for the `.bs-props` glass overlay */
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.contacts__placeholder {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-2);
+	padding: var(--space-8);
+	text-align: center;
+}
+
+.contacts__placeholder-avatar {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 72px;
+	height: 72px;
+	border-radius: var(--radius-full);
+	background: var(--bg-elev);
+	color: var(--text-faint);
+	margin-bottom: var(--space-2);
+}
+
+.contacts__placeholder-title {
+	margin: 0;
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium);
+	color: var(--text-dim);
+}
+
+.contacts__placeholder-blurb {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--text-faint);
+}
+
+.contacts__company-landing {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-3);
+	padding: var(--space-8);
+	text-align: center;
+}
+
+.contacts__company-back {
+	align-self: center;
+	gap: var(--space-1);
+}
+
+.contacts__company-landing-head {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-1);
+}
+
+.contacts__company-name {
+	margin: 0;
+	font-size: var(--text-size-lg);
+	font-weight: var(--text-weight-medium);
+	color: var(--text);
+}
+
+.contacts__company-count {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--text-faint);
+}
+
+.contacts-detail {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-height: 0;
+}
+
+/* ── App header ──────────────────────────────────────────────────────────
+ * The full header chrome — flex skeleton, left/right groups, the `<h1>` title
+ * face (incl. its `margin: 0` reset), height / padding / drag-region — is the
+ * shared `.app-header` rule in `@brainstorm/sdk/app-theme.css`. Nothing to
+ * declare locally. */
+
+/* ── Shared controls ─────────────────────────────────────────────────── */
+
+/* Dialog / CTA buttons use the shared `.bs-btn` primitive (neutral ·
+ * data-bs-primary · --danger). The stateful 28px icon button stays local. */
+
+.contacts-icon-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border: none;
+	border-radius: var(--radius-md);
+	background: transparent;
+	color: var(--text-dim);
+	cursor: pointer;
+}
+
+.contacts-icon-btn:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.contacts-icon-btn--active {
+	background: var(--accent-soft);
+	color: var(--accent);
+}
+
+.contacts-icon-btn--danger:hover {
+	background: var(--danger-bg);
+	color: var(--danger);
+}
+
+/* ── List route ──────────────────────────────────────────────────────── */
+
+.contacts-list__search {
+	display: flex;
+	flex: 0 0 auto;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-2);
+	color: var(--text-faint);
+	border-bottom: var(--border-width) solid var(--color-border-subtle);
+}
+
+.contacts-list__search-input {
+	flex: 1;
+	border: none;
+	background: transparent;
+	color: var(--text);
+	font-size: var(--text-size-md);
+	outline: none;
+}
+
+.contacts-list__controls {
+	display: flex;
+	flex: 0 0 auto;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-2);
+	border-bottom: var(--border-width) solid var(--color-border-subtle);
+}
+
+/* Light borderless toggles, matching the Tasks app's Group/Sort controls
+   (was heavy bordered chips). */
+.contacts-list__control {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	padding: var(--space-1);
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text-dim);
+	font-size: var(--text-size-xs);
+	cursor: pointer;
+}
+
+.contacts-list__control svg {
+	flex: 0 0 auto;
+	color: var(--text-dim);
+}
+
+.contacts-list__control:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.contacts-list__banner {
+	margin: 0;
+	padding: var(--space-2);
+	font-size: var(--text-size-xs);
+	color: var(--text-faint);
+	background: var(--bg-elev);
+	border-bottom: var(--border-width) solid var(--color-border-subtle);
+}
+
+.contacts-list__scroll {
+	flex: 1;
+	overflow-y: auto;
+	padding: var(--space-2) 0 var(--space-8);
+}
+
+.contacts-list__group-letter {
+	position: sticky;
+	top: 0;
+	margin: 0;
+	padding: var(--space-2) var(--space-4) var(--space-1);
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-semibold);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--text-faint);
+	background: var(--bg);
+}
+
+.contacts-list__upcoming {
+	border-bottom: var(--border-width) solid var(--color-border-subtle);
+	margin-bottom: var(--space-2);
+	padding-bottom: var(--space-2);
+}
+
+/* Row chrome matches the Notes/Journal sidebar: rounded, inset highlight,
+   tighter gap (was a square full-bleed hover with an oversized gap). */
+.contacts-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	width: 100%;
+	padding: var(--space-1) var(--space-2);
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-md);
+	background: transparent;
+	background-clip: padding-box;
+	color: inherit;
+	text-align: start;
+	cursor: pointer;
+}
+
+.contacts-row:hover {
+	background: var(--hover);
+}
+
+.contacts-row--active,
+.contacts-row--active:hover {
+	background: var(--accent-soft);
+	color: var(--text);
+	border-color: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.contacts-row__avatar {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 32px;
+	width: 32px;
+	height: 32px;
+	border-radius: var(--radius-full);
+	background: var(--accent-soft);
+	color: var(--accent);
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-semibold);
+}
+
+.contacts-row__avatar--soft {
+	background: var(--bg-elev);
+	color: var(--text-dim);
+}
+
+.contacts-row__text {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+	min-width: 0;
+	flex: 1;
+}
+
+.contacts-row__name {
+	font-size: var(--text-size-md);
+	color: var(--text);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.contacts-row__secondary {
+	font-size: var(--text-size-sm);
+	color: var(--text-faint);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.contacts-list__no-results {
+	padding: var(--space-8) var(--space-6);
+	text-align: center;
+	color: var(--text-faint);
+}
+
+/* ── Detail pane ─────────────────────────────────────────────────────── */
+
+/* Editable name on the card — the same face as the old static <h1>, as a
+ * borderless centered input committed on blur / Enter. */
+.contacts-detail__name-input {
+	width: min(100%, 28ch);
+	border: none;
+	background: transparent;
+	color: var(--text);
+	text-align: center;
+	font-size: var(--text-size-2xl);
+	font-weight: var(--text-weight-semibold);
+	outline: none;
+	border-radius: var(--radius-md);
+}
+
+.contacts-detail__name-input:hover,
+.contacts-detail__name-input:focus {
+	background: var(--bg-elev);
+}
+
+.contacts-detail__scroll {
+	flex: 1;
+	overflow-y: auto;
+}
+
+.contacts-detail__card {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-8) var(--space-6) var(--space-4);
+	text-align: center;
+}
+
+.contacts-detail__avatar {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 72px;
+	height: 72px;
+	border-radius: var(--radius-full);
+	background: var(--accent-soft);
+	color: var(--accent);
+	font-size: var(--text-size-2xl);
+	font-weight: var(--text-weight-semibold);
+}
+
+.contacts-detail__subtitle {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--text-faint);
+}
+
+.contacts-detail__company-link {
+	border: none;
+	background: transparent;
+	padding: 0;
+	color: var(--accent);
+	font: inherit;
+	cursor: pointer;
+}
+
+.contacts-detail__company-link:hover {
+	text-decoration: underline;
+}
+
+.contacts-detail__birthday {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	margin: 0;
+	color: var(--text-dim);
+}
+
+/* Inline "Add company" affordance shown on the card when a contact has no
+ * company yet (the picker only links existing ones). */
+.contacts-detail__add-company {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	padding: var(--space-1);
+	border: var(--border-width) dashed var(--border);
+	border-radius: var(--radius-md);
+	background: transparent;
+	color: var(--text-dim);
+	cursor: pointer;
+}
+
+.contacts-detail__add-company:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.contacts-detail__add-company-input {
+	padding: var(--space-1);
+	border: var(--border-width) solid var(--accent);
+	border-radius: var(--radius-md);
+	background: var(--bg-elev);
+	color: var(--text);
+	outline: none;
+}
+
+.contacts-detail__section {
+	max-width: 60ch;
+	margin: 0 auto;
+	padding: var(--space-3);
+}
+
+.contacts-detail__section-title {
+	margin: 0 0 var(--space-2);
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-semibold);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--text-faint);
+}
+
+.contacts-detail__methods {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.contacts-detail__method {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	color: var(--text-faint);
+}
+
+.contacts-detail__method-value {
+	color: var(--text);
+	font-size: var(--text-size-md);
+	text-decoration: none;
+}
+
+.contacts-detail__method-value:hover {
+	color: var(--accent);
+	text-decoration: underline;
+}
+
+.contacts-detail__chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+}
+
+.contacts-detail__chip {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	padding: var(--space-1);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-full);
+	background: var(--bg-elev);
+	color: var(--text);
+	font-size: var(--text-size-sm);
+	cursor: pointer;
+}
+
+.contacts-detail__chip:hover {
+	background: var(--hover);
+	border-color: var(--border-strong);
+}
+
+.contacts-detail__bio {
+	max-width: 60ch;
+	margin: 0 auto;
+	padding: var(--space-3) var(--space-6) var(--space-8);
+	font-size: var(--text-size-md);
+	line-height: var(--text-line-height-normal, 1.5);
+	color: var(--text-dim);
+	white-space: pre-wrap;
+}
+
+.contacts-detail__empty {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--text-faint);
+}
+
+/* ── Properties inspector — shared glass overlay (app owns the container) ─ */
+
+/* The overlay anchors to `.contacts__content`, which already sits below the
+ * shared header — so it spans the pane from the top. */
+.bs-props {
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	width: 320px;
+	max-width: 90vw;
+	border-inline-start: var(--border-width) solid var(--color-glass-border);
+	transform: translateX(100%);
+	transition: transform 160ms ease;
+	z-index: 5;
+}
+
+.bs-props--open {
+	transform: translateX(0);
+}
+
+/* ── Compose popover ─────────────────────────────────────────────────── */
+
+.contacts-compose {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+}
+
+.contacts-compose__field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.contacts-compose__label {
+	font-size: var(--text-size-sm);
+	color: var(--text-dim);
+}
+
+.contacts-compose__input {
+	height: var(--control-height-md, 32px);
+	padding: 0 var(--space-2);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-md);
+	background: var(--bg-elev);
+	color: var(--text);
+	font-size: var(--text-size-md);
+	outline: none;
+}
+
+.contacts-compose__input:focus-visible {
+	border-color: var(--color-focus-ring);
+}
+
+.contacts-compose__actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--space-2);
+}
+
+/* ── Confirm dialog ──────────────────────────────────────────────────── */
+
+.contacts-confirm__body {
+	margin: 0;
+	font-size: var(--text-size-md);
+	color: var(--text-dim);
+}
+
+.contacts-confirm__actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--space-2);
+}

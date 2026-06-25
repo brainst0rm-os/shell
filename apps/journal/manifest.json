@@ -1,0 +1,31 @@
+{
+  "id": "io.brainstorm.journal",
+  "name": "Journal",
+  "version": "0.1.0",
+  "sdk": "1",
+  "description": "Daily-notes / Roam-Logseq-style rolling journal. Each day is a Journal/Entry whose title is the ISO date and whose body the user writes into (edited through the shared Notes editor). Date navigator, today pin, week + month overviews, backlinks panel.",
+  "icon": "icon.svg",
+  "entry": "dist/index.html",
+  "capabilities": [
+    "storage.kv",
+    "editor.spellcheck.read",
+    "editor.spellcheck.write",
+    "entities.read:*",
+    "entities.write:io.brainstorm.journal/Entry/v1",
+    "entities.write:brainstorm/Comment/v1",
+    "intents.dispatch:open",
+    "intents.dispatch:compose",
+    "notifications.post",
+    "files.write"
+  ],
+  "registrations": {
+    "openers": [{ "kind": "primary", "entityType": "io.brainstorm.journal/Entry/v1" }],
+    "intents": [
+      {
+        "verb": "open",
+        "entityType": "io.brainstorm.journal/Entry/v1",
+        "priority": "primary"
+      }
+    ]
+  }
+}

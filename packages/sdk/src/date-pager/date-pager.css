@@ -1,0 +1,52 @@
+/**
+ * Date pager — minimal shared chrome for the today/prev/next cluster
+ * (`@brainstorm/sdk/date-pager`). The shape is opinionated (flex row,
+ * tight gap, button reset); the palette is left to the host so Calendar /
+ * Database / Journal can keep their own pill / flat / linear treatments.
+ *
+ * Loaded via `app-theme.css` (the same way `searchbar.css` and the
+ * icon/cover-picker CSS ship) so the side-effect tree-shaking trap
+ * `[[project_workspace_css_subpath_export]]` doesn't bite.
+ */
+
+.bs-date-pager {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1, var(--space-1));
+}
+
+.bs-date-pager__today,
+.bs-date-pager__arrow {
+	font: inherit;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	height: 28px;
+	min-width: 28px;
+	padding: 0 var(--space-2);
+	background: transparent;
+	border: var(--border-width) solid var(--color-border-subtle, var(--border));
+	border-radius: var(--radius-sm);
+	color: var(--text);
+	cursor: pointer;
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium, 500);
+	line-height: 20px;
+}
+
+.bs-date-pager__arrow {
+	padding: 0;
+	width: 28px;
+}
+
+.bs-date-pager__today:hover,
+.bs-date-pager__arrow:hover {
+	background: var(--hover, var(--color-interactive-hover));
+}
+
+.bs-date-pager__today:focus-visible,
+.bs-date-pager__arrow:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+	border-color: transparent;
+}

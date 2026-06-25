@@ -1,0 +1,120 @@
+/* `<ShareDialog>` (Collab-C5) — member list + add-by-code + your-invite-code.
+ * Every var() names a real app-theme alias (packages/sdk/src/app-theme.css) or
+ * a flattened token (packages/tokens). */
+
+.bs-share {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+	min-width: 320px;
+}
+
+.bs-share__section {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.bs-share__heading {
+	margin: 0;
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-semibold);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--text-dim);
+}
+
+.bs-share__members {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.bs-share__member {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	height: var(--control-height-md, 32px);
+}
+
+.bs-share__member-name {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: var(--text-size-md);
+	color: var(--text);
+}
+
+.bs-share__role {
+	flex: 0 0 auto;
+	font-size: var(--text-size-sm);
+	color: var(--text-dim);
+}
+
+.bs-share__revoke {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--control-height-sm, 24px);
+	height: var(--control-height-sm, 24px);
+	padding: 0;
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text-dim);
+	cursor: pointer;
+}
+
+.bs-share__revoke:hover:not(:disabled) {
+	background: var(--hover);
+	color: var(--danger);
+}
+
+.bs-share__revoke:disabled {
+	cursor: not-allowed;
+	opacity: 0.55;
+}
+
+.bs-share__add,
+.bs-share__invite {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+
+.bs-share__code-input {
+	flex: 1 1 auto;
+	min-width: 0;
+	height: var(--control-height-md, 32px);
+	padding: 0 var(--space-2);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-sm);
+	background: var(--bg-elev);
+	color: var(--text);
+	font-family: inherit;
+	font-size: var(--text-size-md);
+}
+
+.bs-share__code-input:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+	border-color: transparent;
+}
+
+.bs-share__hint {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--text-dim);
+}
+
+.bs-share__error {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--danger);
+}

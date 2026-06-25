@@ -1,0 +1,72 @@
+/**
+ * Styling for the shared `mountComingSoon` placeholder surface. Lives as a
+ * subpath CSS export (`@brainstorm/sdk/coming-soon/coming-soon.css`) the
+ * stub app imports once, mirroring `searchbar/searchbar.css` etc. Tokens
+ * only — no hard-coded palette, so it follows the active theme.
+ */
+
+/* Stub-page scaffold. A not-yet-built app's whole stylesheet is this one
+ * import, so the page reset that a real app keeps in its local `styles.css`
+ * (box-sizing + full-height body + the header/main column) lives here too.
+ * When an app graduates to a real build it drops this import and ships its
+ * own styles. */
+:root {
+	color-scheme: light dark;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	height: 100%;
+	overflow: hidden;
+}
+
+body {
+	display: flex;
+	flex-direction: column;
+}
+
+body > main {
+	flex: 1 1 auto;
+	min-height: 0;
+}
+
+.bs-coming-soon {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.75rem;
+	height: 100%;
+	padding: 2rem;
+	text-align: center;
+}
+
+.bs-coming-soon__badge {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--color-accent-default, #8867d0);
+}
+
+.bs-coming-soon__title {
+	margin: 0;
+	font-size: 1.75rem;
+	font-weight: 650;
+	line-height: 1.15;
+	color: var(--color-text-primary, #1a1a1a);
+}
+
+.bs-coming-soon__blurb {
+	margin: 0;
+	max-width: 32rem;
+	font-size: var(--text-size-md);
+	line-height: 1.55;
+	color: var(--color-text-tertiary, #6b6b6b);
+}

@@ -1,0 +1,164 @@
+/**
+ * SDK popover chrome — the app-side mirror of the shell's `ui/popover.css`,
+ * `bs-`-prefixed so it never collides with an app's own `.popover`. Reads
+ * the shell theme tokens an app inherits (per "Apps inherit shell theme"),
+ * with literal fallbacks so the pure-DOM helper still renders if it mounts
+ * before the theme stylesheet. No framer-motion: the only animation is a
+ * backdrop opacity fade (the blurred panel mounts at its target state to
+ * dodge the Chromium backdrop-filter-during-opacity glitch, same reasoning
+ * as the shell).
+ */
+
+.bs-popover {
+	position: fixed;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: var(--z-popover, 50);
+}
+
+.bs-popover__backdrop {
+	position: absolute;
+	inset: 0;
+	background: var(--color-dimmer, rgba(0, 0, 0, 0.45));
+	border: 0;
+	cursor: default;
+	padding: 0;
+	margin: 0;
+	animation: bs-popover-fade-in 140ms ease both;
+}
+
+@keyframes bs-popover-fade-in {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.bs-popover__backdrop {
+		animation: none;
+	}
+}
+
+/* Glass surface mirroring the shell's `.popover__panel.glass`: a translucent
+ * blurred panel that reads the live theme tokens (`--color-glass-background`)
+ * rather than a hardcoded hex, so it tracks light/dark. The opaque
+ * `--color-background-elevated` is the no-glass-support fallback; the literal
+ * is the last resort for a pre-theme mount. */
+.bs-popover__panel {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	color: var(--color-text-primary, inherit);
+	background: var(
+		--color-glass-background,
+		var(--color-background-elevated, #1c1c1f)
+	);
+	backdrop-filter: blur(var(--glass-blur, 24px)) saturate(var(--glass-saturate, 1.4));
+	-webkit-backdrop-filter: blur(var(--glass-blur, 24px)) saturate(var(--glass-saturate, 1.4));
+	border: var(--border-width) solid var(--color-glass-border, rgba(127, 127, 127, 0.28));
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-xl, 0 12px 40px rgba(0, 0, 0, 0.4));
+	overflow: hidden;
+}
+
+.bs-popover__panel--small {
+	width: 320px;
+	min-height: 220px;
+	max-height: min(80vh, 480px);
+}
+
+.bs-popover__panel--medium {
+	width: 420px;
+	min-height: 340px;
+	max-height: min(80vh, 600px);
+}
+
+.bs-popover__panel--large {
+	width: 640px;
+	min-height: 480px;
+	max-height: min(80vh, 760px);
+}
+
+/* Fixed 44px header + 1px subtle bottom border — the project-wide panel
+ * header rule. Right padding optical-compensated for the close button. */
+.bs-popover__header {
+	height: var(--app-header-height, 44px);
+	box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3, var(--space-3));
+	padding: 0 var(--space-3, var(--space-3)) 0 var(--space-4, var(--space-4));
+	border-bottom: var(--border-width) solid var(--color-glass-border, rgba(127, 127, 127, 0.28));
+	flex-shrink: 0;
+}
+
+.bs-popover__title {
+	margin: 0;
+	font-size: var(--text-size-lg);
+	font-weight: var(--text-weight-semibold, 600);
+	color: var(--color-text-primary, inherit);
+}
+
+.bs-popover__close {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--color-text-secondary, inherit);
+	cursor: pointer;
+	transition: background-color 120ms ease, color 120ms ease;
+}
+
+.bs-popover__close:hover {
+	background: var(--color-interactive-hover, rgba(127, 127, 127, 0.12));
+	color: var(--color-text-primary, inherit);
+}
+
+.bs-popover__close:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}
+
+.bs-popover__close-glyph {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.bs-popover__body {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2, var(--space-2));
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow-y: auto;
+}
+
+.bs-popover__body--compact {
+	padding: var(--space-2, var(--space-2));
+}
+
+.bs-popover__body--comfortable {
+	padding: var(--space-4, var(--space-4));
+}
+
+.bs-popover__footer {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: var(--space-2, var(--space-2));
+	padding: var(--space-3, var(--space-3)) var(--space-4, var(--space-4));
+	border-top: var(--border-width) solid var(--color-glass-border, rgba(127, 127, 127, 0.28));
+	flex-shrink: 0;
+}

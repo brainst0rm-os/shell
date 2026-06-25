@@ -1,0 +1,320 @@
+/**
+ * Collection shapes (9.3.5.1b) — `List/v1`, its `ListSource` membership
+ * criteria, and `ListView/v1` (the six view kinds + their per-kind layout
+ * options). Promoted here from the app-local
+ * `apps/database/src/types/{list,list-source,list-view}.ts` so there is ONE
+ * canonical definition shared by the Database app, the SH-8/SH-8a seed, and
+ * any future consumer.
+ *
+ * The membership sub-contract (`MemberOverrides`, `ListMode`,
+ * `COLLECTION_TYPE_URL`) was promoted in 9.3.5.1 and lives in
+ * `./collections`; this file owns the rest now that the `Icon` /
+ * `PropertyPredicate` reconciliation (9.3.5.1b) cleared the app-local-dep
+ * blocker. See docs/apps/database/01-data-model.md,
+ * docs/apps/database/10-lists-sets-collections.md and
+ * docs/apps/database/20-views.md.
+ */
+
+import type { MemberOverrides } from "./collections";
+import type { Icon } from "./icon";
+import type { FilterNode, PropertyPredicate } from "./predicate";
+
+// ─── ListSource — dynamic membership criteria ───────────────────────────────
+
+export enum ListSourceKind {
+	ByType = "byType",
+	ByFilter = "byFilter",
+	ByLink = "byLink",
+	ByVocabulary = "byVocabulary",
+	Composite = "composite",
+}
+
+export enum LinkDirection {
+	In = "in",
+	Out = "out",
+}
+
+export enum CompositeOp {
+	And = "and",
+	Or = "or",
+}
+
+export type ListSourceByType = {
+	kind: ListSourceKind.ByType;
+	types: string[];
+};
+
+export type ListSourceByFilter = {
+	kind: ListSourceKind.ByFilter;
+	where: PropertyPredicate;
+};
+
+export type ListSourceByLink = {
+	kind: ListSourceKind.ByLink;
+	linkType: string;
+	direction: LinkDirection;
+	/** Single anchor (legacy / the common case). */
+	anchorEntityId?: string;
+	/** Multiple anchors with implicit OR — "members reachable from *any* of
+	 *  these entities by `linkType`" (OQ-LD-1 (b), 9.12.22). Additive: a source
+	 *  carrying only `anchorEntityId` still resolves; a reader unions both. At
+	 *  least one of the two must be set. */
+	anchorEntityIds?: string[];
+};
+
+export type ListSourceByVocabulary = {
+	kind: ListSourceKind.ByVocabulary;
+	vocabularyId: string;
+	values?: string[];
+};
+
+export type ListSourceComposite = {
+	kind: ListSourceKind.Composite;
+	op: CompositeOp;
+	sources: ListSource[];
+};
+
+export type ListSource =
+	| ListSourceByType
+	| ListSourceByFilter
+	| ListSourceByLink
+	| ListSourceByVocabulary
+	| ListSourceComposite;
+
+// ─── ListView — one view onto a List ────────────────────────────────────────
+
+export enum ListViewKind {
+	Grid = "grid",
+	List = "list",
+	Gallery = "gallery",
+	Board = "board",
+	Calendar = "calendar",
+	Timeline = "timeline",
+}
+
+export enum SortDirection {
+	Asc = "asc",
+	Desc = "desc",
+	Manual = "manual",
+}
+
+export enum EmptyPlacement {
+	None = "none",
+	Start = "start",
+	End = "end",
+}
+
+export type SortKey = {
+	propertyId: string;
+	direction: SortDirection;
+	emptyPlacement: EmptyPlacement;
+};
+
+export type GroupBy = {
+	propertyId: string;
+};
+
+/** A computed *rollup* column's spec (9.12.17): no backing entity property —
+ *  the cell value is derived by walking the source row's `relationKey` relation
+ *  to its linked entities, reading each one's `targetPropertyKey`, and reducing
+ *  the gathered values with `aggregation`. `aggregation` is kept a plain string
+ *  (an `AggregationKind` value) so this leaf type stays free of the Database
+ *  app's `AggregationKind` enum — the same reason the `$relativeDate` predicate
+ *  RHS is a plain token string. */
+export type ColumnRollup = {
+	relationKey: string;
+	targetPropertyKey: string;
+	aggregation: string;
+	/** Display label for the column header / settings row. */
+	name: string;
+};
+
+/** A computed *formula* column's spec (9.12.17 formula half): no backing
+ *  entity property — the cell value is an arithmetic expression over the row's
+ *  other properties (`{fee} * {quantity}`), evaluated read-only per row. The
+ *  expression grammar lives in the Database app's `logic/formula.ts`; this leaf
+ *  type stays a plain `expression` string for the same reason `ColumnRollup`
+ *  keeps `aggregation` a string. */
+export type ColumnFormula = {
+	expression: string;
+	/** Display label for the column header / settings row. */
+	name: string;
+};
+
+export type ColumnSpec = {
+	propertyId: string;
+	width?: number;
+	visible: boolean;
+	displayOverride?: Record<string, unknown>;
+	/** When present, this column is a computed rollup (9.12.17): `propertyId`
+	 *  is a synthetic, spec-derived identity (no entity carries it) and the
+	 *  cell renders the read-only aggregated value. */
+	rollup?: ColumnRollup;
+	/** When present, this column is a computed formula (9.12.17): `propertyId`
+	 *  is a synthetic, spec-derived identity and the cell renders the read-only
+	 *  evaluated expression. */
+	formula?: ColumnFormula;
+	/** The footer aggregation chosen for this column (9.12.18) — an
+	 *  `AggregationKind` value (a plain string, same rationale as
+	 *  `ColumnRollup.aggregation`). Absent → the column's type default. */
+	aggregation?: string;
+};
+
+/** Per-kind layout option shapes. Discriminated by `ListView.kind`.
+ *
+ *  The narrow string-literal sub-fields below (`rowHeight`, `density`,
+ *  `thumbnailSize`, …) are deliberately NOT enums: they are not
+ *  discriminators (the discriminator is `ListView.kind`, an enum), and
+ *  per CLAUDE.md §"Enums, not string constants" pre-existing literal
+ *  unions are migrated as adjacent code is touched — enum-ifying them
+ *  here would be an unrelated app-wide churn. Wire format is unchanged. */
+export type GridLayoutOptions = {
+	rowHeight: "compact" | "comfortable" | "tall";
+	showRowNumbers: boolean;
+	pinFirstColumn: boolean;
+	/** Wrap cell content onto multiple lines. Default (false / undefined)
+	 *  is single-line with ellipsis. Toggled in view settings. */
+	wrap?: boolean;
+};
+
+export type ListLayoutOptions = {
+	density: "compact" | "comfortable";
+	showIcon: boolean;
+};
+
+export type GalleryLayoutOptions = {
+	thumbnailSize: "small" | "medium" | "large";
+	cardAspectRatio: "square" | "video" | "portrait";
+	showFilename: boolean;
+};
+
+export type BoardLayoutOptions = {
+	columnWidth: number;
+	collapseEmptyColumns: boolean;
+	cardPreview: "minimal" | "rich";
+	/** User-chosen column order, by group key (the empty string is the
+	 *  null / "Uncategorized" group). Keys not listed render after, in
+	 *  data order; unknown keys are ignored. Absent → pure data order. */
+	groupOrder?: string[];
+};
+
+export enum CalendarRange {
+	Day = "day",
+	Week = "week",
+	Month = "month",
+	Year = "year",
+	Agenda = "agenda",
+}
+
+export enum CalendarWeekStart {
+	Sunday = "sun",
+	Monday = "mon",
+}
+
+/** Optional recurrence projection for a calendar view's date property.
+ *  `Yearly` = the `primaryDateProperty` is a day-of-year (a birthday /
+ *  anniversary): place each row on the *displayed period's* occurrence
+ *  of its month-day, not the absolute stored year. Resolves the
+ *  9.12.13(b) Birthdays-view gate (OQ-CT-3, jointly with OQ-CAL-2). */
+export enum CalendarRecurring {
+	Yearly = "yearly",
+}
+
+export type CalendarLayoutOptions = {
+	range: CalendarRange;
+	startWeekOn: CalendarWeekStart;
+	/** Property whose date value places a card on the grid (e.g.
+	 *  `completedAt`, `dueAt`). Cards whose value is empty/unparseable
+	 *  are simply not shown that month. */
+	primaryDateProperty: string;
+	colorBy: string | null;
+	dateRangeStart?: string;
+	dateRangeEnd?: string;
+	/** When set, the date property is projected as a recurrence rather
+	 *  than an absolute instant (e.g. `Yearly` for a Birthdays view). */
+	recurring?: CalendarRecurring;
+};
+
+/** Timeline density — how items pack vertically within a swimlane. */
+export enum TimelineDensity {
+	Compact = "compact",
+	Comfortable = "comfortable",
+}
+
+/** Derived from data + config; not stored on the entity.
+ *  See docs/apps/database/20-views.md §Timeline. */
+export enum TimelineMode {
+	Event = "event",
+	Span = "span",
+	Mixed = "mixed",
+}
+
+export type TimelineLayoutOptions = {
+	primaryDateProperty: string;
+	endDateProperty: string | null;
+	swimlaneBy: string | null;
+	pxPerDay: number;
+	showNow: boolean;
+	showWeekends: boolean;
+	dependencyLinkTypes: string[];
+	showDependencies: boolean;
+	density: TimelineDensity;
+	colorBy: string | null;
+	labelProperty: string | null;
+};
+
+export type LayoutOptions =
+	| GridLayoutOptions
+	| ListLayoutOptions
+	| GalleryLayoutOptions
+	| BoardLayoutOptions
+	| CalendarLayoutOptions
+	| TimelineLayoutOptions;
+
+export type ListView = {
+	id: string;
+	listId: string;
+	name: string;
+	icon: Icon | null;
+	kind: ListViewKind;
+	filters: FilterNode | null;
+	sorts: SortKey[];
+	groupBy: GroupBy | null;
+	coverProperty: string | null;
+	cardSubtitleProperty: string | null;
+	columns: ColumnSpec[];
+	/** Explicit drag-reordered row order (entity ids). When set it wins
+	 *  over sorts — the user dragged rows into this order. Ids not listed
+	 *  keep their post-sort order, appended after. */
+	manualOrder?: string[];
+	defaultTypeUrl: string | null;
+	defaultTemplate: string | null;
+	pageSize: number;
+	layoutOptions: LayoutOptions;
+};
+
+/** Compiled view filter — what the entities service actually consumes once
+ *  the filter tree is flattened. Kept separate from the editable `FilterNode`
+ *  tree so the UI can present groups while the service sees a single
+ *  predicate. */
+export type CompiledViewFilter = PropertyPredicate | null;
+
+// ─── List/v1 — the single canonical Collection entity ───────────────────────
+
+export type List = {
+	id: string;
+	name: string;
+	icon: Icon | null;
+	description: string;
+	source: ListSource | null;
+	members: MemberOverrides;
+	views: string[];
+	defaultViewId: string | null;
+	/** Entity id of this Collection's default `Template/v1` for "+ New", or
+	 *  `null`. Second rung of the default-template ladder
+	 *  (`view.defaultTemplate → collection.defaultTemplate → type-default →
+	 *  blank`); see [66-templates.md](../../../docs/platform/66-templates.md). */
+	defaultTemplate: string | null;
+	createdAt: number;
+	updatedAt: number;
+};

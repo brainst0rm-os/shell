@@ -1,0 +1,299 @@
+/**
+ * Bin overlay chrome. Mirrors the Marketplace / Settings overlay shell
+ * (fixed backdrop + spring panel) but single-pane — the Bin is a list,
+ * not a workspace. The header follows the shared 44px /
+ * `--color-border-subtle` panel-header baseline. All sizing/colour via
+ * tokens (no hardcoded px font-size).
+ */
+
+.bin {
+	position: fixed;
+	inset: 0;
+	z-index: var(--z-modal);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	pointer-events: none;
+}
+
+.bin__backdrop {
+	position: absolute;
+	inset: 0;
+	background: var(--color-dimmer);
+	border: 0;
+	cursor: default;
+	pointer-events: auto;
+}
+
+.bin__panel {
+	position: relative;
+	width: min(640px, calc(100vw - var(--space-8)));
+	max-height: min(640px, calc(100vh - var(--space-8)));
+	display: flex;
+	flex-direction: column;
+	border: var(--border-width) solid var(--color-glass-border);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-xl);
+	overflow: hidden;
+	pointer-events: auto;
+}
+
+.bin__header {
+	flex: none;
+	height: var(--app-header-height);
+	box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+	padding: 0 var(--space-2) 0 var(--space-4);
+	border-bottom: var(--border-width) solid var(--color-border-subtle);
+}
+
+.bin__header-titles {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: var(--space-2);
+	min-width: 0;
+}
+
+.bin__title {
+	margin: 0;
+	font-size: var(--text-size-lg);
+	font-weight: var(--text-weight-semibold);
+	color: var(--color-text-primary);
+}
+
+/* Tiny quiet pill beside the title so the header stays one line. Count
+ * value is rendered raw; the localized "{count} in the Bin" string is
+ * the aria-label so screen readers still hear a full sentence. */
+.bin__count {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 20px;
+	height: 20px;
+	padding: 0 var(--space-2);
+	border-radius: var(--radius-full);
+	background: var(--color-interactive-hover);
+	color: var(--color-text-secondary);
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+	font-variant-numeric: tabular-nums;
+	line-height: 1;
+}
+
+.bin__header-actions {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+
+.bin__body {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	padding: var(--space-3) var(--space-2) var(--space-4);
+}
+
+/* Empty state has the giant tinted disc — it needs the wider padding +
+ * a min-height so the panel doesn't collapse to a thin strip. */
+.bin__body:has(.bin__empty) {
+	padding: var(--space-6);
+	min-height: 320px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+
+.bin__footer {
+	flex: none;
+	display: flex;
+	justify-content: flex-end;
+	align-items: center;
+	padding: var(--space-2) var(--space-2);
+	border-top: var(--border-width) solid var(--color-border-subtle);
+}
+
+.bin__state {
+	padding: var(--space-6);
+	text-align: center;
+	color: var(--color-text-tertiary);
+	font-size: var(--text-size-sm);
+}
+
+.bin__empty {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-3);
+	min-height: 100%;
+	padding: var(--space-8) var(--space-6);
+	text-align: center;
+	color: var(--color-text-tertiary);
+}
+
+/* Soft tinted disc behind the empty-state glyph — gives the empty-state
+ * a focal point without going pictorial. Sized off `--space` so it
+ * inherits the spacing scale; colour comes from the interactive-hover
+ * token so it reads as a quiet surface chip, not a button. */
+.bin__empty-glyph {
+	width: 64px;
+	height: 64px;
+	border-radius: 50%;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--color-interactive-hover);
+	color: var(--color-text-secondary);
+	margin-bottom: var(--space-1);
+}
+
+.bin__empty-title {
+	margin: 0;
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium);
+	color: var(--color-text-secondary);
+}
+
+.bin__empty-hint {
+	margin: 0;
+	max-width: 42ch;
+	font-size: var(--text-size-sm);
+	color: var(--color-text-tertiary);
+}
+
+/* Virtualized via @tanstack/react-virtual — the list is a positioned
+ * container sized to `getTotalSize()`; each row is absolute-positioned
+ * inside it via `translateY(start)` so only the visible slice is in the
+ * DOM. Pattern mirrors apps/notes/.../notes-list.tsx. */
+.bin__list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	position: relative;
+	width: 100%;
+}
+
+.bin__row {
+	--bin-row-bg: transparent;
+	position: absolute;
+	top: 0;
+	inset-inline: 0;
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	padding: var(--space-2) var(--space-2);
+	border-radius: var(--radius-md);
+	box-sizing: border-box;
+	background: var(--bin-row-bg);
+	/* A transparent bottom border + padding-box clip carves a `--space-0_5`
+	 * gap below each row's fill, so back-to-back selected / hovered rows read as
+	 * separate pills instead of one solid block. */
+	border-bottom: var(--space-0_5) solid transparent;
+	background-clip: padding-box;
+}
+
+.bin__row:hover {
+	--bin-row-bg: var(--color-interactive-hover);
+}
+
+/* A checked row stays tinted even off-hover so the selection reads at a glance
+ * across the list (the leading checkbox alone is too small to scan). */
+.bin__row--checked {
+	--bin-row-bg: var(--color-selection-subtle, var(--color-interactive-hover));
+}
+
+/* Leading selection checkbox — a bare click target wrapping the shared
+ * `<CheckboxGlyph>`; mouse-only (tabindex -1) since Space on the row toggles it
+ * via the keyboard, and the option's `aria-selected` carries the state. */
+.bin__row-check {
+	flex: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	border: 0;
+	background: none;
+	cursor: pointer;
+}
+
+.bin__row-icon {
+	flex: none;
+}
+
+.bin__row-text {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+}
+
+/* The object name is primary content — it reads at the common body size
+ * (`--text-size-md`), not the secondary `--text-size-sm`. `--text-size-sm`
+ * is reserved for the supporting meta line below. */
+.bin__row-title {
+	font-size: var(--text-size-md);
+	line-height: 1.3;
+	color: var(--color-text-primary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.bin__row-meta {
+	font-size: var(--text-size-sm);
+	line-height: 1.3;
+	color: var(--color-text-tertiary);
+}
+
+/* The per-row Restore / Delete-forever buttons are `display: none` until the
+ * row is hovered / focused — fully OUT of the flex flow, so they reserve no
+ * width and the title div (`flex: 1; min-width: 0`) spans the whole row and
+ * only ellipsizes at the true edge. On reveal they re-enter the flex row and
+ * the title shrinks to make room. The always-visible leading checkbox is the
+ * persistent "this row is actionable" affordance, so the icons can stay hidden
+ * off-hover without the row looking dead. */
+.bin__row-actions {
+	flex: none;
+	display: none;
+	align-items: center;
+	gap: var(--space-1);
+}
+
+.bin__row:hover .bin__row-actions,
+.bin__row:focus-within .bin__row-actions {
+	display: flex;
+}
+
+/* Selection action bar — replaces the lone "Empty Bin" button in the footer
+ * when ≥1 row is checked. Count + Clear on the left, bulk Restore / Delete on
+ * the right (Ghost-in-footer for the destructive bulk action, per the shell
+ * overlay chrome convention — the confirm dialog carries the danger). */
+.bin__selection {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+	min-width: 0;
+}
+
+.bin__selection-info {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	min-width: 0;
+	color: var(--color-text-secondary);
+	font-size: var(--text-size-sm);
+}
+
+.bin__selection-actions {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+}

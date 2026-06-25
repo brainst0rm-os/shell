@@ -1,0 +1,100 @@
+/**
+ * Recurrence editor chrome (`@brainstorm/sdk/recurrence-editor`). Neutral
+ * `bs-recur__*` classes; consumers import this sheet directly (it is not
+ * side-effect-imported from the module so it survives tree-shaking). Tuned to
+ * the shared token set so it themes with the host.
+ */
+
+.bs-recur {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.bs-recur__body {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.bs-recur__body:empty {
+	display: none;
+}
+
+.bs-recur__row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	flex-wrap: wrap;
+}
+
+.bs-recur__inline-label {
+	color: var(--color-text-secondary, var(--text-dim));
+}
+
+/* Neutral input styling — hosts that want their own field look can override
+   `.bs-recur__input` in their stylesheet. Dropdowns are the shared `.bs-select`
+   control and carry its face instead. */
+.bs-recur__input {
+	font: inherit;
+	color: inherit;
+	padding: var(--space-1);
+	border: var(--border-width) solid var(--color-border-strong, var(--border-strong, var(--border)));
+	border-radius: var(--radius-sm);
+	background: var(--bg-elev, transparent);
+}
+
+.bs-recur__interval {
+	width: 72px;
+}
+
+.bs-recur__weekdays {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-1);
+}
+
+.bs-recur__weekday {
+	appearance: none;
+	border: var(--border-width) solid var(--color-border-strong, var(--border-strong, var(--border)));
+	background: var(--bg-elev, transparent);
+	color: var(--color-text-secondary, var(--text-dim));
+	font: inherit;
+	font-size: var(--text-size-xs);
+	min-width: 36px;
+	padding: var(--space-1);
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+}
+
+.bs-recur__weekday[data-selected="true"] {
+	background: var(--accent);
+	color: var(--accent-fg, #fff);
+	border-color: transparent;
+	font-weight: var(--text-weight-semibold);
+}
+
+.bs-recur__weekday:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 1px;
+}
+
+.bs-recur__monthly {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.bs-recur__monthly-option {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	color: var(--text);
+}
+
+.bs-recur__summary {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary, var(--text-dim));
+	font-style: italic;
+}

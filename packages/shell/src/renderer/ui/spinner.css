@@ -1,0 +1,84 @@
+/* Spinner — the one async-loading affordance. Dual concentric arcs that
+ * counter-sweep while the whole SVG rotates. Canonical spec lives in
+ * docs/shell/36-design-system.md §Async loading & busy state.
+ *
+ * Monochrome by contract: stroke is `currentColor`, so on a button it is
+ * the button's text colour, and anywhere else the surrounding text
+ * colour. Never hardcode the stroke or theme it per surface.
+ *
+ * Default size is `1em` so it sits inline in a button/label; region-level
+ * loaders pass an explicit pixel size. Arc geometry is viewBox-relative,
+ * so it stays crisp at any size. */
+
+.spinner {
+	display: inline-block;
+	width: 1em;
+	height: 1em;
+	position: relative;
+	flex-shrink: 0;
+	color: inherit;
+}
+
+.spinner svg {
+	width: 100%;
+	height: 100%;
+	animation: spinner-rotate 2s linear infinite;
+	transform-origin: center center;
+}
+
+.spinner__arc {
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 8;
+	stroke-linecap: round;
+}
+
+.spinner__arc--outer {
+	stroke-dasharray: 251.3274; /* 2 * π * 40 */
+	stroke-dashoffset: 251.3274;
+	animation: spinner-dash-outer 1.5s cubic-bezier(0.66, 0, 0.34, 1) infinite alternate;
+}
+
+.spinner__arc--inner {
+	stroke-dasharray: 188.4956; /* 2 * π * 30 */
+	stroke-dashoffset: 0;
+	animation: spinner-dash-inner 1.5s cubic-bezier(0.66, 0, 0.34, 1) infinite alternate;
+}
+
+@keyframes spinner-rotate {
+	100% {
+		transform: rotate(360deg);
+	}
+}
+
+@keyframes spinner-dash-outer {
+	0% {
+		stroke-dashoffset: 251.3274;
+	}
+	100% {
+		stroke-dashoffset: 0;
+	}
+}
+
+@keyframes spinner-dash-inner {
+	0% {
+		stroke-dashoffset: 0;
+	}
+	100% {
+		stroke-dashoffset: 188.4956;
+	}
+}
+
+/* Reduced-motion users still get a visible busy signal — a held partial
+ * arc — just no spin/sweep. Mirrors the design-system spec. */
+@media (prefers-reduced-motion: reduce) {
+	.spinner svg,
+	.spinner__arc--outer,
+	.spinner__arc--inner {
+		animation: none;
+	}
+
+	.spinner__arc--outer {
+		stroke-dashoffset: 188.4956;
+	}
+}

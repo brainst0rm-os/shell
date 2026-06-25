@@ -1,0 +1,155 @@
+/* The strip lives inside the dashboard footer (44px panel header height per
+ * project rule). It owns its layout but inherits the glass surface from the
+ * footer — no extra backdrop here. */
+
+/* Wrapper owns the footer's flex slot; holds the overflow scroll buttons +
+ * the scrollable tile track. The buttons appear only when the track overflows
+ * (many windows open) so the off-screen tiles stay reachable. */
+.window-strip-wrap {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	height: 100%;
+	min-width: 0;
+	flex: 1;
+}
+
+.window-strip {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	height: 100%;
+	min-width: 0;
+	flex: 1;
+	overflow-x: auto;
+	scrollbar-width: none;
+	-webkit-app-region: no-drag;
+	app-region: no-drag;
+}
+
+.window-strip::-webkit-scrollbar {
+	display: none;
+}
+
+/* Overflow scroll affordance — a CaretDown rotated to point left/right. Only
+ * rendered when the track can scroll that way, so it never clutters a strip
+ * that fits. tabIndex=-1: keyboard users move the roving cursor (which scrolls
+ * the active tile into view), so these are a mouse-only convenience. */
+.window-strip__scroll {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	width: 22px;
+	height: 22px;
+	padding: 0;
+	border: none;
+	border-radius: var(--radius-md);
+	background: transparent;
+	color: var(--color-text-secondary);
+	cursor: pointer;
+	transition: background-color 120ms ease;
+	-webkit-app-region: no-drag;
+	app-region: no-drag;
+}
+
+.window-strip__scroll:hover {
+	background: var(--color-interactive-hover);
+	color: var(--color-text-primary);
+}
+
+.window-strip__scroll--left {
+	transform: rotate(90deg);
+}
+
+.window-strip__scroll--right {
+	transform: rotate(-90deg);
+}
+
+.window-strip__tile {
+	display: flex;
+	align-items: center;
+	align-self: stretch;
+	gap: var(--space-2);
+	padding: var(--space-1);
+	background: transparent;
+	border-radius: var(--radius-md);
+	color: var(--color-text-primary);
+	font: inherit;
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+	cursor: pointer;
+	transition: background-color 120ms ease;
+	max-width: 200px;
+	/* Condense as more windows open (browser-tab behaviour): the tile shrinks,
+	 * the label ellipsizes then collapses, the icon always stays — so far more
+	 * windows fit before the track has to scroll. */
+	min-width: 0;
+	flex-shrink: 1;
+}
+
+.window-strip__tile:hover {
+	background: var(--color-interactive-hover);
+}
+
+.window-strip__tile--focused {
+	background: var(--color-interactive-active);
+}
+
+.window-strip__tile[data-state="minimized"] {
+	opacity: 0.55;
+}
+
+.window-strip__label {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 140px;
+	/* Shrink first within a condensing tile (the icon never shrinks); collapses
+	 * toward icon-only when many windows are open. */
+	min-width: 0;
+	flex: 0 1 auto;
+}
+
+/* Start button — the all-apps grid entry point. Sits at the left edge of the
+ * footer (the OS start-menu spot), separated from the running-windows strip by
+ * a hairline. Mirrors the strip tile chrome so the footer reads as one piece. */
+.dashboard__start {
+	display: flex;
+	align-items: center;
+	align-self: stretch;
+	gap: var(--space-2);
+	flex-shrink: 0;
+	padding: var(--space-1);
+	border: none;
+	border-radius: var(--radius-md);
+	background: transparent;
+	color: var(--color-text-primary);
+	font: inherit;
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+	cursor: pointer;
+	transition: background-color 120ms ease;
+	-webkit-app-region: no-drag;
+	app-region: no-drag;
+}
+
+/* Vertically-inset hairline between the Apps button and the window strip. A
+ * real flex sibling (not an absolute `::after`), so the footer's `gap` owns the
+ * space-2 breathing room on each side — no negative margins. */
+.dashboard__start-divider {
+	align-self: center;
+	flex-shrink: 0;
+	width: var(--border-width);
+	height: 56%;
+	background: var(--color-border-subtle);
+}
+
+.dashboard__start:hover {
+	background: var(--color-interactive-hover);
+}
+
+.dashboard__start:focus-visible {
+	outline: var(--border-width) solid var(--color-accent-default);
+	outline-offset: -2px;
+}

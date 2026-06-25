@@ -1,0 +1,908 @@
+/*
+ * Brainstorm app-theme — the single source of truth for first-party-app
+ * theming. Imported by each app's TS entry at build time:
+ *
+ *   import "@brainstorm/sdk/app-theme.css";
+ *
+ * Apps are sandboxed renderers that do NOT import the shell's component
+ * library. Before this file existed, each app re-declared its own `:root`
+ * alias block (`--accent`, `--bg`, …) AND its own primary-button / glass /
+ * icon-gloss CSS, while the shell separately *overlaid* gloss on top via
+ * preload. Four near-duplicate copies that drifted (different fallback
+ * hexes, `--text-dim` mapped to two different tokens, `--accent-soft`
+ * pointing at a token that doesn't exist) — every visual fix turned into
+ * hide-and-seek across five files.
+ *
+ * Now there is ONE definition. Apps own zero theming; just consume the
+ * classes and aliases below.
+ *
+ * Theme token VALUES (`--color-*`, `--text-*`, `--space-*`, `--shadow-*`)
+ * are injected at runtime by `app-preload.ts` (they change with the user's
+ * theme choice). The per-app `.app-header__icon` chip face is also pushed
+ * via 4 custom properties from the preload, since it varies per app id.
+ *
+ * Order in this file: aliases → glass → icon chip → buttons → header-nav
+ * → panel-toggle → icon-pick → find-bar → searchbar → resize-suppress →
+ * app-header drag region. Every component selector is `:root`-prefixed so
+ * a per-app base (single-class, 0,1,0) loading after this sheet can't
+ * strip the shell-owned face — `:root` raises to (0,2,0) without changing
+ * what's matched.
+ */
+
+/* fancy-menus (Stage 8.8): the package runtime stylesheet first, then the
+ * SDK bridge that maps --fm-* onto Brainstorm tokens + the utility shim.
+ * Every app pulls menu chrome for free through its existing app-theme import
+ * — no per-app menu stylesheet wiring. (Bridge after runtime so it wins the
+ * same-specificity :root cascade.) */
+@import "@react-fancy-menus/core/runtime.css";
+@import "./menus/menus.css";
+
+/* Searchbar chrome lives in its own file so the privileged shell renderer
+ * (which doesn't pull app-theme.css) can import it directly. Must be the
+ * first non-comment rule per CSS @import spec. */
+@import url("./searchbar/searchbar.css");
+
+/* IconPicker + CoverPicker chrome — side-effect imports inside the SDK's
+ * picker.tsx files get tree-shaken under `sideEffects: false`
+ * ([[project_workspace_css_subpath_export]]), so route the CSS through the
+ * theme aggregator the same way `searchbar.css` is. Without this the cover
+ * popover's icon-only remove button falls back to the unrelated
+ * `.icon-picker__action` text-button base (1px error-color border, 4×10
+ * padding) and visibly breaks. */
+@import url("./icon-picker/icon-picker.css");
+@import url("./cover-picker/cover-picker.css");
+@import url("./date-pager/date-pager.css");
+@import url("./calendar/calendar.css");
+@import url("./checkbox/checkbox.css");
+@import url("./radio/radio.css");
+@import url("./properties-panel/properties-panel.css");
+@import url("./property-ui/cells.css");
+
+/* RTL inline-axis icon mirror — Stage 12.5. Glyphs that encode the
+ * inline-start ↔ inline-end direction (back/forward carets, prev/next match
+ * arrows) are marked with `data-icon-direction="inline"` at the call site
+ * via `<Icon direction={IconDirection.Inline} />` / `createIconElement(name,
+ * { direction: IconDirection.Inline })` so their visual orientation flips
+ * with the locale. Bidirectional glyphs (Settings, Trash, Sun, Cube, …) are
+ * never stamped and stay identical. The same rule lives in the shell's
+ * styles.css so the shell renderer gets the same behaviour. */
+[dir="rtl"] [data-icon-direction="inline"] {
+	transform: scaleX(-1);
+}
+
+/* Keyboard focus must be visible — WCAG 2.4.7 (AA), and CLAUDE.md's "every PR
+ * ships a keyboard path". Two halves:
+ *   • mouse / programmatic focus (`:focus` but not `:focus-visible`) suppresses
+ *     the UA outline — explicitly `none`, not `unset` (which surfaces it);
+ *   • keyboard focus (`:focus-visible`) gets a real ring by DEFAULT on every
+ *     interactive element, so an app's own buttons don't need to opt in.
+ * The per-component `:root …:focus-visible` rules below only TUNE the offset;
+ * the earlier global `outline: none !important` silently killed them all (and
+ * left 8 of 9 apps with no visible focus — F-270). */
+:focus:not(:focus-visible) {
+	outline: none;
+}
+/* The ring is for BARE interactive controls (buttons, links, icons, menu/list
+ * items) — the elements that otherwise show no focus. Text-entry and prose
+ * surfaces are EXCLUDED here by default: a contenteditable shows focus via its
+ * caret, an `<input>`/`<textarea>`/`<select>` via its own focus border, so a
+ * hard inset rectangle on top is redundant and reads as a stray box (it kept
+ * re-appearing on every new composer/editor surface). Excluding them at the
+ * source means new editable surfaces are ringless without a per-component
+ * opt-out. An input that genuinely wants a ring opts in explicitly below
+ * (`.bs-find-bar__input:focus-visible`), and those (0,0,3,0) still win.
+ * `:root …` gives this (0,0,2,0) so it beats the single-class `outline: none`
+ * resets some components carry on their buttons. */
+:root :focus-visible:not([contenteditable]):not(input):not(textarea):not(select) {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -2px;
+}
+
+/* F-272 — window-splitter (resize-handle) keyboard focus ring. Every resize
+ * handle is `role="separator" aria-orientation="vertical"` and keyboard-operable
+ * (the shared `useResizable`: ←/→ move, Home/End snap, dbl-click reset), so it
+ * stays a tab stop. Per-app handle CSS suppresses the outline because a thin
+ * inset outline reads poorly on a ~6px bar; give the bar a clearly-visible
+ * box-shadow ring instead — one rule, every app (Files / Notes / Journal / …),
+ * independent of those `outline: none` opt-outs. */
+[role="separator"][aria-orientation="vertical"]:focus-visible {
+	box-shadow: 0 0 0 2px var(--color-focus-ring);
+}
+
+/* ============================================================
+ * ALIASES — short names app CSS references, each bound to the
+ * canonical semantic token. Several were latent bugs in the old
+ * per-app copies pointing at tokens that DON'T EXIST:
+ *   --text-dim → secondary (== primary, should be tertiary)
+ *   --accent-soft → a nonexistent "soft" colour token (real: subtle)
+ *   --danger → --color-state-danger (real: --color-state-error)
+ *   --selected / --bg-hover → --color-interactive-selected/-hover
+ *     (real: --color-interactive-active / --color-interactive-hover)
+ *   font-family → --font-family-sans (real: --text-family-ui)
+ * Fixed once, here.
+ * ============================================================ */
+:root {
+	--bg: var(--color-background-primary);
+	--bg-elev: var(--color-background-elevated);
+	--bg-elevated: var(--color-background-elevated);
+	--bg-canvas: var(--color-background-primary);
+	--bg-subtle: var(--color-surface-default);
+	--bg-stage: var(--color-background-primary);
+	--bg-hover: var(--color-interactive-hover);
+	--text: var(--color-text-primary);
+	--text-dim: var(--color-text-tertiary);
+	--text-faint: var(--color-text-tertiary);
+	--border: var(--color-border-subtle);
+	--border-subtle: var(--color-border-subtle);
+	--border-strong: var(--color-border-default);
+	--edge: var(--color-border-strong);
+	--hover: var(--color-interactive-hover);
+	--active: var(--color-interactive-active);
+	--selected: var(--color-interactive-active);
+	--accent: var(--color-accent-default);
+	--accent-strong: var(--color-accent-strong);
+	--accent-fg: var(--color-accent-text);
+	--accent-soft: var(--color-accent-subtle);
+	--accent-dim: var(--color-accent-subtle);
+	--warn: var(--color-state-warning);
+	--warn-bg: color-mix(in srgb, var(--color-state-warning) 12%, transparent);
+	--warn-border: color-mix(in srgb, var(--color-state-warning) 32%, transparent);
+	--ok: var(--color-state-success);
+	--danger: var(--color-state-error);
+	--danger-bg: color-mix(in srgb, var(--color-state-error) 14%, transparent);
+	--danger-border: color-mix(in srgb, var(--color-state-error) 36%, transparent);
+	--code-bg: var(--color-surface-default);
+	--today-tint: var(--color-accent-subtle);
+	--glyph-folder: var(--color-accent-default);
+	--glyph-file: var(--color-text-primary);
+	--glyph-note: var(--color-state-warning);
+	--glyph-unknown: var(--color-text-tertiary);
+	--shadow-popover: var(--shadow-lg);
+	font-family: var(--text-family-ui);
+	font-size: var(--text-size-md);
+	line-height: var(--text-line-height-normal);
+}
+
+/* ============================================================
+ * GLASS — backdrop-filter surfaces.
+ * ============================================================ */
+.glass,
+.glass--subtle,
+.glass--strong {
+	backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+	-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+	border-color: var(--color-glass-border);
+}
+.glass--subtle { background: var(--color-glass-background-subtle); }
+.glass { background: var(--color-glass-background); }
+.glass--strong { background: var(--color-glass-background-strong); }
+
+/* ============================================================
+ * APP-HEADER ICON CHIP — Apple-style gloss, mirrors the dashboard
+ * tile (packages/shell/src/renderer/dashboard/app-icon.css). The
+ * chip's image+gradient+ink VARY PER APP, so preload pushes four
+ * custom properties on `:root`:
+ *
+ *   --app-icon-image       url("brainstorm://app-icon/<appId>")
+ *   --app-icon-grad-from   palette `from` colour
+ *   --app-icon-grad-to     palette `to` colour
+ *   --app-icon-ink         palette `ink` colour (no-icon fallback)
+ *
+ * Fallbacks below cover non-shell hosts (tests, ad-hoc embedding).
+ * The chip renders the app's REAL declared icon — same resource as
+ * the dashboard tile — so in-app header chip and launcher tile are
+ * pixel-identical. The palette gradient is the no-icon fallback
+ * layer behind it.
+ * ============================================================ */
+:root .app-header__icon {
+	background:
+		var(--app-icon-image, none) center / cover no-repeat,
+		linear-gradient(
+			135deg,
+			var(--app-icon-grad-from, var(--color-accent-default)),
+			var(--app-icon-grad-to, var(--color-accent-strong))
+		);
+	color: var(--app-icon-ink, var(--color-accent-text));
+}
+.app-header__icon {
+	position: relative;
+	overflow: hidden;
+	box-shadow:
+		0 1px 1px rgba(255, 255, 255, 0.12) inset,
+		0 -1px 2px rgba(0, 0, 0, 0.18) inset,
+		0 2px 6px rgba(0, 0, 0, 0.22),
+		0 1px 2px rgba(0, 0, 0, 0.18);
+}
+.app-header__icon > * {
+	position: relative;
+	z-index: 0;
+}
+.app-header__icon::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	z-index: 1;
+	pointer-events: none;
+	background:
+		linear-gradient(
+			to bottom,
+			rgba(255, 255, 255, 0.5) 0%,
+			rgba(255, 255, 255, 0.14) 16%,
+			rgba(255, 255, 255, 0) 40%
+		),
+		radial-gradient(
+			130% 64% at 50% 114%,
+			rgba(255, 255, 255, 0.28) 0%,
+			rgba(255, 255, 255, 0) 62%
+		);
+	box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.4);
+}
+
+/* ============================================================
+ * GLOBAL BASE RESET — the resets EVERY sandboxed app needs, in ONE
+ * place instead of being re-pasted into each app's `styles.css`
+ * (the `box-sizing` + `body { margin:0; … }` + form-control blocks
+ * were duplicated across ~19 apps; new apps re-added them by hand).
+ * All selectors here are element/universal (≤ 0,0,1 specificity) so
+ * any app-class rule overrides freely — app shells still own their
+ * own `body` deltas (Graph/Database set `display:grid`, etc.).
+ *
+ *  · box-sizing so a 1px header border sits INSIDE the shared 44px.
+ *  · body flush to the window (no UA 8px inset) + non-scrolling; the
+ *    app's own `.app` root owns scrolling.
+ *  · form controls inherit the app font (UA defaults to a 13px
+ *    system face, which is why apps kept re-declaring `font`).
+ *  · ButtonFace / Field reset: a bare `<button>`/`<select>` must
+ *    never paint the theme-blind UA grey. Any styled control
+ *    (`.bs-btn`, `.toolbar__sort`, view-switch, `<SelectMenu>` …)
+ *    overrides via its own higher-specificity `background`, so this
+ *    only catches controls that forgot to declare one — the recurring
+ *    "generic grey button" leak ([[feedback_bs_btn_buttonface_grey]]).
+ *    (Native `<select>` is rejected per CLAUDE.md; the reset just
+ *    defends the leak if one slips in.)
+ * ============================================================ */
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+}
+
+body {
+	overflow: hidden;
+}
+
+button,
+input,
+select,
+textarea {
+	font: inherit;
+	letter-spacing: inherit;
+}
+
+button,
+select {
+	appearance: none;
+	background: transparent;
+	color: inherit;
+}
+
+/* ============================================================
+ * SCROLLBARS — theme-following scrollbars on Windows/Linux.
+ * macOS keeps its native auto-hiding overlay scrollbars (already
+ * unobtrusive + theme-neutral), so we only restyle where Chromium
+ * would otherwise paint an opaque grey bar that ignores the theme.
+ * Scoped on the `data-platform` stamped on <html> by `app-preload.ts`.
+ * We deliberately don't set `display`, so the few surfaces that hide
+ * their scrollbar (`::-webkit-scrollbar { display: none }`) stay hidden.
+ * ============================================================ */
+:root[data-platform="win32"],
+:root[data-platform="linux"] {
+	scrollbar-color: var(--color-border-strong) transparent;
+	scrollbar-width: thin;
+}
+
+:root[data-platform="win32"] ::-webkit-scrollbar,
+:root[data-platform="linux"] ::-webkit-scrollbar {
+	width: 12px;
+	height: 12px;
+}
+
+:root[data-platform="win32"] ::-webkit-scrollbar-track,
+:root[data-platform="linux"] ::-webkit-scrollbar-track,
+:root[data-platform="win32"] ::-webkit-scrollbar-corner,
+:root[data-platform="linux"] ::-webkit-scrollbar-corner {
+	background: transparent;
+}
+
+:root[data-platform="win32"] ::-webkit-scrollbar-thumb,
+:root[data-platform="linux"] ::-webkit-scrollbar-thumb {
+	background: var(--color-border-strong);
+	border-radius: 8px;
+	/* A transparent border + padding-box clip is the only way to inset a
+	 * webkit thumb, so it reads as a slim pill instead of a full-width bar. */
+	border: 3px solid transparent;
+	background-clip: padding-box;
+}
+
+:root[data-platform="win32"] ::-webkit-scrollbar-thumb:hover,
+:root[data-platform="linux"] ::-webkit-scrollbar-thumb:hover {
+	background: var(--color-text-tertiary);
+	background-clip: padding-box;
+}
+
+/* ============================================================
+ * BUTTON — shared structural primitive `.bs-btn`. Every app's
+ * generic buttons (toolbar / dialog / form actions) build on this
+ * so height / padding / radius / type / surface live in ONE place;
+ * an app supplies only positioning deltas (margin / flex placement),
+ * never the box itself. Sizes ride the shared control-height scale
+ * (sm 24 · md 32 · lg 40) so a button lines up pixel-exact beside
+ * any input / select of the same size. The glossy emphasis face is
+ * the `data-bs-primary` hook shared in the BUTTONS section below —
+ * a primary button is `class="bs-btn" data-bs-primary`. This block
+ * sits BEFORE that section on purpose: at equal specificity the
+ * later gloss rules win the face (border / colour / background) for
+ * primary while `.bs-btn` still supplies its box.
+ * ============================================================ */
+:root .bs-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-2);
+	height: var(--control-height-md, 32px);
+	padding: 0 var(--space-2);
+	/* Reset native `<button>` chrome (ButtonFace grey) so the unfilled variants
+	 * — ghost / secondary — read as transparent instead of a hardcoded,
+	 * theme-blind UA grey. Filled variants (neutral / danger / primary) paint
+	 * over this. */
+	appearance: none;
+	background: transparent;
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-sm);
+	color: var(--text);
+	font-family: inherit;
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium);
+	white-space: nowrap;
+	cursor: pointer;
+	transition:
+		background-color var(--motion-duration-normal) var(--motion-easing-standard),
+		border-color var(--motion-duration-normal) var(--motion-easing-standard),
+		color var(--motion-duration-normal) var(--motion-easing-standard);
+}
+:root .bs-btn:disabled {
+	cursor: not-allowed;
+	opacity: 0.55;
+}
+:root .bs-btn:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -2px;
+}
+
+/* Sizes — md is the base height above; sm / lg only re-set height + padding. */
+:root .bs-btn--sm {
+	height: var(--control-height-sm, 24px);
+	padding: 0 var(--space-2);
+	font-size: var(--text-size-sm);
+}
+:root .bs-btn--lg {
+	height: var(--control-height-lg, 40px);
+	padding: 0 var(--space-4);
+}
+
+/* Secondary — bordered, transparent until hover. The default dialog / toolbar
+ * surface. */
+:root .bs-btn--secondary {
+	border-color: var(--border-strong);
+	color: var(--text-dim);
+}
+:root .bs-btn--secondary:hover:not(:disabled) {
+	background: var(--hover);
+	color: var(--text);
+}
+
+/* Neutral — filled elevated surface (the default dialog / form button where a
+ * transparent secondary would read as too quiet). */
+:root .bs-btn--neutral {
+	background: var(--bg-elev);
+	border-color: var(--border);
+}
+:root .bs-btn--neutral:hover:not(:disabled) {
+	background: var(--bg-subtle);
+	border-color: var(--border-strong);
+}
+
+/* Ghost — chromeless until hover. */
+:root .bs-btn--ghost {
+	color: var(--text-dim);
+}
+:root .bs-btn--ghost:hover:not(:disabled) {
+	background: var(--hover);
+	color: var(--text);
+}
+
+/* Danger — solid error face for destructive confirmation. */
+:root .bs-btn--danger {
+	background: var(--danger);
+	color: var(--accent-fg);
+}
+:root .bs-btn--danger:hover:not(:disabled) {
+	background: color-mix(in srgb, var(--danger) 86%, var(--text));
+}
+
+/* Icon-only — square the control-height box, drop horizontal padding. Pair
+ * with a size modifier (defaults to md). */
+:root .bs-btn--icon {
+	width: var(--control-height-md, 32px);
+	padding: 0;
+}
+:root .bs-btn--sm.bs-btn--icon {
+	width: var(--control-height-sm, 24px);
+}
+:root .bs-btn--lg.bs-btn--icon {
+	width: var(--control-height-lg, 40px);
+}
+
+/* ============================================================
+ * BUTTONS — canonical glossy primary, same recipe as the shell
+ * Button (packages/shell/src/renderer/ui/button.css): 2-colour
+ * theme face, no white top band, soft tinted speculars, inset
+ * glints, animated hover (box-shadow + 1px lift + specular bloom).
+ *
+ * Keyed off the stable `data-bs-primary` hook; legacy class names
+ * stay as additional selectors for back-compat with surfaces that
+ * predate the hook. Apps keep only structural rules in their own
+ * styles.css (padding / radius / font / flex); never the gloss
+ * face.
+ * ============================================================ */
+:root [data-bs-primary],
+:root .notes__btn--primary,
+:root .notes__inline-toolbar-btn--primary {
+	position: relative;
+	z-index: 1;
+	overflow: hidden;
+	border: none;
+	color: var(--color-accent-text);
+	text-shadow: 0 0.5px 0.5px rgba(0, 0, 0, 0.25);
+	background: linear-gradient(to bottom, var(--color-gloss-top), var(--color-gloss-bottom));
+	box-shadow:
+		0 4px 12px rgba(9, 12, 60, 0.15),
+		0 2px 8px rgba(9, 12, 60, 0.15),
+		0 1px 3px rgba(9, 12, 60, 0.1),
+		inset 0 1px 1px var(--color-gloss-inner-top),
+		inset 0 -1px 3px var(--color-gloss-inner-bottom);
+	transition:
+		box-shadow var(--motion-duration-slow) var(--motion-easing-decelerated),
+		transform var(--motion-duration-slow) var(--motion-easing-decelerated);
+}
+:root [data-bs-primary] > *,
+:root .notes__btn--primary > *,
+:root .notes__inline-toolbar-btn--primary > * {
+	position: relative;
+	z-index: 1;
+}
+:root [data-bs-primary]::before,
+:root .notes__btn--primary::before,
+:root .notes__inline-toolbar-btn--primary::before,
+:root [data-bs-primary]::after,
+:root .notes__btn--primary::after,
+:root .notes__inline-toolbar-btn--primary::after {
+	content: "";
+	position: absolute;
+	left: 50%;
+	transform: translateX(-50%);
+	border-radius: 50%;
+	pointer-events: none;
+	z-index: 0;
+	transition:
+		opacity var(--motion-duration-slow) var(--motion-easing-decelerated),
+		transform var(--motion-duration-slow) var(--motion-easing-decelerated);
+}
+:root [data-bs-primary]::before,
+:root .notes__btn--primary::before,
+:root .notes__inline-toolbar-btn--primary::before {
+	top: -4px;
+	width: 56%;
+	height: 5px;
+	background-color: var(--color-gloss-shine-top);
+	opacity: 0.35;
+	filter: blur(6px);
+}
+:root [data-bs-primary]::after,
+:root .notes__btn--primary::after,
+:root .notes__inline-toolbar-btn--primary::after {
+	bottom: -4px;
+	width: 60%;
+	height: 8px;
+	background-color: var(--color-gloss-shine-bottom);
+	opacity: 0.75;
+	filter: blur(6px);
+}
+:root [data-bs-primary]:hover:not(:disabled),
+:root .notes__btn--primary:hover:not(:disabled),
+:root .notes__inline-toolbar-btn--primary:hover:not(:disabled) {
+	transform: translateY(-1px);
+	box-shadow:
+		0 8px 18px -4px var(--color-gloss-bottom),
+		0 3px 10px rgba(9, 12, 60, 0.18),
+		inset 0 1px 1px var(--color-gloss-inner-top),
+		inset 0 -1px 3px var(--color-gloss-inner-bottom);
+}
+:root [data-bs-primary]:active:not(:disabled),
+:root .notes__btn--primary:active:not(:disabled),
+:root .notes__inline-toolbar-btn--primary:active:not(:disabled) {
+	transform: translateY(0);
+}
+:root [data-bs-primary]:hover:not(:disabled)::before,
+:root .notes__btn--primary:hover:not(:disabled)::before,
+:root .notes__inline-toolbar-btn--primary:hover:not(:disabled)::before {
+	opacity: 0.55;
+}
+:root [data-bs-primary]:hover:not(:disabled)::after,
+:root .notes__btn--primary:hover:not(:disabled)::after,
+:root .notes__inline-toolbar-btn--primary:hover:not(:disabled)::after {
+	opacity: 0.95;
+	transform: translateX(-50%) scale(1.25);
+}
+:root [data-bs-primary]:disabled::before,
+:root .notes__btn--primary:disabled::before,
+:root .notes__inline-toolbar-btn--primary:disabled::before,
+:root [data-bs-primary]:disabled::after,
+:root .notes__btn--primary:disabled::after,
+:root .notes__inline-toolbar-btn--primary:disabled::after {
+	opacity: 0;
+}
+:root [data-bs-primary]:disabled,
+:root .notes__btn--primary:disabled,
+:root .notes__inline-toolbar-btn--primary:disabled {
+	cursor: not-allowed;
+	opacity: 0.55;
+}
+
+/* ============================================================
+ * HEADER-NAV — shared in-app back/forward control
+ * (@brainstorm/sdk/nav-history `<NavButtons>` / `createNavButtons`).
+ * Chrome owned here so every app's header back/forward is
+ * pixel-identical; apps declare zero styling for it.
+ * ============================================================ */
+:root .header-nav {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-0_5);
+}
+:root .header-nav__btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	height: 26px;
+	padding: 0;
+	border: 0;
+	border-radius: var(--radius-md);
+	line-height: 1;
+	background: transparent;
+	color: var(--text-dim);
+	cursor: pointer;
+	transition: background-color 0.12s ease, color 0.12s ease;
+}
+:root .header-nav__btn:hover:not(:disabled) {
+	background: var(--hover);
+	color: var(--text);
+}
+:root .header-nav__btn:active:not(:disabled) { background: var(--active); }
+:root .header-nav__btn:disabled {
+	opacity: 0.35;
+	cursor: default;
+	pointer-events: none;
+}
+:root .header-nav__btn:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -2px;
+}
+
+/* ============================================================
+ * PANEL-TOGGLE — canonical sidebar / inspector toggle button.
+ * One source of truth for the borderless icon chip every first-party
+ * app's header carries — pixel-identical box with `.header-icon-btn`
+ * (24×24, transparent border) so every header icon reads the same,
+ * bordered or not. Sits in `-webkit-app-region: drag` strip, so it
+ * explicitly opts out.
+ * ============================================================ */
+:root .bs-panel-toggle {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--control-height-sm, 24px);
+	height: var(--control-height-sm, 24px);
+	padding: 0;
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text-dim);
+	cursor: pointer;
+	line-height: 1;
+	-webkit-app-region: no-drag;
+	transition:
+		background-color var(--motion-duration-fast, 120ms) ease,
+		color var(--motion-duration-fast, 120ms) ease;
+}
+:root .bs-panel-toggle:hover:not(:disabled) {
+	background: var(--hover);
+	color: var(--text);
+}
+:root .bs-panel-toggle[aria-pressed="true"]:not(:disabled) {
+	background: var(--accent-soft);
+	color: var(--accent);
+}
+:root .bs-panel-toggle:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+:root .bs-panel-toggle:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+	border-color: transparent;
+}
+
+/* ============================================================
+ * HEADER-ICON-BTN — canonical borderless icon button for the
+ * `.app-header__right` action group (new-object ⊕, search, …).
+ * Extracted from the identical Files / Database / Graph copies.
+ * ============================================================ */
+:root .header-icon-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--control-height-sm, 24px);
+	height: var(--control-height-sm, 24px);
+	padding: 0;
+	border-radius: var(--radius-sm);
+	border: var(--border-width) solid transparent;
+	background: transparent;
+	color: var(--text-dim);
+	cursor: pointer;
+}
+:root .header-icon-btn:hover:not(:disabled) {
+	background: var(--hover);
+	color: var(--text);
+}
+:root .header-icon-btn:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+	border-color: transparent;
+}
+:root .header-icon-btn[aria-pressed="true"] {
+	background: var(--accent-soft);
+	color: var(--accent-strong);
+}
+:root .header-icon-btn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+/* ============================================================
+ * ICON-PICK — canonical clickable object-icon affordance shared
+ * by every app (Notes page icon, Database list icon, …). Markup +
+ * behaviour live in `@brainstorm/sdk/picker-host`; LOOK is here.
+ * Look-only: transparent until hover, flex-centred, no border.
+ * Pixel box is caller-chosen inline so the same component serves
+ * a 24px header chip and a 28px doc-title glyph.
+ * ============================================================ */
+:root .bs-icon-pick {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border: 0;
+	padding: 0;
+	border-radius: var(--radius-sm);
+	line-height: 1;
+	background: transparent;
+	color: var(--accent);
+	cursor: pointer;
+}
+:root .bs-icon-pick:hover:not(:disabled) { background: var(--hover); }
+:root .bs-icon-pick:disabled { cursor: not-allowed; }
+.bs-icon-pick__add { opacity: 0.45; }
+.bs-icon-pick:hover:not(:disabled) .bs-icon-pick__add { opacity: 0.8; }
+
+/* ============================================================
+ * FIND-BAR — shared in-document find & replace chrome (B9.1c).
+ * ============================================================ */
+:root .bs-find-bar {
+	position: absolute;
+	top: 8px;
+	inset-inline-end: 8px;
+	z-index: 30;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	padding: var(--space-2);
+	border-radius: var(--radius-md);
+	background: var(--bg-elev);
+	border: var(--border-width) solid var(--border);
+	box-shadow: var(--shadow-lg, 0 8px 24px rgba(0, 0, 0, 0.32));
+	color: var(--text);
+	font-size: var(--text-size-md);
+}
+:root .bs-find-bar__row { display: flex; align-items: center; gap: var(--space-1); }
+:root .bs-find-bar__input {
+	min-width: 180px;
+	height: 26px;
+	padding: 0 var(--space-2);
+	border-radius: var(--radius-sm);
+	border: var(--border-width) solid transparent;
+	background: var(--hover);
+	color: inherit;
+	font: inherit;
+}
+:root .bs-find-bar__input:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+	border-color: transparent;
+}
+:root .bs-find-bar__count {
+	min-width: 64px;
+	padding: 0 var(--space-1);
+	color: var(--text-dim);
+	font-size: var(--text-size-sm);
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+:root .bs-find-bar__btn,
+:root .bs-find-bar__toggle,
+:root .bs-find-bar__action {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	height: 26px;
+	padding: 0 var(--space-2);
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: inherit;
+	cursor: pointer;
+	font: inherit;
+}
+:root .bs-find-bar__toggle { min-width: 28px; font-variant-numeric: tabular-nums; }
+:root .bs-find-bar__btn:hover:not(:disabled),
+:root .bs-find-bar__toggle:hover,
+:root .bs-find-bar__action:hover:not(:disabled) { background: var(--hover); }
+:root .bs-find-bar__toggle[aria-pressed="true"] {
+	background: var(--accent-soft);
+	color: var(--accent);
+}
+:root .bs-find-bar__btn:disabled,
+:root .bs-find-bar__action:disabled { opacity: 0.4; cursor: default; }
+:root .bs-find-bar__btn:focus-visible,
+:root .bs-find-bar__toggle:focus-visible,
+:root .bs-find-bar__action:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}
+
+/* SEARCHBAR — `.bs-searchbar*` chrome lives in `./searchbar/searchbar.css`
+ * (loaded via the top-of-file @import) so the shell renderer can pull the
+ * same chrome without dragging the rest of app-theme.css. */
+
+/* ============================================================
+ * RESIZE-SUPPRESS — universal, applied to every app.
+ *
+ * `attachResizable` (`packages/sdk/src/resizable.ts`) sets
+ * `is-resizing` on `body` for the entire pointer-drag lifecycle
+ * and clears it on pointerup/cancel/destroy. While that flag is
+ * on, any CSS transition that animates layout — `grid-template-
+ * columns`, `width`, `transform`, `flex-basis` — would fight the
+ * pointer-driven width updates and the divider would visibly
+ * rubber-band behind the cursor.
+ *
+ * Rule: transitions express the TOGGLE-button path (one-shot, two
+ * discrete states). During a mouse drag they must not run.
+ * `transition-duration: 0s !important` zeroes every transition
+ * duration without touching the declarations — `transitionend`
+ * still fires (at 0s) so listeners don't deadlock. Animations
+ * (`@keyframes`) are unaffected. `!important` is necessary because
+ * per-app rules with higher specificity declare the transitions
+ * we're overriding.
+ * ============================================================ */
+body.is-resizing,
+body.is-resizing *,
+body.is-resizing *::before,
+body.is-resizing *::after {
+	transition-duration: 0s !important;
+}
+
+/* ============================================================
+ * BOOT-SUPPRESS — universal, applied to every app.
+ *
+ * Every app's <body> ships with `is-booting`. While the flag is on,
+ * transitions are zeroed so the persisted-state hydration that runs
+ * during boot (e.g. sidebar collapsed → grid track 0, properties
+ * panel open → translateX(0)) cannot animate IN from the CSS default
+ * on every app open. `app-preload.ts` clears the flag with a double
+ * rAF after DOMContentLoaded, so the first paint sees the hydrated
+ * state with transitions still suppressed, and subsequent toggles
+ * (sidebar, inspector, resize) animate normally.
+ *
+ * Same shape as `is-resizing`: zeroes transition-duration only, so
+ * CSS @keyframes animations (including the entrance scale + fade)
+ * are unaffected.
+ * ============================================================ */
+body.is-booting,
+body.is-booting *,
+body.is-booting *::before,
+body.is-booting *::after {
+	transition-duration: 0s !important;
+}
+
+/* ============================================================
+ * APP-HEADER — draggable window-chrome strip every first-party
+ * app renders at the top of its document. Single source of truth
+ * for the drag region; children opt out via tag (button / a /
+ * input / [role="button"]) or shared chrome classes embedded in
+ * the header.
+ *
+ * `.app-header { height / padding-* }` and the no-drag rules for
+ * native interactive children (button/a/input/select/textarea/
+ * label/[role="button"]/[tabindex]) are pushed by `app-preload.ts`
+ * (because the padding values depend on platform + fullscreen).
+ * The block below covers the drag region, the flex skeleton every
+ * app's header shares, and the left/right groups + title face — so
+ * no app re-declares (or drifts from) them. The surface skin is
+ * GLASS for every app (one consistent chrome across the product —
+ * the old solid default / per-app `--glass` opt-in drifted, with
+ * Graph reading glass next to solid siblings; the `--glass`/`--chrome`
+ * modifiers are deleted). Height / padding still come from
+ * app-preload.
+ * ============================================================ */
+:root .app-header {
+	-webkit-app-region: drag;
+	user-select: none;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-2);
+	flex-shrink: 0;
+	background: var(--color-glass-background-subtle, var(--color-background-primary));
+	backdrop-filter: blur(var(--glass-blur, 5px)) saturate(var(--glass-saturate, 180%));
+	-webkit-backdrop-filter: blur(var(--glass-blur, 5px)) saturate(var(--glass-saturate, 180%));
+	border-bottom: var(--border-width) solid var(--color-glass-border, var(--color-border-subtle));
+}
+.app-header__left,
+.app-header__right {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	min-width: 0;
+	color: var(--color-text-primary);
+}
+/* `:root`-prefixed like the skeleton: title elements often carry a
+ * co-located app hook class (test/rename hooks), and a bare app rule on
+ * that hook must not silently re-fork the face. */
+:root .app-header__title {
+	margin: 0;
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-semibold);
+	color: var(--color-text-primary);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: min(440px, 60vw);
+}
+:root .app-header button,
+:root .app-header a,
+:root .app-header input,
+:root .app-header [role="button"],
+:root .app-header .header-nav,
+:root .app-header .bs-icon-pick,
+:root .app-header .bs-object-menu__more,
+:root .app-header .bs-panel-toggle {
+	-webkit-app-region: no-drag;
+}

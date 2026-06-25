@@ -1,0 +1,127 @@
+{
+  "id": "io.brainstorm.automations",
+  "name": "Automations",
+  "version": "0.1.0",
+  "sdk": "1",
+  "description": "Workflow builder — triggers, steps, and branching that run intents, AI, and code on a schedule.",
+  "icon": "icon.svg",
+  "entry": "dist/index.html",
+  "capabilities": [
+    "storage.kv",
+    "entities.read:brainstorm/Workflow/v1",
+    "entities.write:brainstorm/Workflow/v1",
+    "entities.read:brainstorm/Trigger/v1",
+    "entities.write:brainstorm/Trigger/v1",
+    "entities.read:brainstorm/WorkflowRun/v1",
+    "entities.write:brainstorm/WorkflowRun/v1",
+    "entities.read:brainstorm/Reminder/v1",
+    "entities.write:brainstorm/Reminder/v1",
+    "entities.read:brainstorm/AutomationHostDesignation/v1",
+    "entities.write:brainstorm/AutomationHostDesignation/v1",
+    "entities.read:*",
+    "notifications.post",
+    "intents.dispatch:open",
+    "files.read",
+    "files.write",
+    "automations.run"
+  ],
+  "registrations": {
+    "entityTypes": [
+      {
+        "id": "brainstorm/Workflow/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/automations/workflow/v1.json",
+        "schema": {
+          "type": "object",
+          "required": ["name", "enabled", "triggerId", "steps", "capabilities"],
+          "properties": {
+            "name": { "type": "string" },
+            "description": { "type": "string" },
+            "icon": { "type": "string" },
+            "enabled": { "type": "boolean" },
+            "triggerId": { "type": "string" },
+            "steps": { "type": "array" },
+            "capabilities": { "type": "array", "items": { "type": "string" } },
+            "concurrency": { "type": "string", "enum": ["queue", "drop"] },
+            "tags": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      },
+      {
+        "id": "brainstorm/Trigger/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/automations/trigger/v1.json",
+        "schema": {
+          "type": "object",
+          "required": ["kind", "config", "enabled"],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "time",
+                "entity-event",
+                "intent",
+                "manual",
+                "webhook",
+                "file-watch",
+                "startup"
+              ]
+            },
+            "config": { "type": "object" },
+            "enabled": { "type": "boolean" },
+            "lastFiredAt": { "type": "string" },
+            "nextFireAt": { "type": "string" }
+          }
+        }
+      },
+      {
+        "id": "brainstorm/WorkflowRun/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/automations/workflow-run/v1.json",
+        "schema": {
+          "type": "object",
+          "required": ["workflow", "triggeredAt", "triggeredBy", "status"],
+          "properties": {
+            "workflow": { "type": "string" },
+            "triggeredAt": { "type": "string" },
+            "triggeredBy": { "type": "string" },
+            "status": {
+              "type": "string",
+              "enum": ["queued", "running", "succeeded", "failed", "cancelled", "timed-out"]
+            },
+            "stepLog": {},
+            "error": { "type": "string" },
+            "costCents": { "type": "number" }
+          }
+        }
+      },
+      {
+        "id": "brainstorm/Reminder/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/automations/reminder/v1.json",
+        "schema": {
+          "type": "object",
+          "required": ["subject", "dueAt"],
+          "properties": {
+            "subject": { "type": "string" },
+            "target": { "type": "string" },
+            "dueAt": { "type": "string" },
+            "recurrence": { "type": "string" },
+            "snoozedUntil": { "type": "string" },
+            "completedAt": { "type": "string" }
+          }
+        }
+      },
+      {
+        "id": "brainstorm/AutomationHostDesignation/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/automations/host-designation/v1.json",
+        "schema": {
+          "type": "object",
+          "required": ["deviceId", "claimedAt"],
+          "properties": {
+            "deviceId": { "type": "string" },
+            "claimedAt": { "type": "number" }
+          }
+        }
+      }
+    ],
+    "openers": [{ "kind": "primary", "entityType": "brainstorm/Workflow/v1" }],
+    "intents": [{ "verb": "open", "entityType": "brainstorm/Workflow/v1", "priority": "primary" }]
+  }
+}

@@ -1,0 +1,32 @@
+/* TablesPlugin contextual trigger — a single small button that floats at
+ * the top-left of the table the caret is in (position: fixed, viewport-
+ * relative coordinates supplied by the plugin). Clicking it opens the
+ * shared fancy-menu of table actions. Class names use the `bs-editor__`
+ * prefix so they don't collide with app-specific styling.
+ */
+
+.bs-editor__table-trigger {
+	position: fixed;
+	z-index: 60;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-sm);
+	background: var(--bg-elev);
+	color: var(--text-dim);
+	cursor: pointer;
+	box-shadow: var(--shadow-sm);
+	transition: background var(--motion-duration-fast) ease, color var(--motion-duration-fast) ease;
+}
+
+.bs-editor__table-trigger:hover,
+.bs-editor__table-trigger:focus-visible,
+.bs-editor__table-trigger[aria-expanded="true"] {
+	background: var(--hover);
+	color: var(--text);
+	outline: none;
+}

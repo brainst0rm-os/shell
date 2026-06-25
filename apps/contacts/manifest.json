@@ -1,0 +1,66 @@
+{
+  "id": "io.brainstorm.contacts",
+  "name": "Contacts",
+  "version": "0.1.0",
+  "sdk": "1",
+  "description": "People manager with relationship links, birthdays, and vCard import and export over the shared Person entity.",
+  "icon": "icon.svg",
+  "entry": "dist/index.html",
+  "capabilities": [
+    "storage.kv",
+    "entities.read:brainstorm/Person/v1",
+    "entities.write:brainstorm/Person/v1",
+    "entities.read:brainstorm/Company/v1",
+    "entities.write:brainstorm/Company/v1",
+    "entities.write:brainstorm/Comment/v1",
+    "entities.read:*",
+    "properties.read",
+    "properties.write",
+    "intents.dispatch:open",
+    "files.read",
+    "files.write"
+  ],
+  "registrations": {
+    "entityTypes": [
+      {
+        "id": "brainstorm/Person/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/contacts/person/v1.json",
+        "schema": {
+          "type": "object",
+          "required": ["name"],
+          "properties": {
+            "name": { "type": "string" },
+            "email": { "type": "array", "items": { "type": "string" } },
+            "phone": { "type": "array", "items": { "type": "string" } },
+            "company": { "type": ["string", "object", "null"] },
+            "role": { "type": "string" },
+            "birthday": { "type": ["number", "null"] },
+            "anniversary": { "type": ["number", "null"] },
+            "links": { "type": "array" },
+            "bio": { "type": "string" }
+          }
+        }
+      },
+      {
+        "id": "brainstorm/Company/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/contacts/company/v1.json",
+        "schema": {
+          "type": "object",
+          "required": ["name"],
+          "properties": {
+            "name": { "type": "string" }
+          }
+        }
+      }
+    ],
+    "openers": [
+      { "kind": "primary", "entityType": "brainstorm/Person/v1" },
+      { "kind": "primary", "entityType": "brainstorm/Company/v1" }
+    ],
+    "intents": [
+      { "verb": "open", "entityType": "brainstorm/Person/v1", "priority": "primary" },
+      { "verb": "open", "entityType": "brainstorm/Company/v1", "priority": "primary" }
+    ],
+    "widgets": [{ "id": "list-contacts", "name": "Contacts", "size": "medium" }]
+  }
+}

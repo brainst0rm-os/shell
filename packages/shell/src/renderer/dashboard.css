@@ -1,0 +1,333 @@
+.dashboard {
+	position: relative;
+	height: 100vh;
+	width: 100vw;
+	display: grid;
+	grid-template-rows: auto 1fr auto;
+	color: var(--color-text-primary);
+	overflow: hidden;
+}
+
+/* Shown only while the first `lockStatus()` round-trip is in flight, so a
+ * boots-locked vault never flashes its icons/picker before the lock screen.
+ * The wallpaper paints behind it (instant, from the localStorage cache). */
+.dashboard__boot {
+	position: relative;
+	height: 100vh;
+	width: 100vw;
+	overflow: hidden;
+}
+
+.dashboard__boot-loader {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 100%;
+	width: 100%;
+	color: var(--color-text-secondary);
+}
+
+.dashboard__wallpaper {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	pointer-events: none;
+	/* Promote to its own compositor layer. macOS Live Resize would
+	 * otherwise re-rasterize the wallpaper (gradient stops, `cover`
+	 * crop) on every resize tick — visible as shimmer / shake. With
+	 * the layer hoisted, resize frames just rescale the cached bitmap
+	 * and the next paint settles the final pixels. */
+	transform: translateZ(0);
+	will-change: transform;
+	overflow: hidden;
+	/* Sizes the thumbnail blur-up underlay (set as `background-image` inline
+	 * while the full-res <img> decodes). Harmless for solid/gradient kinds,
+	 * which set the `background` shorthand inline. */
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+}
+
+.dashboard__wallpaper-image {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: center;
+	user-select: none;
+	-webkit-user-drag: none;
+	will-change: transform, opacity;
+	/* Fade the full-resolution image in over its thumbnail underlay once it has
+	 * decoded (`data-ready`), so entry never shows a blank frame or a hard pop. */
+	opacity: 0;
+	transition: opacity 0.4s ease-in-out;
+}
+
+.dashboard__wallpaper-image[data-ready="true"] {
+	opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.dashboard__wallpaper-image {
+		transition: none;
+	}
+}
+
+.dashboard__header,
+.dashboard__footer {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-2);
+	padding: var(--space-2);
+	/* Glass surface comes from the shared `.glass` class applied via JSX;
+	 * keep this rule for layout only — never duplicate the backdrop-filter
+	 * here (DRY rule per CLAUDE.md). */
+	border-color: var(--color-glass-border);
+}
+
+.dashboard__header {
+	height: var(--app-header-height);
+	border-bottom: var(--border-width) solid var(--color-border-subtle);
+	-webkit-app-region: drag;
+	app-region: drag;
+	/* Default: no leading / trailing inset for window controls. Platform-
+	 * specific insets are applied below via the `data-platform` +
+	 * `data-fullscreen` attributes on `.dashboard`. */
+	padding-inline: var(--space-2);
+}
+
+/* macOS, windowed: traffic lights occupy the top-left ~78px. Reserve 82px so
+ * the vault label clears them visually. In fullscreen the lights are hidden
+ * by the system, so no reserve. PHYSICAL-AXIS INTENTIONAL — macOS traffic
+ * lights stay top-LEFT regardless of UI locale direction (Apple HIG); do not
+ * mirror to logical properties. */
+.dashboard[data-platform="darwin"][data-fullscreen="false"] .dashboard__header {
+	padding-left: 82px;
+}
+
+/* Windows: with `titleBarStyle: hidden` + `titleBarOverlay`, the close /
+ * minimize / maximize controls sit at the top-right of the content area.
+ * Reserve enough room on the right so trailing buttons don't collide.
+ * Fullscreen hides the controls. PHYSICAL-AXIS INTENTIONAL — Win window
+ * controls stay top-RIGHT regardless of UI locale direction; do not mirror. */
+.dashboard[data-platform="win32"][data-fullscreen="false"] .dashboard__header {
+	padding-right: 150px;
+}
+
+/* Linux: many WMs keep controls on the right (GNOME, KDE default); a few
+ * place them left (Unity legacy). Reserve right-side space as the
+ * conservative default; fullscreen drops it. PHYSICAL-AXIS INTENTIONAL —
+ * WM-painted controls don't follow our locale direction; do not mirror. */
+.dashboard[data-platform="linux"][data-fullscreen="false"] .dashboard__header {
+	padding-right: 120px;
+}
+
+.dashboard__footer {
+	height: var(--app-header-height);
+	border-top: var(--border-width) solid var(--color-border-subtle);
+	/* The running-windows strip owns this surface end-to-end — no left /
+	 * right zones, no extra padding (the strip's tiles supply their own
+	 * hit-target padding). */
+	padding-inline: var(--space-2);
+}
+
+.dashboard__header-left,
+.dashboard__header-right {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	-webkit-app-region: no-drag;
+	app-region: no-drag;
+}
+
+.dashboard__clock {
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+	font-variant-numeric: tabular-nums;
+	min-width: 60px;
+	text-align: end;
+}
+
+/* Icon buttons in the dashboard chrome use the shared <IconButton>
+ * primitive (`renderer/ui/icon-button.tsx`). Don't re-implement chrome here. */
+
+/* Dev-only "Seed demo apps" affordance. Visible only when
+ * `window.brainstorm.dev.isDev` is true. Production preload does not expose
+ * the API at all; this rule simply has no consumer in a packaged build. */
+.dashboard__dev-seed {
+	font: inherit;
+	font-size: var(--text-size-xs);
+	color: var(--color-text-primary);
+	background: var(--color-interactive-hover);
+	border: var(--border-width) solid var(--color-glass-border);
+	border-radius: var(--radius-sm);
+	padding: var(--space-1);
+	cursor: pointer;
+	transition: background var(--motion-duration-fast) var(--motion-easing-standard);
+}
+
+.dashboard__dev-seed:hover {
+	background: var(--color-interactive-active);
+}
+
+.dashboard__body {
+	position: relative;
+	z-index: 1;
+	overflow: hidden;
+}
+
+/* The body/footer regions are tabIndex=-1 programmatic focus targets for F6
+   region navigation. On window re-focus Chromium restores DOM focus to the
+   last-focused region and re-evaluates :focus-visible as true, which the broad
+   :root :focus-visible baseline would draw as a ring around the whole region.
+   The visible ring belongs on the child controls, not the region container. */
+.dashboard__body:focus-visible,
+.dashboard__footer:focus-visible {
+	outline: none;
+}
+
+/* --- Notification center (Track C): header bell + unread badge. The center
+   panel itself uses the shared <Popover> chrome. --- */
+.notif-bell {
+	position: relative;
+	display: inline-flex;
+}
+
+.notif-bell__badge {
+	position: absolute;
+	top: -2px;
+	inset-inline-end: -2px;
+	min-width: 16px;
+	height: 16px;
+	padding: 0 var(--space-1);
+	border-radius: var(--radius-md);
+	background: var(--color-accent-default);
+	color: var(--color-on-accent, #fff);
+	font-size: 10px;
+	line-height: 16px;
+	font-weight: 600;
+	text-align: center;
+	pointer-events: none;
+}
+
+.notif-center__empty {
+	flex: 1 1 auto;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-2);
+	color: var(--color-text-tertiary);
+	padding: var(--space-6) 0;
+	text-align: center;
+}
+
+.notif-center__empty-text {
+	margin: 0;
+	font-size: var(--text-size-sm);
+}
+
+/* No own scroller — the popover body scrolls, so the scrollbar sits on the
+   panel edge instead of inset by the body padding. */
+.notif-center__list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+}
+
+/* Read rows are flat — a persistent surface tint on every row read as a
+   stuck hover state. Only unread rows carry the tint, so it visibly clears
+   once a notification is read. */
+.notif-center__item {
+	position: relative;
+	display: flex;
+	gap: var(--space-2);
+	align-items: flex-start;
+	padding: var(--space-2);
+	border-radius: var(--radius-md);
+}
+
+.notif-center__item--unread {
+	background: var(--color-surface-default);
+}
+
+/* The posting app's icon (squircle, initials fallback), with the kind glyph
+   demoted to a corner badge — only present when it carries signal. */
+.notif-center__app {
+	position: relative;
+	flex-shrink: 0;
+	display: inline-flex;
+}
+
+.notif-center__kind {
+	position: absolute;
+	inset-inline-end: -3px;
+	bottom: -3px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 12px;
+	height: 12px;
+	border-radius: 50%;
+	background: var(--color-surface-default);
+	border: var(--border-width) solid var(--color-border-subtle);
+}
+
+.notif-center__kind--success {
+	color: var(--color-state-success);
+}
+
+.notif-center__kind--warning {
+	color: var(--color-state-warning);
+}
+
+.notif-center__kind--error {
+	color: var(--color-state-error);
+}
+
+/* Unread = a small accent dot in the corner (a full accent-tinted row read
+   as a stray selection state), plus a heavier title. */
+.notif-center__item--unread::after {
+	content: "";
+	position: absolute;
+	top: var(--space-2);
+	inset-inline-end: var(--space-2);
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: var(--color-accent-default);
+}
+
+.notif-center__item--unread .notif-center__title {
+	font-weight: 600;
+}
+
+.notif-center__text {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+	min-width: 0;
+}
+
+.notif-center__title {
+	font-size: var(--text-size-sm);
+	color: var(--color-text-primary);
+}
+
+.notif-center__body {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-secondary);
+}
+
+.notif-center__time {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+}

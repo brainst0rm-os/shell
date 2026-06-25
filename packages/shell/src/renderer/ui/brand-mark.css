@@ -1,0 +1,13 @@
+/* App-icon artwork. Loaded via CSS url() (the bundler rewrites it, same
+ * pattern as the Welcome wallpaper) so no asset-import typing is needed.
+ * image-set serves the @2x PNG on retina. The PNG already includes the
+ * squircle + transparent corners, so a drop-shadow on this element hugs
+ * the icon shape rather than a box. */
+.brand-mark {
+	display: inline-block;
+	flex-shrink: 0;
+	background-image: image-set(url("../../../art/icon.png") 1x, url("../../../art/icon@2x.png") 2x);
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: contain;
+}

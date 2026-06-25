@@ -1,0 +1,81 @@
+/* CompactEditor — the short rich-text surface (chat / comments composers).
+   Tokens only (see the no-phantom-CSS-tokens rule). The contenteditable host
+   sizes like a single-line field that grows with content; block chrome lives in
+   the consuming composer (border, background, send button row). */
+
+/* Grid overlay: content + placeholder share one cell, so any padding the
+   consumer puts on the wrapper keeps the placeholder aligned with the caret. */
+.bs-compact-editor {
+	display: grid;
+	width: 100%;
+}
+
+.bs-compact-editor__content,
+.bs-compact-editor__placeholder {
+	grid-area: 1 / 1;
+	min-width: 0;
+	font: inherit;
+}
+
+.bs-compact-editor__content {
+	outline: none;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	color: var(--color-text-primary);
+	caret-color: var(--color-text-primary);
+}
+
+.bs-compact-editor__content:focus {
+	outline: none;
+}
+
+/* Tight paragraph rhythm — a composer line, not a document. */
+.bs-compact-editor__content .bs-editor__paragraph {
+	margin: 0;
+}
+
+.bs-compact-editor__content .bs-editor__paragraph + .bs-editor__paragraph {
+	margin-top: var(--space-2);
+}
+
+.bs-compact-editor__placeholder {
+	pointer-events: none;
+	user-select: none;
+	color: var(--color-text-tertiary);
+}
+
+/* Live inline marks — shipped with the component so a CompactEditor renders the
+   same in any host without depending on a host's editor theme. The baseline
+   theme (`bs-editor__text--*`) maps the Lexical format bits to these classes. */
+.bs-compact-editor__content .bs-editor__text--bold {
+	font-weight: 600;
+}
+
+.bs-compact-editor__content .bs-editor__text--italic {
+	font-style: italic;
+}
+
+.bs-compact-editor__content .bs-editor__text--underline {
+	text-decoration: underline;
+}
+
+.bs-compact-editor__content .bs-editor__text--strikethrough {
+	text-decoration: line-through;
+}
+
+.bs-compact-editor__content .bs-editor__text--underline.bs-editor__text--strikethrough {
+	text-decoration: underline line-through;
+}
+
+.bs-compact-editor__content .bs-editor__text--code {
+	font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+	font-size: 0.92em;
+	background: color-mix(in srgb, currentColor 10%, transparent);
+	padding: 0.08em 0.32em;
+	border-radius: var(--radius-sm);
+}
+
+.bs-compact-editor__content a {
+	color: var(--color-text-link);
+	text-decoration: underline;
+}

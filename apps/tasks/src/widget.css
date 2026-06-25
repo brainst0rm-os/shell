@@ -1,0 +1,181 @@
+/* Tasks "open tasks" dashboard widget (Stage 7.3a). */
+.tasks-widget {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-height: 0;
+}
+
+/* In-widget controls: the sort select + the live open-task count. Sits above
+ * the scrolling list with a subtle divider so it reads as a toolbar. */
+.tasks-widget__toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-2);
+	flex-shrink: 0;
+	padding: var(--space-1);
+	border-bottom: var(--border-width) solid var(--border);
+}
+
+.tasks-widget__toolbar .bs-select {
+	height: 26px;
+	font-size: var(--text-size-sm);
+}
+
+.tasks-widget__count {
+	flex-shrink: 0;
+	color: var(--text-dim);
+	font-size: var(--text-size-xs);
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+.tasks-widget__list {
+	list-style: none;
+	margin: 0;
+	padding: var(--space-1);
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+}
+
+.tasks-widget__row {
+	display: block;
+	width: 100%;
+	padding: var(--space-1);
+	border: none;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text);
+	font: inherit;
+	font-size: var(--text-size-sm);
+	text-align: start;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	cursor: pointer;
+}
+
+.tasks-widget__row:hover {
+	background: var(--hover);
+}
+
+.tasks-widget__empty {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 1;
+	min-height: 0;
+	margin: 0;
+	color: var(--text-dim);
+	font-size: var(--text-size-sm);
+}
+
+/* "Task Stats" widget (small) — a count card, not a list: a big open-task
+ * number with an overdue / due-today breakdown below. Each stat is a button
+ * opening its most-urgent task. */
+.tasks-stats {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-height: 0;
+	padding: var(--widget-pad);
+	gap: var(--space-1);
+}
+
+.tasks-stats__primary {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 2px;
+	flex: 1;
+	min-height: 0;
+	border: none;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text);
+	cursor: pointer;
+}
+
+.tasks-stats__primary:hover {
+	background: var(--hover);
+}
+
+.tasks-stats__number {
+	font-size: var(--text-size-3xl);
+	font-weight: var(--text-weight-semibold);
+	line-height: 1;
+	color: var(--accent);
+	font-variant-numeric: tabular-nums;
+}
+
+.tasks-stats__primary-label {
+	font-size: var(--text-size-xs);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--text-dim);
+}
+
+.tasks-stats__breakdown {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	flex-shrink: 0;
+}
+
+.tasks-stats__row {
+	display: flex;
+	align-items: baseline;
+	gap: var(--space-1);
+	width: 100%;
+	padding: 2px var(--space-1);
+	border: none;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text);
+	font: inherit;
+	font-size: var(--text-size-sm);
+	text-align: start;
+	cursor: pointer;
+}
+
+button.tasks-stats__row:hover {
+	background: var(--hover);
+}
+
+.tasks-stats__row--idle {
+	color: var(--text-faint);
+	cursor: default;
+}
+
+.tasks-stats__row-count {
+	min-width: 1.4em;
+	font-variant-numeric: tabular-nums;
+	font-weight: var(--text-weight-medium);
+	text-align: end;
+}
+
+.tasks-stats__row--danger:not(.tasks-stats__row--idle) .tasks-stats__row-count {
+	color: var(--danger);
+}
+
+.tasks-stats__row-label {
+	color: var(--text-dim);
+}
+
+.tasks-stats__empty {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 1;
+	min-height: 0;
+	margin: 0;
+	padding: var(--widget-pad);
+	color: var(--text-dim);
+	font-size: var(--text-size-sm);
+}

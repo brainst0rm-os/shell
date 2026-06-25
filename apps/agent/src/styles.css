@@ -1,0 +1,699 @@
+/* Structural rules only. Colours, the `.app-header` chrome, glass, and the
+   primary button come from the shell-injected @brainstorm/sdk app-theme. */
+:root {
+	color-scheme: light dark;
+}
+
+/* Base resets every app needs (Tasks / Bookmarks / Notes all carry these).
+ * `box-sizing: border-box` so the header's 1px border sits INSIDE the shared
+ * 44px height (content-box made it 45px); `body { margin: 0 }` so the app
+ * isn't inset 8px by the browser default and the header is flush + the right
+ * height. */
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	overflow: hidden;
+}
+
+/* `.app` shape: a flex column with the shared 44px `.app-header` on top
+   (full width), then the two-column body — matching every other app. */
+.agent {
+	display: flex;
+	flex-direction: column;
+	height: 100vh;
+	overflow: hidden;
+}
+
+/* Header chrome — flex skeleton, left/right groups, the `<h1>` title face,
+ * height / padding / drag region — is the shared `.app-header` rule in
+ * `@brainstorm/sdk/app-theme.css`. Only the agent-specific delta stays local. */
+.app-header__left {
+	flex: 1 1 auto;
+}
+
+.agent__body {
+	flex: 1;
+	display: grid;
+	grid-template-columns: 248px 1fr;
+	min-height: 0;
+}
+
+.agent__body[data-sidebar-open="false"] {
+	grid-template-columns: 1fr;
+}
+
+.agent__body[data-sidebar-open="false"] .agent__sidebar {
+	display: none;
+}
+
+/* ── Sidebar (a real left track) ── */
+.agent__sidebar {
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	border-right: var(--border-width) solid var(--color-border-subtle);
+}
+
+.agent__convs {
+	flex: 1;
+	overflow: auto;
+	padding: var(--space-2);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+}
+
+.agent__sidebar-empty {
+	color: var(--color-text-tertiary);
+	font-size: var(--text-size-sm);
+	padding: var(--space-2);
+}
+
+.agent__conv {
+	appearance: none;
+	text-align: left;
+	padding: var(--space-2) var(--space-2);
+	border-radius: var(--radius-md);
+	border: none;
+	background: transparent;
+	color: var(--color-text-primary);
+	font-size: var(--text-size-md);
+	cursor: pointer;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* Hover is a neutral wash; the selected row owns the accent — so hover never
+   reads as "selected" (focus-ring/active-state convention). */
+.agent__conv:hover {
+	background: var(--hover);
+}
+
+.agent__conv:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -2px;
+}
+
+.agent__conv--active {
+	background: var(--color-accent-subtle);
+	color: var(--accent);
+}
+
+/* ── Main column ── */
+.agent__main {
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+}
+
+/* Transcript, error bar and composer share ONE centered content column —
+ * the message column reads as a unit instead of bubbles hugging the window
+ * edges while the composer spans the full width. The scrollbar stays at the
+ * window edge because the centering is padding, not a nested max-width box. */
+.agent__transcript,
+.agent__error-row,
+.agent__composer {
+	padding-inline: max(var(--space-5), calc((100% - 760px) / 2));
+}
+
+.agent__transcript {
+	flex: 1;
+	overflow: auto;
+	padding-block: var(--space-5);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+}
+
+.agent__msg {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	max-width: 720px;
+}
+
+.agent__msg--user {
+	align-self: flex-end;
+	align-items: flex-end;
+}
+
+.agent__msg-role {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+	font-weight: var(--text-weight-semibold, 600);
+}
+
+.agent__msg-model {
+	font-weight: var(--text-weight-regular, 400);
+}
+
+.agent__msg-tools {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+	margin-bottom: var(--space-1);
+}
+
+.agent__tool-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+	background: var(--color-surface-default);
+	border: 1px solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+	padding: 2px;
+}
+
+/* ── Cited sources (Agent-4) ── */
+.agent__citations {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	margin-top: var(--space-2);
+}
+
+.agent__citations-label {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.agent__citation-links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+}
+
+.agent__citation {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	font-size: var(--text-size-xs);
+	color: var(--color-accent);
+	background: var(--color-accent-subtle);
+	border: 1px solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+	padding: 2px;
+	cursor: pointer;
+	max-width: 22rem;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.agent__citation:hover {
+	background: var(--color-accent);
+	color: var(--color-accent-text);
+}
+
+.agent__citation:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 1px;
+}
+
+/* Chips for context the user attached to a turn (composer rail → bubble). */
+.agent__attachments {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-1);
+	margin-top: var(--space-2);
+}
+
+.agent__attachment {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	max-width: 18rem;
+	font-size: var(--text-size-xs);
+	color: var(--color-text-secondary);
+	background: var(--color-surface-default);
+	border: 1px solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+	padding: 2px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.agent__attachment--link {
+	color: var(--color-accent);
+	background: var(--color-accent-subtle);
+	cursor: pointer;
+}
+
+.agent__attachment--link:hover {
+	background: var(--color-accent);
+	color: var(--color-accent-text);
+}
+
+.agent__attachment--link:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 1px;
+}
+
+.agent__msg-body {
+	white-space: pre-wrap;
+	word-break: break-word;
+	line-height: 1.5;
+	font-size: var(--text-size-md);
+	padding: var(--space-3) var(--space-2);
+	border-radius: var(--radius-lg);
+	color: var(--color-text-primary);
+}
+
+.agent__msg--assistant .agent__msg-body {
+	background: var(--color-surface-default);
+}
+
+.agent__msg--user .agent__msg-body {
+	background: var(--color-accent-subtle);
+}
+
+.agent__msg-body--thinking {
+	color: var(--color-text-tertiary);
+	font-style: italic;
+}
+
+.agent__error {
+	padding: var(--space-3) var(--space-2);
+	border-radius: var(--radius-md);
+	font-size: var(--text-size-md);
+	border: var(--border-width) solid var(--danger);
+	color: var(--danger);
+}
+
+/* ── Composer ── */
+.agent__composer {
+	display: flex;
+	gap: var(--space-2);
+	align-items: flex-end;
+	padding-block: var(--space-3) var(--space-4);
+	border-top: var(--border-width) solid var(--color-border-subtle);
+}
+
+.agent__input {
+	flex: 1;
+	resize: none;
+	/* Auto-grow with content up to ~8 lines (Chromium field-sizing; the
+	   max-height fallback still applies where unsupported). */
+	field-sizing: content;
+	max-height: 200px;
+	min-height: var(--control-height-lg, 40px);
+	/* 9px block padding keeps the single-line height at exactly
+	   --control-height-lg (19.6px line + 18px padding + 2px border),
+	   so the Send button sits on the same row line. */
+	padding: 9px var(--space-3, var(--space-3));
+	border-radius: var(--radius-lg);
+	border: var(--border-width) solid var(--color-border-subtle);
+	background: var(--color-surface-default);
+	color: var(--color-text-primary);
+	font: inherit;
+	font-size: var(--text-size-md);
+	line-height: 1.4;
+	transition: border-color var(--motion-duration-fast) var(--motion-easing-standard);
+}
+
+.agent__input::placeholder {
+	color: var(--color-text-tertiary);
+}
+
+.agent__input:focus {
+	outline: none;
+	border-color: var(--color-focus-ring);
+}
+
+/* Match the attach "+" to the 40px input/send so all three sit on one row
+   (the SDK default is the 32px md control). */
+.agent__composer .bs-composer-context__attach {
+	width: var(--control-height-lg, 40px);
+	height: var(--control-height-lg, 40px);
+}
+
+/* Structural rules only — the glossy primary face (background, color,
+   shadows, hover) comes from the shared `data-bs-primary` hook in the
+   SDK app-theme. */
+.agent__send {
+	appearance: none;
+	border: 0;
+	height: var(--control-height-lg, 40px);
+	padding: 0 var(--space-4, var(--space-4));
+	border-radius: var(--radius-lg);
+	font: inherit;
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium, 500);
+	cursor: pointer;
+	flex-shrink: 0;
+}
+
+.agent__send:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 2px;
+}
+
+.agent__send:disabled {
+	opacity: 0.5;
+	cursor: default;
+}
+
+/* ── Conversation settings dialog (Agent-5) ── */
+.agent-settings {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-5);
+}
+
+.agent-settings__section {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.agent-settings__heading {
+	margin: 0;
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-semibold, 600);
+	color: var(--color-text-primary);
+}
+
+.agent-settings__blurb {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+	line-height: 1.45;
+}
+
+.agent-settings__empty {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--color-text-tertiary);
+}
+
+.agent-settings__field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.agent-settings__field-label {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.agent-settings__tools {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.agent-settings__budget-input {
+	width: 100%;
+	height: var(--control-height-md, 32px);
+	padding: 0 var(--space-3);
+	border-radius: var(--radius-md);
+	border: var(--border-width) solid var(--color-border-subtle);
+	background: var(--color-surface-default);
+	color: var(--color-text-primary);
+	font: inherit;
+	font-size: var(--text-size-md);
+}
+
+.agent-settings__budget-input:focus {
+	outline: none;
+	border-color: var(--color-focus-ring);
+}
+
+.agent-settings__spent {
+	margin: 0;
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+}
+
+/* ── Inline escalation prompt (Agent-5) ── */
+.agent__escalation {
+	display: flex;
+	gap: var(--space-3);
+	align-items: flex-start;
+	max-width: 720px;
+	padding: var(--space-3);
+	border-radius: var(--radius-lg);
+	border: var(--border-width) solid var(--color-border-subtle);
+	background: var(--color-surface-default);
+}
+
+.agent__escalation-icon {
+	flex-shrink: 0;
+	color: var(--accent);
+	margin-top: 2px;
+}
+
+.agent__escalation-body {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.agent__escalation-title {
+	margin: 0;
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-semibold, 600);
+	color: var(--color-text-primary);
+}
+
+.agent__escalation-blurb {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+	line-height: 1.45;
+}
+
+.agent__escalation-actions {
+	display: flex;
+	gap: var(--space-2);
+	margin-top: var(--space-1);
+}
+
+.agent__escalation-allow {
+	appearance: none;
+	border: 0;
+	height: var(--control-height-sm, 24px);
+	padding: 0 var(--space-3);
+	border-radius: var(--radius-md);
+	font: inherit;
+	font-size: var(--text-size-sm);
+	font-weight: var(--text-weight-medium, 500);
+	cursor: pointer;
+}
+
+.agent__escalation-dismiss {
+	appearance: none;
+	height: var(--control-height-sm, 24px);
+	padding: 0 var(--space-3);
+	border-radius: var(--radius-md);
+	border: var(--border-width) solid var(--color-border-subtle);
+	background: transparent;
+	color: var(--color-text-secondary);
+	font: inherit;
+	font-size: var(--text-size-sm);
+	cursor: pointer;
+}
+
+.agent__escalation-allow:focus-visible,
+.agent__escalation-dismiss:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 2px;
+}
+
+/* ── Save as automation review dialog (Agent-6) ── */
+.agent-save-auto {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-5);
+}
+
+.agent-save-auto__blurb {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+	line-height: 1.45;
+}
+
+.agent-save-auto__section {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.agent-save-auto__heading {
+	margin: 0;
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.agent-save-auto__name {
+	margin: 0;
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-semibold, 600);
+	color: var(--color-text-primary);
+}
+
+.agent-save-auto__line,
+.agent-save-auto__instructions {
+	margin: 0;
+	font-size: var(--text-size-md);
+	color: var(--color-text-primary);
+	line-height: 1.45;
+	white-space: pre-wrap;
+}
+
+.agent-save-auto__tools,
+.agent-save-auto__params,
+.agent-save-auto__caps {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.agent-save-auto__tool {
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+}
+
+.agent-save-auto__param {
+	display: flex;
+	align-items: baseline;
+	gap: var(--space-2);
+	font-size: var(--text-size-sm);
+}
+
+.agent-save-auto__token {
+	font-family: var(--text-family-code);
+	font-size: var(--text-size-xs);
+	color: var(--color-text-primary);
+	background: var(--code-bg);
+	padding: 0 var(--space-1);
+	border-radius: var(--radius-sm);
+}
+
+.agent-save-auto__example {
+	color: var(--color-text-tertiary);
+}
+
+.agent-save-auto__cap code {
+	font-family: var(--text-family-code);
+	font-size: var(--text-size-xs);
+	color: var(--color-text-secondary);
+}
+
+.agent-save-auto__actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--space-2);
+}
+
+/* ── Long-term memory (Agent-7) ── */
+.agent__msg-actions {
+	display: flex;
+	gap: var(--space-2);
+	margin-top: var(--space-2);
+}
+
+.agent__remember {
+	appearance: none;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	height: var(--control-height-sm, 24px);
+	padding: 0 var(--space-2);
+	border-radius: var(--radius-md);
+	border: var(--border-width) solid var(--color-border-subtle);
+	background: transparent;
+	color: var(--color-text-secondary);
+	font: inherit;
+	font-size: var(--text-size-xs);
+	cursor: pointer;
+}
+
+.agent__remember:hover {
+	background: var(--hover);
+	color: var(--color-text-primary);
+}
+
+.agent__remember:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 2px;
+}
+
+.agent-memory__list-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-2);
+}
+
+.agent-memory__list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.agent-memory__row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-2);
+	border-radius: var(--radius-md);
+	border: var(--border-width) solid var(--color-border-subtle);
+	background: var(--color-surface-default);
+}
+
+.agent-memory__text {
+	flex: 1 1 auto;
+	font-size: var(--text-size-sm);
+	color: var(--color-text-primary);
+	line-height: 1.45;
+}
+
+.agent-memory__edit {
+	flex: 1 1 auto;
+	height: var(--control-height-sm, 24px);
+	padding: 0 var(--space-2);
+	border-radius: var(--radius-md);
+	border: var(--border-width) solid var(--color-border-subtle);
+	background: var(--color-surface-default);
+	color: var(--color-text-primary);
+	font: inherit;
+	font-size: var(--text-size-sm);
+}
+
+.agent-memory__edit:focus {
+	outline: none;
+	border-color: var(--color-focus-ring);
+}
+
+.agent-memory__row-actions {
+	display: flex;
+	gap: var(--space-1);
+	flex-shrink: 0;
+}

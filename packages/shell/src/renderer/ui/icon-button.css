@@ -1,0 +1,86 @@
+/* IconButton — single source of truth for every icon-only button.
+ * Hover / active states are token-driven and work on glass + solid surfaces. */
+
+.icon-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background: transparent;
+	color: var(--color-text-secondary);
+	border: 0;
+	padding: 0;
+	border-radius: var(--radius-md);
+	cursor: pointer;
+	line-height: 1;
+	will-change: transform, background-color;
+	transition: background var(--motion-duration-normal) var(--motion-easing-standard), color
+		var(--motion-duration-normal) var(--motion-easing-standard), transform var(--motion-duration-fast)
+		var(--motion-easing-decelerated);
+}
+
+.icon-button:active:not(:disabled) {
+	transform: scale(0.92);
+}
+
+/* Square hit-areas. Outer size is the touch target; the inner icon is
+ * sized to the optical sweet spot per pair (Sm 24/14, Md 28/20, Lg 32/22). */
+.icon-button--sm {
+	width: 24px;
+	height: 24px;
+}
+
+.icon-button--md {
+	width: 28px;
+	height: 28px;
+}
+
+.icon-button--lg {
+	width: 32px;
+	height: 32px;
+}
+
+/* Ghost — default. Hover surfaces a token overlay that looks right on any
+ * surface; active dims slightly more. */
+.icon-button--ghost:hover:not(:disabled) {
+	background: var(--color-interactive-hover);
+	color: var(--color-text-primary);
+}
+
+.icon-button--ghost:active:not(:disabled) {
+	background: var(--color-interactive-active);
+}
+
+/* Filled — accent-tinted, used sparingly. */
+.icon-button--filled {
+	background: var(--color-accent-subtle);
+	color: var(--color-accent-default);
+}
+
+.icon-button--filled:hover:not(:disabled) {
+	background: var(--color-accent-default);
+	color: var(--color-accent-text);
+}
+
+/* Toggle "on" state — used by `pressed` (e.g. pin / mute). Tints with the
+ * accent so the user can read at a glance that the action is active. */
+.icon-button--on:not(:disabled) {
+	background: var(--color-accent-subtle);
+	color: var(--color-accent-default);
+}
+
+.icon-button--on:hover:not(:disabled) {
+	background: var(--color-accent-default);
+	color: var(--color-accent-text);
+}
+
+.icon-button:disabled {
+	cursor: not-allowed;
+	opacity: 0.55;
+}
+
+/* Tight offset (1px, not the default 2px): small square icon buttons need the
+ * ring to hug closer or it visually detaches from a 20-24px target. */
+.icon-button:focus-visible {
+	outline: var(--focus-ring-outline);
+	outline-offset: 1px;
+}

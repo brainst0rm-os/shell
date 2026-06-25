@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node", "vite/client"],
+    "paths": {
+      "@brainstorm/tokens": ["./packages/tokens/src/index.ts"],
+      "@brainstorm/sdk": ["./packages/sdk/src/index.ts"],
+      "@brainstorm/sdk-types": ["./packages/sdk-types/src/index.ts"],
+      "@brainstorm/react-yjs": ["./packages/react-yjs/src/index.ts"],
+      "@brainstorm/editor": ["./packages/editor/src/index.ts"],
+      "@brainstorm/cli": ["./packages/cli/src/index.ts"]
+    }
+  },
+  "include": ["packages/*/src/**/*", "packages/shell/electron.vite.config.ts", "vitest.config.ts"],
+  "exclude": ["node_modules", "**/out/**", "**/dist/**"]
+}

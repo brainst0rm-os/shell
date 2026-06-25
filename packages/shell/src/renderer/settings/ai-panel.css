@@ -1,0 +1,229 @@
+/* Settings → AI panel (11.9) — provider-key rows. The generic field chrome
+ * (.settings__field*, .settings__input) lives in the shared settings.css and is
+ * reused here + by the MCP panel; this file holds only AI-specific surfaces. */
+
+/* Provider grid — a wrap of tiles, each opening a credential popover. */
+.settings__ai-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
+	gap: var(--space-2);
+	margin-top: var(--space-2);
+}
+
+.settings__ai-tile {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-3) var(--space-2);
+	background: var(--color-surface-raised);
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-lg);
+	cursor: pointer;
+	text-align: center;
+	transition: border-color 120ms ease, background 120ms ease, transform 120ms ease;
+}
+
+.settings__ai-tile:hover {
+	border-color: var(--color-border-strong);
+	background: var(--color-surface-overlay);
+}
+
+.settings__ai-tile:active {
+	transform: scale(0.98);
+}
+
+.settings__ai-tile:focus-visible {
+	outline: var(--focus-ring-outline);
+	outline-offset: var(--focus-ring-offset-inset);
+	border-color: transparent;
+}
+
+.settings__ai-tile[data-configured="true"] {
+	border-color: var(--color-accent-default);
+}
+
+.settings__ai-avatar {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.5rem;
+	height: 2.5rem;
+	border-radius: var(--radius-full);
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium);
+	/* Per-provider accent; literal brand-ish hues, overridable below. Neutral default. */
+	background: var(--color-surface-sunken);
+	color: var(--color-text-primary);
+}
+
+/* Brand-ish hues keyed off `data-provider` on any ancestor (the grid tile or
+ * the credential dialog's identity row), so the avatar reads the same in both. */
+[data-provider="anthropic"] .settings__ai-avatar {
+	background: #d97757;
+	color: #fff;
+}
+
+[data-provider="openai"] .settings__ai-avatar {
+	background: #10a37f;
+	color: #fff;
+}
+
+[data-provider="glm"] .settings__ai-avatar {
+	background: #4d6bfe;
+	color: #fff;
+}
+
+[data-provider="mistral"] .settings__ai-avatar {
+	background: #fa5111;
+	color: #fff;
+}
+
+[data-provider="gemini"] .settings__ai-avatar {
+	background: #4285f4;
+	color: #fff;
+}
+
+/* Key-status dot, pinned to the avatar corner. */
+.settings__ai-dot {
+	position: absolute;
+	right: -1px;
+	bottom: -1px;
+	width: 0.7rem;
+	height: 0.7rem;
+	border-radius: var(--radius-full);
+	border: 2px solid var(--color-surface-raised);
+	background: var(--color-text-tertiary);
+}
+
+[data-configured="true"] .settings__ai-dot {
+	background: var(--color-accent-default);
+}
+
+.settings__ai-tile-name {
+	font-size: var(--text-size-sm);
+	font-weight: var(--text-weight-medium);
+	color: var(--color-text-primary);
+	max-width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.settings__ai-tile-status {
+	font-size: var(--text-size-xs);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--color-text-tertiary);
+}
+
+.settings__ai-tile[data-configured="true"] .settings__ai-tile-status {
+	color: var(--color-accent-default);
+}
+
+/* Credential popover body. */
+.settings__ai-key-form {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+}
+
+/* Identity row at the top of the credential dialog: the provider avatar
+ * (brand hue + live key-status dot) paired with a status pill, so the dialog
+ * states current configuration at a glance rather than reading as an empty
+ * field. */
+.settings__ai-key-id {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+}
+
+.settings__ai-key-status-pill {
+	display: inline-flex;
+	align-items: center;
+	height: 1.5rem;
+	padding: 0 var(--space-2);
+	border-radius: var(--radius-full);
+	font-size: var(--text-size-xs);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--color-text-tertiary);
+	background: color-mix(in srgb, var(--color-text-tertiary) 12%, transparent);
+}
+
+.settings__ai-key-id[data-configured="true"] .settings__ai-key-status-pill {
+	color: var(--color-accent-default);
+	background: var(--color-accent-subtle);
+}
+
+.settings__ai-key-label {
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-semibold);
+	color: var(--color-text-secondary);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	margin-bottom: calc(-1 * var(--space-1));
+}
+
+.settings__ai-key-form .settings__input {
+	width: 100%;
+}
+
+.settings__ai-usage-list {
+	list-style: none;
+	margin: var(--space-1) 0 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.settings__ai-usage-row {
+	display: flex;
+}
+
+/* The whole row is the budget-editor trigger (opens the popover) — a calm
+ * read-only summary, not a grid of live inputs. */
+.settings__ai-usage-trigger {
+	flex: 1;
+	display: flex;
+	align-items: baseline;
+	gap: var(--space-3);
+	font-size: var(--text-size-sm);
+	padding: var(--space-1) var(--space-2);
+	margin: 0 calc(-1 * var(--space-2));
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: inherit;
+	text-align: left;
+	cursor: pointer;
+	transition: background-color 120ms ease;
+}
+
+.settings__ai-usage-trigger:hover {
+	background: var(--color-surface-hover);
+}
+
+.settings__ai-usage-app {
+	color: var(--color-text-primary);
+	margin-right: auto;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.settings__ai-usage-stat {
+	color: var(--color-text-tertiary);
+	flex-shrink: 0;
+}
+
+.settings__ai-budget-value {
+	color: var(--color-text-tertiary);
+	flex-shrink: 0;
+}
+
+.settings__ai-budget-value[data-set="true"] {
+	color: var(--color-text-secondary);
+}

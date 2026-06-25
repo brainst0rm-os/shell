@@ -1,0 +1,1779 @@
+/* Brainstorm — Calendar first-party app (preview drop, Stage 9.15.1.5).
+ *
+ * Per [[apps-inherit-shell-theme]]: shell pushes flattened CSS tokens.
+ * Local vars alias those tokens with dark fallbacks for the boot-
+ * before-tokens window. Font-sizes via tokens per [[font-sizes-use-tokens]].
+ */
+/* Theming is the shell's job, not the app's. The shell preload injects
+ * the active theme tokens AND the alias layer (--accent / --bg / --text /
+ * --selected / --today-tint / …) + base type + component styles via a
+ * single stylesheet — packages/shell/src/preload/app-theme.ts, the
+ * single source of truth. This app declares ZERO theme values. Don't
+ * reintroduce a :root alias block or root font/colour here. */
+:root {
+	color-scheme: light dark;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	overflow: hidden;
+}
+
+#root {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-height: 0;
+}
+
+button {
+	font-family: inherit;
+	font-size: inherit;
+	color: inherit;
+	background: none;
+	border: none;
+	padding: 0;
+	cursor: pointer;
+}
+
+button:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 2px;
+	border-radius: var(--radius-xs);
+}
+
+/* ─── App header ─────────────────────────────────────────────────── */
+
+/* Header chrome (flex skeleton, left/right groups, drag region, skin) is the
+ * shared `.app-header` rule in `@brainstorm/sdk/app-theme.css`; only the
+ * calendar-specific delta stays local. */
+.app-header__right {
+	flex: 0 0 auto;
+}
+
+/* ─── Main layout ─────────────────────────────────────────────────── */
+
+.calendar-main {
+	position: relative;
+	height: calc(100vh - var(--app-header-height, 44px));
+	display: grid;
+	grid-template-columns: var(--cal-sidebar-width, 248px) 1fr;
+	transition: grid-template-columns var(--motion-duration-normal, 180ms) ease;
+	overflow: hidden;
+}
+
+/* The transition above is the TOGGLE-button animation; the shell's
+   app-theme zeroes transition-duration globally under `body.is-resizing`
+   so a mouse-resize drag stays synced to the cursor.
+
+   Closed: collapse the grid track to 0 so the content column smoothly
+   fills the freed space, while the slot (in absolute layout at a stable
+   width) slides off-screen on a GPU transform. Per [[animate-transform-not-width]]. */
+.calendar-main[data-sidebar-open="false"] {
+	grid-template-columns: 0 minmax(0, 1fr);
+}
+
+#calendar-sidebar-slot {
+	position: absolute;
+	top: 0;
+	inset-inline-start: 0;
+	bottom: 0;
+	width: var(--cal-sidebar-width, 248px);
+	display: flex;
+	flex-direction: column;
+	border-inline-end: var(--border-width) solid var(--color-glass-border);
+	overflow-y: auto;
+	z-index: 90;
+	transition: transform var(--motion-duration-normal, 180ms) ease;
+	will-change: transform;
+}
+
+.calendar-main[data-sidebar-open="false"] #calendar-sidebar-slot {
+	transform: translateX(-100%);
+	border-inline-end-color: transparent;
+}
+
+/* PHYSICAL-AXIS INTENTIONAL: resize handle straddles the panel edge geometrically */
+.calendar-resize {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: var(--cal-sidebar-width, 248px);
+	width: 6px;
+	margin-left: -3px;
+	cursor: col-resize;
+	z-index: 5;
+	background: transparent;
+	transition: background 120ms ease;
+	touch-action: none;
+}
+
+.calendar-main[data-sidebar-open="false"] .calendar-resize {
+	display: none;
+}
+
+.calendar-resize:hover,
+.calendar-resize:focus-visible,
+body.is-resizing .calendar-resize {
+	background: var(--color-accent-subtle, rgba(255, 255, 255, 0.1));
+	outline: none;
+}
+
+.calendar-content {
+	/* The sidebar slot + resize bar are position:absolute, so they're
+	 * removed from .calendar-main's grid flow. Without an explicit
+	 * grid-column placement the content would auto-place into the FIRST
+	 * track (the 248px sidebar column) and get overlapped by the
+	 * absolutely-positioned slot. Pin it to column 2 so it always
+	 * occupies the 1fr content track regardless of sidebar state. */
+	grid-column: 2;
+	display: grid;
+	grid-template-rows: 1fr;
+	/* CSS Grid items default to `min-width: auto` (= the item's content's
+	 * minimum intrinsic width). The inner month grid contains chips whose
+	 * intrinsic min-width can sum to more than the 1fr track's share —
+	 * that inflates the SECOND track, pushing the FIRST track (the
+	 * sidebar's reserved 248px) to a NEGATIVE width visually; since the
+	 * absolutely-positioned `#calendar-sidebar-slot` still draws at x=0
+	 * with its declared `width: var(--cal-sidebar-width)`, the content
+	 * shifts left and the first 4 weekday columns end up hidden behind
+	 * the sidebar. `min-width: 0` (+ `min-height: 0`, already present)
+	 * is the canonical fix — pin the track to its 1fr share. */
+	min-width: 0;
+	min-height: 0;
+}
+
+.calendar-view-slot {
+	min-width: 0;
+	min-height: 0;
+	overflow: auto;
+	background: var(--bg);
+}
+
+/* ─── Sidebar ─────────────────────────────────────────────────────── */
+
+.cal-sidebar {
+	display: flex;
+	flex-direction: column;
+}
+
+.cal-sidebar__group {
+	padding: var(--space-3) var(--space-2);
+}
+
+.cal-sidebar__group + .cal-sidebar__group {
+	border-top: var(--border-width) solid var(--border);
+}
+
+.cal-sidebar__heading {
+	margin: 0 0 var(--space-2);
+	font-size: var(--text-size-xs);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--text-dim);
+	font-weight: var(--text-weight-semibold);
+}
+
+.cal-sidebar__list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+}
+
+.cal-sidebar__row {
+	display: grid;
+	grid-template-columns: 18px 1fr auto auto;
+	align-items: center;
+	gap: var(--space-2);
+	width: 100%;
+	padding: var(--space-2) var(--space-2);
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-md);
+	color: var(--text);
+	text-align: start;
+	transition: background-color 80ms ease;
+}
+
+.cal-sidebar__row:hover {
+	background: var(--hover);
+}
+
+.cal-sidebar__row[aria-pressed="true"] {
+	background: var(--accent-soft);
+	color: var(--text);
+	border-color: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.cal-sidebar__label {
+	min-width: 0;
+	font-weight: var(--text-weight-medium);
+	font-size: var(--text-size-md);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.cal-sidebar__dot {
+	width: 10px;
+	height: 10px;
+	flex: 0 0 auto;
+	justify-self: center;
+	border-radius: var(--radius-full);
+	background: var(--dot-color, var(--accent));
+	box-shadow: 0 0 0 1px var(--border-strong) inset;
+}
+
+.cal-sidebar__count {
+	color: var(--text-dim);
+	font-size: var(--text-size-sm);
+	font-variant-numeric: tabular-nums;
+}
+
+.cal-sidebar__check {
+	color: var(--accent);
+	font-weight: var(--text-weight-bold);
+}
+
+.cal-sidebar__row[aria-pressed="false"] .cal-sidebar__dot {
+	opacity: 0.35;
+}
+
+.cal-sidebar__empty {
+	margin: 0;
+	padding: var(--space-2);
+	color: var(--text-dim);
+	font-size: var(--text-size-sm);
+}
+
+/* The sidebar mini-month is the shared `@brainstorm/sdk/calendar`
+ * `createMiniCalendar` (`.bs-cal-mini*`, styled by the SDK's calendar.css
+ * via the app-theme aggregator) — no app-local mini-month chrome. */
+
+/* ─── Header content (single shell .app-header bar) ───────────────── */
+
+/* The lead slot follows the back/forward nav buttons in `.app-header__left`.
+ * The actions (view-tabs + search + New) mount directly into
+ * `.app-header__right` as siblings of the sidebar toggle + ⋯, so every button
+ * on the right shares one `var(--space-2)` rhythm — no wrapping group. */
+.cal-header__lead-slot {
+	display: inline-flex;
+	align-items: center;
+	min-width: 0;
+}
+
+.cal-header__lead {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-3);
+	min-width: 0;
+}
+
+.cal-toolbar__nav {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+
+/* The range title — the page's main heading on the shared
+ * `.app-header__title` face (per the cross-app rule); only the flex-shrink
+ * layout delta stays local. */
+.cal-toolbar__range {
+	min-width: 0;
+}
+
+.cal-toolbar__tabs {
+	display: inline-flex;
+	/* Match the 28px header buttons (search / new) so the view switcher sits on
+	 * the same baseline — control-height-sm (24px) left it visibly short. */
+	height: 28px;
+	box-shadow: inset 0 0 0 1px var(--border-strong);
+	border-radius: var(--radius-sm);
+	overflow: hidden;
+}
+
+.cal-toolbar__tab {
+	display: inline-flex;
+	align-items: center;
+	padding: 0 var(--space-2);
+	font-size: var(--text-size-md);
+	color: var(--text-dim);
+	background: transparent;
+	transition: background-color 80ms ease, color 80ms ease;
+}
+
+.cal-toolbar__tab:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.cal-toolbar__tab[aria-selected="true"] {
+	background: var(--selected);
+	color: var(--text);
+}
+
+.cal-toolbar__tab + .cal-toolbar__tab {
+	border-inline-start: var(--border-width) solid var(--border-strong);
+}
+
+/* ─── Month view ──────────────────────────────────────────────────── */
+
+/* The grid itself is the shared `@brainstorm/sdk/calendar` month grid
+ * (`.bs-cal-month*`, styled by the SDK). The host only has to give it the
+ * full content height; the per-cell chip list below is Calendar-owned. */
+.cal-month-host {
+	height: 100%;
+	min-height: 0;
+}
+
+/* Year view (9.15.11) — 12 mini-months in a responsive grid. */
+.cal-year {
+	height: 100%;
+	overflow-y: auto;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	gap: var(--space-4);
+	padding: var(--space-4);
+	align-content: start;
+}
+
+.cal-year__month {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.cal-year__month-head {
+	appearance: none;
+	border: none;
+	background: transparent;
+	color: var(--text);
+	font: inherit;
+	font-weight: var(--text-weight-semibold);
+	font-size: var(--text-size-sm);
+	text-align: start;
+	padding: var(--space-1) var(--space-1);
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+}
+
+.cal-year__month[data-has-items="true"] .cal-year__month-head {
+	color: var(--accent);
+}
+
+.cal-year__month-head:hover {
+	background: var(--color-accent-subtle, var(--bg-elev));
+}
+
+.cal-year__dow,
+.cal-year__grid {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: var(--space-0_5);
+}
+
+.cal-year__dow-cell {
+	text-align: center;
+	font-size: var(--text-size-xs);
+	color: var(--text-faint);
+	text-transform: uppercase;
+}
+
+.cal-year__day {
+	appearance: none;
+	border: none;
+	background: transparent;
+	color: var(--text-dim);
+	font: inherit;
+	font-size: var(--text-size-xs);
+	aspect-ratio: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--radius-xs);
+	cursor: pointer;
+	position: relative;
+}
+
+.cal-year__day[data-other-month="true"] {
+	color: var(--text-faint);
+	opacity: 0.5;
+}
+
+/* Busy-ness heat — four steps from the accent. */
+.cal-year__day[data-density="1"] {
+	background: color-mix(in srgb, var(--accent) 18%, transparent);
+	color: var(--text);
+}
+.cal-year__day[data-density="2"] {
+	background: color-mix(in srgb, var(--accent) 38%, transparent);
+	color: var(--text);
+}
+.cal-year__day[data-density="3"] {
+	background: color-mix(in srgb, var(--accent) 62%, transparent);
+	color: var(--accent-fg, #fff);
+}
+
+.cal-year__day[data-today="true"] {
+	outline: 2px solid var(--accent);
+	outline-offset: -2px;
+	font-weight: var(--text-weight-semibold);
+}
+
+.cal-year__day:hover {
+	background: var(--color-accent-subtle, var(--bg-elev));
+}
+
+.cal-month__items {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.cal-month__item {
+	min-width: 0;
+}
+
+/* Multi-day ribbon lanes (9.15.20). The band reserves one row per lane so
+ * the bars line up across the week; gaps keep the row height. The cell
+ * grid's 1px borders are the only break, so square inner edges read as a
+ * single continuous bar. */
+.cal-month__ribbons {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+	margin-bottom: var(--space-0_5);
+}
+
+.cal-month__ribbon,
+.cal-month__ribbon-gap {
+	height: 18px;
+	min-height: 18px;
+}
+
+.cal-month__ribbon {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	/* Bleed to the cell edges so adjacent days' segments touch. */
+	margin: 0 -1px;
+	padding: 0 var(--space-1);
+	border: none;
+	background: color-mix(in srgb, var(--chip-color) 24%, transparent);
+	color: var(--text);
+	font: inherit;
+	font-size: var(--text-size-xs);
+	text-align: start;
+	cursor: pointer;
+	border-left: 3px solid transparent;
+	white-space: nowrap;
+	overflow: hidden;
+	position: relative;
+}
+
+.cal-month__ribbon[data-cap-left="true"] {
+	border-top-left-radius: 5px;
+	border-bottom-left-radius: 5px;
+	margin-left: 0;
+	border-left: 3px solid var(--chip-color);
+}
+
+.cal-month__ribbon[data-cap-right="true"] {
+	border-top-right-radius: 5px;
+	border-bottom-right-radius: 5px;
+	margin-right: 0;
+}
+
+.cal-month__ribbon[data-status="cancelled"] {
+	opacity: 0.55;
+}
+
+.cal-month__ribbon[data-status="cancelled"] .cal-month__ribbon-title {
+	text-decoration: line-through;
+}
+
+.cal-month__ribbon-title {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	flex: 1 1 auto;
+}
+
+.cal-month__ribbon-more {
+	flex: 0 0 auto;
+}
+
+.cal-month__overflow-button {
+	font-size: var(--text-size-xs);
+	color: var(--text-faint);
+	text-align: start;
+	padding: var(--space-0_5);
+	border-radius: var(--radius-xs);
+	width: 100%;
+}
+
+.cal-month__overflow-button:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+/* Free-floating popover anchored at "+N more". Lists every item for the
+ * day so the user can open/pin without leaving the month grid. */
+.cal-month__overflow-popover {
+	position: fixed;
+	z-index: 1000;
+	min-width: 220px;
+	max-width: 320px;
+	max-height: 360px;
+	overflow-y: auto;
+	padding: var(--space-2);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	background: var(--bg-elev);
+	color: var(--text);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-md, 0 8px 24px rgba(0, 0, 0, 0.2));
+}
+
+.cal-month__overflow-popover-header {
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-semibold);
+	color: var(--text);
+	text-align: start;
+	padding: var(--space-1) var(--space-1) var(--space-2);
+	border-bottom: var(--border-width) solid var(--border-subtle);
+	border-radius: 0;
+}
+
+.cal-month__overflow-popover-header:hover {
+	color: var(--accent);
+}
+
+.cal-month__overflow-popover-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+}
+
+.cal-month__overflow-popover-item {
+	min-width: 0;
+}
+
+/* ─── Event chip ──────────────────────────────────────────────────── */
+
+.cal-chip {
+	--chip-color: var(--accent);
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	min-width: 0;
+	width: 100%;
+	border-radius: var(--radius-xs);
+	transition: background-color 80ms ease;
+	text-align: start;
+}
+
+/* The source object's own icon, shared across every chip mode. Fixed
+ * box so titles align whether or not an icon is present. */
+.cal-chip__icon {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+}
+
+.cal-chip__title-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	min-width: 0;
+	width: 100%;
+}
+
+.cal-chip--compact {
+	padding: var(--space-0_5);
+	font-size: var(--text-size-xs);
+	line-height: 1.2;
+	color: var(--text);
+	background: color-mix(in srgb, var(--chip-color) 22%, transparent);
+	border-inline-start: var(--border-width-thick) solid var(--chip-color);
+	min-height: 0;
+}
+
+.cal-chip--compact .cal-chip__title {
+	flex: 1 1 auto;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	font-weight: var(--text-weight-medium);
+}
+
+.cal-chip--compact .cal-chip__time {
+	color: var(--text-dim);
+	font-size: var(--text-size-xs);
+	flex: 0 0 auto;
+}
+
+.cal-chip--compact .bs-object-menu__more {
+	width: 20px;
+	height: 20px;
+}
+
+.cal-chip--compact[data-all-day="true"] {
+	background: var(--chip-color);
+	color: var(--accent-fg);
+	border-inline-start-color: transparent;
+}
+
+.cal-chip:hover {
+	filter: brightness(1.15);
+}
+
+.cal-chip__recurring {
+	margin-inline-start: auto;
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	flex: 0 0 auto;
+}
+
+/* Block variant for Week/Day views */
+.cal-chip--block {
+	position: absolute;
+	inset-inline-start: var(--space-1);
+	inset-inline-end: var(--space-1);
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--space-0_5);
+	padding: var(--space-1);
+	background: color-mix(in srgb, var(--chip-color) 30%, transparent);
+	border-inline-start: 3px solid var(--chip-color);
+	border-radius: var(--radius-sm);
+	color: var(--text);
+	overflow: hidden;
+}
+
+.cal-chip--block .cal-chip__title {
+	font-size: var(--text-size-sm);
+	font-weight: var(--text-weight-semibold);
+	flex: 1 1 auto;
+	min-width: 0;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.cal-chip--block .cal-chip__meta {
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	width: 100%;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* Density-aware content gating. The block chip is sized by inline
+ * `height`; when the chip is too short for its content the meta /
+ * location lines hide so text stops bleeding past the chip's bottom
+ * edge into the next hour's slot. `data-density` is set by week-view.ts:
+ *   - tight (<35min): title only
+ *   - compact (<55min): title + meta
+ *   - roomy (≥55min): full content (title + meta + location)
+ */
+.cal-chip--block[data-density="tight"] .cal-chip__meta,
+.cal-chip--block[data-density="tight"] .cal-chip__meta--location,
+.cal-chip--block[data-density="compact"] .cal-chip__meta--location {
+	display: none;
+}
+
+.cal-chip--block[data-density="tight"] {
+	padding-top: var(--space-0_5);
+	padding-bottom: var(--space-0_5);
+}
+
+.cal-chip--block[data-density="tight"] .cal-chip__title {
+	font-size: var(--text-size-xs);
+}
+
+/* Agenda row variant */
+.cal-chip--row {
+	padding: var(--space-2) var(--space-2);
+	border-radius: var(--radius-md);
+	color: var(--text);
+	background: var(--bg-elev);
+	border: var(--border-width) solid var(--border);
+}
+
+.cal-chip--row:hover {
+	background: var(--hover);
+}
+
+.cal-chip--row .cal-chip__dot {
+	width: 10px;
+	height: 10px;
+	border-radius: var(--radius-full);
+	background: var(--chip-color);
+	flex: 0 0 auto;
+}
+
+.cal-chip--row .cal-chip__time {
+	min-width: 120px;
+	color: var(--text-dim);
+	font-size: var(--text-size-sm);
+	flex: 0 0 auto;
+}
+
+.cal-chip--row .cal-chip__title {
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium);
+	flex: 1 1 auto;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.cal-chip--row .cal-chip__meta {
+	color: var(--text-faint);
+	font-size: var(--text-size-xs);
+	flex: 0 0 auto;
+}
+
+/* ─── Week / Day view ─────────────────────────────────────────────── */
+
+.cal-week {
+	display: grid;
+	grid-template-rows: auto auto minmax(0, 1fr);
+	height: 100%;
+	min-height: 0;
+	background: var(--bg);
+	/* Gutter width + the snap grid both read from these so the gutter,
+	 * head, all-day band and hour grid stay column-aligned. */
+	--cal-gutter-width: 56px;
+}
+
+.cal-week__head {
+	display: grid;
+	grid-template-columns: var(--cal-gutter-width) repeat(var(--day-count, 7), 1fr);
+	border-bottom: var(--border-width) solid var(--border);
+	background: var(--bg);
+}
+
+.cal-week[data-kind="day"] {
+	--day-count: 1;
+}
+
+.cal-week__gutter {
+	border-inline-end: var(--border-width) solid var(--border);
+	background: var(--bg);
+}
+
+.cal-week__gutter--allday {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	padding: var(--space-1);
+	font-size: var(--text-size-xs);
+	color: var(--text-faint);
+	border-inline-end: var(--border-width) solid var(--border);
+}
+
+.cal-week__head-cell {
+	display: flex;
+	flex-direction: row;
+	align-items: baseline;
+	justify-content: center;
+	gap: var(--space-1);
+	padding: var(--space-2) var(--space-1);
+	color: var(--text-dim);
+	border-inline-end: var(--border-width) solid var(--border-subtle);
+}
+
+.cal-week__head-cell:last-child {
+	border-inline-end: none;
+}
+
+.cal-week__head-cell:hover {
+	color: var(--text);
+	background: var(--hover);
+}
+
+.cal-week__head-cell--today {
+	color: var(--accent);
+}
+
+.cal-week__head-cell--today .cal-week__head-num {
+	background: var(--accent);
+	color: var(--accent-fg);
+}
+
+.cal-week__head-dow {
+	font-size: var(--text-size-xs);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--text-faint);
+}
+
+.cal-week__head-cell--today .cal-week__head-dow {
+	color: var(--accent);
+}
+
+.cal-week__head-num {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 26px;
+	height: 26px;
+	padding: 0 var(--space-1);
+	border-radius: var(--radius-lg);
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-semibold);
+}
+
+.cal-week__allday {
+	display: grid;
+	grid-template-columns: var(--cal-gutter-width) repeat(var(--day-count, 7), 1fr);
+	border-bottom: var(--border-width) solid var(--border);
+	background: var(--bg-subtle);
+}
+
+.cal-week__allday-cell {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+	padding: var(--space-0_5);
+	border-inline-end: var(--border-width) solid var(--border-subtle);
+	min-width: 0;
+	min-height: 26px;
+}
+
+.cal-week__allday-cell:last-child {
+	border-inline-end: none;
+}
+
+.cal-week__allday-cell--weekend {
+	background: var(--bg-subtle);
+}
+
+.cal-week__grid {
+	position: relative;
+	display: grid;
+	grid-template-columns: var(--cal-gutter-width) repeat(var(--day-count, 7), 1fr);
+	min-height: 0;
+	overflow-y: auto;
+}
+
+.cal-week__hour-gutter {
+	position: relative;
+	border-inline-end: var(--border-width) solid var(--border);
+	background: var(--bg);
+	height: calc(var(--hour-height) * var(--hour-count));
+}
+
+.cal-week__hour-label {
+	position: absolute;
+	inset-inline-end: var(--space-2);
+	font-size: var(--text-size-xs);
+	color: var(--text-faint);
+	transform: translateY(-50%);
+	font-variant-numeric: tabular-nums;
+}
+
+.cal-week__column {
+	position: relative;
+	border-inline-end: var(--border-width) solid var(--border-subtle);
+	background: var(--bg);
+	height: calc(var(--hour-height) * var(--hour-count));
+}
+
+.cal-week__column:last-child {
+	border-inline-end: none;
+}
+
+.cal-week__column--weekend {
+	background: var(--bg-subtle);
+}
+
+.cal-week__column--today {
+	background: var(--today-tint);
+}
+
+/* One clickable hour slot per row — the top border draws the hour line,
+ * the hover state advertises "click here to add". The "+" only shows on
+ * hover so the empty grid stays calm at rest. */
+.cal-week__slot {
+	position: absolute;
+	inset-inline-start: 0;
+	inset-inline-end: 0;
+	border-top: var(--border-width) solid var(--border-subtle);
+	display: flex;
+	align-items: flex-start;
+	justify-content: center;
+	padding-top: var(--space-0_5);
+	color: var(--text-faint);
+	transition: background-color 80ms ease;
+}
+
+.cal-week__slot:hover {
+	background: var(--color-accent-subtle, var(--accent-soft));
+}
+
+.cal-week__slot::before {
+	content: "+";
+	font-size: var(--text-size-sm);
+	line-height: 1;
+	opacity: 0;
+	transition: opacity 80ms ease;
+}
+
+.cal-week__slot:hover::before {
+	opacity: 0.7;
+}
+
+.cal-week__slot:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -2px;
+}
+
+.cal-week__now-line {
+	position: absolute;
+	inset-inline-start: 0;
+	inset-inline-end: 0;
+	border-top: var(--border-width-thick) solid var(--accent);
+	z-index: 4;
+	pointer-events: none;
+}
+
+.cal-week__now-line::before {
+	content: "";
+	position: absolute;
+	inset-inline-start: -4px;
+	top: -5px;
+	width: 8px;
+	height: 8px;
+	border-radius: var(--radius-full);
+	background: var(--accent);
+}
+
+/* ─── Agenda view ─────────────────────────────────────────────────── */
+
+.cal-agenda {
+	max-width: 760px;
+	margin: 0 auto;
+	padding: var(--space-5) var(--space-5) var(--space-8);
+}
+
+.cal-agenda__bucket {
+	margin-top: var(--space-5);
+}
+
+.cal-agenda__bucket:first-child {
+	margin-top: 0;
+}
+
+.cal-agenda__heading {
+	margin: 0 0 var(--space-2);
+	font-size: var(--text-size-lg);
+	font-weight: var(--text-weight-semibold);
+	color: var(--text);
+}
+
+.cal-agenda__day {
+	margin: var(--space-3) 0 var(--space-1);
+	font-size: var(--text-size-sm);
+	font-weight: var(--text-weight-semibold);
+	color: var(--text-dim);
+	letter-spacing: 0.02em;
+}
+
+.cal-agenda__list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.cal-agenda__row {
+	min-width: 0;
+}
+
+/* ─── Empty state ─────────────────────────────────────────────────── */
+
+.cal-empty {
+	margin-top: 96px;
+	text-align: center;
+	color: var(--text-dim);
+}
+
+.cal-empty h2 {
+	margin: 0 0 var(--space-1);
+	font-size: var(--text-size-lg);
+	font-weight: var(--text-weight-semibold);
+	color: var(--text);
+}
+
+.cal-empty p {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--text-faint);
+}
+
+/* ─── New event button ────────────────────────────────────────────── */
+
+/* 28px is the deliberate calendar header-control size (see `.cal-toolbar__tabs`):
+ * between control-height-sm (24px, too short) and -md (32px); shared with the
+ * tab switcher + contacts' `.contacts-icon-btn` for a consistent header baseline. */
+.cal-toolbar__new {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border-radius: var(--radius-sm);
+	color: var(--text-dim);
+	background: transparent;
+	transition: background-color 80ms ease, color 80ms ease;
+}
+
+.cal-toolbar__new:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.cal-toolbar__search {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border-radius: var(--radius-sm);
+	color: var(--text-dim);
+	background: transparent;
+	transition: background-color 80ms ease, color 80ms ease;
+}
+
+.cal-toolbar__search:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+/* Event search overlay (9.15.12). */
+.cal-search {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	min-width: 360px;
+}
+
+.cal-search__input {
+	width: 100%;
+}
+
+.cal-search__status {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--text-dim);
+}
+
+.cal-search__results {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+	max-height: 320px;
+	overflow-y: auto;
+}
+
+.cal-search__row {
+	display: flex;
+	align-items: baseline;
+	gap: var(--space-2);
+	width: 100%;
+	appearance: none;
+	border: none;
+	background: transparent;
+	color: var(--text);
+	font: inherit;
+	text-align: start;
+	padding: var(--space-2) var(--space-2);
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+}
+
+.cal-search__row:hover,
+.cal-search__row[data-active="true"] {
+	background: var(--color-accent-subtle, var(--hover));
+}
+
+.cal-search__when {
+	flex: 0 0 auto;
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	min-width: 96px;
+}
+
+.cal-search__title {
+	flex: 1 1 auto;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.cal-search__source {
+	flex: 0 0 auto;
+	font-size: var(--text-size-xs);
+	color: var(--text-faint);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+/* ─── Object-menu ⋯ on chips ──────────────────────────────────────── */
+
+.cal-chip {
+	position: relative;
+}
+
+/* Compound selector (0,2,0) beats the SDK's `.bs-object-menu__more`
+ * (0,1,0) base. Without this the SDK's `opacity: 0.55` wins on load
+ * order and the ⋯ stays dim-visible at rest instead of hidden. */
+.cal-chip .cal-chip__more {
+	opacity: 0;
+	flex: 0 0 auto;
+	transition: opacity 80ms ease;
+}
+
+.cal-chip:hover .cal-chip__more,
+.cal-chip:focus-within .cal-chip__more,
+.cal-chip .cal-chip__more[aria-expanded="true"] {
+	opacity: 1;
+}
+
+.cal-chip--draggable {
+	cursor: grab;
+}
+
+/* The original chip stays in place during a drag, dimmed, so a no-op
+ * or rejected drop leaves the layout exactly where the user found it. */
+.cal-chip[data-source-dragging="true"] {
+	opacity: 0.35;
+	cursor: grabbing;
+}
+
+/* Floating clone that follows the pointer. `position: fixed` is set
+ * inline by the drag handler; this rule is just the visual lift +
+ * pointer-events guard so the underlying hit-test reaches the day
+ * column / cell beneath the ghost. */
+.cal-chip--drag-ghost {
+	cursor: grabbing;
+	box-shadow: var(--shadow-popover);
+	opacity: 0.92;
+	transform: rotate(-1deg);
+	pointer-events: none;
+}
+
+/* Drop-target highlight during a cross-day / cross-cell drag. Subtle
+ * tint sits behind chip content so the drop site is obvious without
+ * obscuring the existing items. */
+.cal-week__column[data-drop-target="true"] {
+	background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.bs-cal-month__cell[data-drop-target="true"] {
+	background: color-mix(in srgb, var(--accent) 12%, transparent);
+	outline: 1px dashed var(--accent);
+	outline-offset: -2px;
+}
+
+/* Cross-app object drop wrapper (DND-4): fills the cell so the whole day is a
+ * drop target, and tints + outlines while an accepted object hovers (set its
+ * date to this day). */
+.cal-month__drop {
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	height: 100%;
+}
+
+.cal-month__drop[data-drop-over="true"] {
+	background: color-mix(in srgb, var(--accent) 14%, transparent);
+	outline: 1px dashed var(--accent);
+	outline-offset: -2px;
+}
+
+/* ─── Event detail / create surface ───────────────────────────────── */
+
+.cal-detail {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+	min-width: 0;
+}
+
+.cal-detail__title-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+
+/* The open Event's object menu, on the detail header itself. Unlike the
+   hover-only chip ⋯, this surface is the focused object — keep it always
+   visible so Pin/Remove are reachable without going back to the grid. */
+.cal-detail__more {
+	flex: 0 0 auto;
+}
+
+.cal-detail__icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--control-height-md, 32px);
+	height: var(--control-height-md, 32px);
+	flex: 0 0 auto;
+	border-radius: var(--radius-md);
+	border: var(--border-width) solid var(--border-strong);
+	color: var(--text);
+	transition: background-color 80ms ease;
+}
+
+.cal-detail__icon:hover {
+	background: var(--hover);
+}
+
+.cal-detail__field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.cal-detail__field--inline {
+	flex-direction: row;
+	align-items: center;
+	gap: var(--space-2);
+}
+
+/* "More options" disclosure (F-054) — folds the secondary event fields so a
+   quick event is just title + when. */
+.cal-detail__more {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+}
+
+.cal-detail__more-summary {
+	cursor: pointer;
+	list-style: none;
+	user-select: none;
+	font-weight: var(--text-weight-medium);
+	color: var(--text-dim);
+	padding: var(--space-1) 0;
+}
+
+.cal-detail__more-summary::-webkit-details-marker {
+	display: none;
+}
+
+.cal-detail__more-summary::before {
+	content: "▸";
+	display: inline-block;
+	margin-right: var(--space-1);
+	transition: transform 80ms ease;
+}
+
+.cal-detail__more[open] > .cal-detail__more-summary::before {
+	transform: rotate(90deg);
+}
+
+.cal-detail__more-summary:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 2px;
+	border-radius: var(--radius-sm);
+}
+
+.cal-detail__label {
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-semibold);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--text-dim);
+}
+
+.cal-detail__input,
+.cal-detail__textarea {
+	width: 100%;
+	font-family: inherit;
+	font-size: var(--text-size-md);
+	color: var(--text);
+	background: var(--bg-elev);
+	border: var(--border-width) solid var(--border-strong);
+	border-radius: var(--radius-sm);
+	padding: var(--space-2) var(--space-2);
+}
+
+.cal-detail__input:focus-visible,
+.cal-detail__textarea:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+	border-color: transparent;
+}
+
+.cal-detail__input--title {
+	flex: 1 1 auto;
+	font-size: var(--text-size-lg);
+	font-weight: var(--text-weight-semibold);
+}
+
+.cal-detail__textarea {
+	resize: vertical;
+	min-height: 64px;
+}
+
+/* The time-zone `.bs-select` fills the field like the other detail inputs. */
+.cal-detail__tz {
+	width: 100%;
+}
+
+/* Start / end pickers route through the shared calendar popover (date) +
+   a `.bs-select` time menu instead of a native `<input type=date|datetime-local>`
+   (F-229). The date trigger borrows the input face so it sits flush. */
+.cal-detail__datetime {
+	display: flex;
+	gap: var(--space-2);
+}
+
+.cal-detail__date-trigger {
+	flex: 1 1 auto;
+	min-width: 0;
+	font-family: inherit;
+	font-size: var(--text-size-md);
+	text-align: left;
+	color: var(--text);
+	background: var(--bg-elev);
+	border: var(--border-width) solid var(--border-strong);
+	border-radius: var(--radius-sm);
+	padding: var(--space-2) var(--space-2);
+	cursor: pointer;
+}
+
+.cal-detail__date-trigger:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+	border-color: transparent;
+}
+
+.cal-detail__date-text[data-empty="true"] {
+	color: var(--text-faint);
+}
+
+.cal-detail__time {
+	flex: 0 0 auto;
+}
+
+/* Status availability — segmented radiogroup. */
+.cal-detail__segmented {
+	display: inline-flex;
+	border: var(--border-width) solid var(--border-strong);
+	border-radius: var(--radius-md);
+	overflow: hidden;
+	align-self: flex-start;
+}
+
+.cal-detail__segment {
+	appearance: none;
+	border: none;
+	background: var(--bg-elev);
+	color: var(--text-dim);
+	font: inherit;
+	padding: var(--space-1);
+	cursor: pointer;
+	border-left: var(--border-width) solid var(--border-subtle);
+}
+
+.cal-detail__segment:first-child {
+	border-left: none;
+}
+
+.cal-detail__segment[data-selected="true"] {
+	background: var(--accent);
+	color: var(--accent-fg, #fff);
+	font-weight: var(--text-weight-semibold);
+}
+
+.cal-detail__segment:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -2px;
+}
+
+/* Colour swatches — radiogroup of preset chips. */
+.cal-detail__swatches {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+	align-items: center;
+}
+
+.cal-detail__swatch {
+	appearance: none;
+	width: 22px;
+	height: 22px;
+	border-radius: var(--radius-full);
+	border: var(--border-width-thick) solid transparent;
+	background: var(--swatch-color, transparent);
+	cursor: pointer;
+	padding: 0;
+	box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+.cal-detail__swatch[data-selected="true"] {
+	border-color: var(--text);
+	box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+.cal-detail__swatch:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 2px;
+}
+
+/* The "default colour" swatch reads as an empty ring with a slash. */
+.cal-detail__swatch--none {
+	background: var(--bg-elev);
+	position: relative;
+	overflow: hidden;
+}
+
+.cal-detail__swatch--none::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(
+		to bottom right,
+		transparent calc(50% - 1px),
+		var(--danger) calc(50% - 1px),
+		var(--danger) calc(50% + 1px),
+		transparent calc(50% + 1px)
+	);
+}
+
+/* Recurrence editor (9.15.13). */
+/* Recurrence editor chrome moved to `@brainstorm/sdk/recurrence-editor.css`
+   (`.bs-recur__*`) when the editor was shared with Tasks (9.14.12). */
+
+/* Reminder preset chips (9.15.16). */
+.cal-detail__reminders {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-1);
+}
+
+.cal-detail__reminder {
+	appearance: none;
+	border: var(--border-width) solid var(--border-strong);
+	background: var(--bg-elev);
+	color: var(--text-dim);
+	font: inherit;
+	font-size: var(--text-size-xs);
+	padding: var(--space-1);
+	border-radius: var(--radius-full);
+	cursor: pointer;
+}
+
+.cal-detail__reminder[data-selected="true"] {
+	background: var(--accent);
+	color: var(--accent-fg, #fff);
+	border-color: transparent;
+	font-weight: var(--text-weight-semibold);
+}
+
+.cal-detail__reminder:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 1px;
+}
+
+/* ICS actions ⋯ button in the header (9.15.18). Inherits the shared
+ * object-menu more-button dots; this just seats it in the header row. */
+.cal-actions__more {
+	align-self: center;
+}
+
+/* Attendee / RSVP editor (9.15.17). */
+.cal-attendees {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.cal-attendees__list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.cal-attendees__item {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+
+.cal-attendees__identity {
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.cal-attendees__name {
+	color: var(--text);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.cal-attendees__email {
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.cal-attendees__rsvp {
+	width: auto;
+	flex: 0 0 auto;
+}
+
+.cal-attendees__remove {
+	appearance: none;
+	border: none;
+	background: transparent;
+	color: var(--text-dim);
+	font-size: var(--text-size-xl);
+	line-height: 1;
+	width: 24px;
+	height: 24px;
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+	flex: 0 0 auto;
+}
+
+.cal-attendees__remove:hover {
+	background: var(--color-accent-subtle, var(--bg-elev));
+	color: var(--danger);
+}
+
+.cal-attendees__empty {
+	font-size: var(--text-size-sm);
+	color: var(--text-dim);
+	font-style: italic;
+}
+
+.cal-attendees__summary {
+	margin: 0;
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+}
+
+.cal-attendees__add {
+	display: flex;
+	gap: var(--space-1);
+	align-items: center;
+}
+
+.cal-attendees__add .cal-detail__input {
+	flex: 1 1 0;
+	min-width: 0;
+}
+
+.cal-attendees__add .bs-btn {
+	flex: 0 0 auto;
+}
+
+/* Availability treatment on the rendered chips. */
+.cal-chip[data-status="cancelled"] {
+	opacity: 0.55;
+}
+
+.cal-chip[data-status="cancelled"] .cal-chip__title {
+	text-decoration: line-through;
+}
+
+.cal-chip[data-status="tentative"] {
+	opacity: 0.82;
+	background-image: repeating-linear-gradient(
+		135deg,
+		transparent 0,
+		transparent 5px,
+		rgb(0 0 0 / 0.06) 5px,
+		rgb(0 0 0 / 0.06) 7px
+	);
+}
+
+.cal-detail__error {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--danger);
+}
+
+.cal-detail__footer {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	width: 100%;
+}
+
+.cal-detail__footer-spacer {
+	flex: 1 1 auto;
+}
+
+/* Detail/dialog footer buttons use the shared `.bs-btn` primitive
+ * (secondary · data-bs-primary · --danger). */
+
+/* Multi-select action bar + selected chips (9.15.15). */
+.cal-selection-slot {
+	position: fixed;
+	bottom: 24px;
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 50;
+	pointer-events: none;
+}
+
+.cal-selection-bar {
+	pointer-events: auto;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-3);
+	padding: var(--space-2) var(--space-2);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-lg, 0 8px 24px rgba(0, 0, 0, 0.25));
+}
+
+.cal-selection-bar__count {
+	font-weight: var(--text-weight-semibold);
+	color: var(--text);
+}
+
+.cal-selection-bar__action {
+	appearance: none;
+	border: none;
+	background: var(--accent);
+	color: var(--accent-fg, #fff);
+	font: inherit;
+	padding: var(--space-1);
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+}
+
+.cal-selection-bar__action--ghost {
+	background: transparent;
+	color: var(--text-dim);
+}
+
+.cal-selection-bar__action--ghost:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.cal-chip[data-selected="true"] {
+	outline: 2px solid var(--accent);
+	outline-offset: 1px;
+}
+
+/* Time-zone badge on chips (9.15.21). */
+.cal-chip__meta--tz {
+	font-variant: small-caps;
+	letter-spacing: 0.03em;
+	opacity: 0.85;
+}
+
+/* ── CalDAV sync dialog (9.15.19) ───────────────────────────────────── */
+
+.cal-caldav__form,
+.cal-caldav__connected {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+}
+
+.cal-caldav__hint {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--text-dim);
+}
+
+.cal-caldav__error {
+	margin: 0;
+	font-size: var(--text-size-md);
+	color: var(--danger);
+}
+
+.cal-caldav__account {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+}
+
+.cal-caldav__account-name {
+	font-weight: var(--text-weight-medium);
+}
+
+.cal-caldav__account-user {
+	flex: 1 1 auto;
+	font-size: var(--text-size-sm);
+	color: var(--text-dim);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.cal-caldav__heading {
+	margin: var(--space-2) 0 0;
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--text-dim);
+}
+
+.cal-caldav__list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.cal-caldav__item {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+}
+
+.cal-caldav__item-name {
+	flex: 1 1 auto;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}

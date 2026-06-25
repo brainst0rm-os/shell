@@ -1,0 +1,2187 @@
+/* Brainstorm — Tasks first-party app (preview state, Stage 9.14.1.5).
+ *
+ * Per [[apps-inherit-shell-theme]]: shell pushes flattened CSS tokens.
+ * Local vars alias those tokens with dark fallbacks for the boot-
+ * before-tokens window. Font-sizes via tokens per [[font-sizes-use-tokens]];
+ * never raw px.
+ */
+/* Theming is the shell's job, not the app's. The shell preload injects
+ * the active theme tokens AND the alias layer (--accent / --bg / --text /
+ * --selected / …) + base type + component styles via a single stylesheet
+ * — packages/shell/src/preload/app-theme.ts, the single source of truth.
+ * This app declares ZERO theme values. Don't reintroduce a :root alias
+ * block or root font/colour here. */
+:root {
+	color-scheme: light dark;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	overflow: hidden;
+}
+
+button {
+	font-family: inherit;
+	font-size: inherit;
+	color: inherit;
+	background: none;
+	border: none;
+	padding: 0;
+	cursor: pointer;
+}
+
+button:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 2px;
+}
+
+/* ─── App header ────────────────────────────────────────────────────
+ * The full header chrome — flex skeleton, left/right groups, height +
+ * platform padding, drag region, skin — is the shared `.app-header` rule in
+ * `@brainstorm/sdk/app-theme.css`. Only task-specific controls stay local. */
+
+/* Header "+" new-task button — icon-only ghost, mirrors Notes'
+   `.notes__btn-icon` / Bookmarks' `.bookmarks__header-btn`. */
+.tasks-header__action {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text-dim);
+	transition:
+		background 0.12s ease,
+		color 0.12s ease;
+}
+
+.tasks-header__action:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.tasks-header__action:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}
+
+/* Header title + ⋯ on one baseline; the ⋯ is quiet until the row is
+   hovered/focused — mirrors Notes' `.notes__header-title-menu`. */
+.tasks-header__title-menu {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	min-width: 0;
+}
+
+/* The header title doubles as an inline rename field — a text cursor hints it;
+   a double-click swaps in `.tasks-header__title-input`, which matches the title
+   face (size + weight) so the text doesn't jump on edit. */
+.tasks-header__title--editable {
+	cursor: text;
+}
+.tasks-header__title-input {
+	min-width: 0;
+	max-width: min(440px, 60vw);
+	padding: var(--space-0_5);
+	margin: -2px -4px;
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-semibold);
+	color: inherit;
+	background: var(--bg-elev);
+	border: var(--border-width) solid var(--accent);
+	border-radius: var(--radius-sm);
+	outline: none;
+}
+
+/* ─── Main layout — sidebar left, content right ────────────────────── */
+
+.tasks-main {
+	position: relative;
+	height: calc(100vh - var(--app-header-height, 44px));
+	display: grid;
+	/* Two tracks: nav (left, absolute slot) · content. The nav track is
+	   driven by a local var so the toggle animates 0↔width while its
+	   absolutely-positioned slot slides on a GPU transform (per
+	   [[animate-transform-not-width]]). The properties inspector is no
+	   longer a grid track — it's a `.bs-props` glass overlay that slides
+	   over the content on its own transform. */
+	grid-template-columns:
+		var(--nav-track, var(--tasks-sidebar-width, 248px))
+		minmax(0, 1fr);
+	transition: grid-template-columns var(--motion-duration-normal, 180ms) ease;
+	overflow: hidden;
+}
+
+/* The transition above is the TOGGLE-button animation; the shell's
+   app-theme zeroes transition-duration globally under `body.is-resizing`
+   so a mouse-resize drag stays synced to the cursor. */
+
+/* Closed: animate the grid track to 0 so the content column smoothly fills
+   the freed space, and slide the panel (which sits in absolute layout at a
+   stable width) off-screen on a GPU transform. The slot is taken out of the
+   grid track so its `translateX(-100%)` resolves against a stable width, not
+   the collapsing track — the previous pattern percentages-against-zero was
+   the "jump on close" the user reported. */
+.tasks-main[data-nav-open="false"] {
+	--nav-track: 0px;
+}
+
+#tasks-sidebar-slot {
+	position: absolute;
+	top: 0;
+	inset-inline-start: 0;
+	bottom: 0;
+	width: var(--tasks-sidebar-width, 248px);
+	display: flex;
+	flex-direction: column;
+	border-inline-end: var(--border-width) solid var(--color-glass-border);
+	overflow-y: auto;
+	z-index: 90;
+	transition: transform var(--motion-duration-normal, 180ms) ease;
+	will-change: transform;
+}
+
+.tasks-main[data-nav-open="false"] #tasks-sidebar-slot {
+	transform: translateX(-100%);
+	border-inline-end-color: transparent;
+}
+
+.tasks-main[data-nav-open="false"] .tasks-resize {
+	display: none;
+}
+
+.tasks-resize {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	inset-inline-start: var(--tasks-sidebar-width, 248px);
+	width: 6px;
+	margin-inline-start: -3px;
+	cursor: col-resize;
+	z-index: 5;
+	background: transparent;
+	transition: background 120ms ease;
+	touch-action: none;
+}
+
+.tasks-resize:hover,
+.tasks-resize:focus-visible,
+body.is-resizing .tasks-resize {
+	background: var(--accent-soft);
+	outline: none;
+}
+
+.tasks-content-col {
+	grid-column: 2;
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	min-height: 0;
+	background: var(--bg);
+}
+
+.tasks-content {
+	flex: 1;
+	overflow-y: auto;
+	background: var(--bg);
+}
+
+/* ─── Task detail route (9.x) ────────────────────────────────────────
+   Opening a task swaps the content area from the list to the task's
+   detail (mirrors the Bookmarks detail route — a separate location, not
+   a side panel). A centered reading column: completion toggle + editable
+   title, the editable property chips, then the universal body editor. The
+   properties inspector is the shared `.bs-props` glass overlay toggled
+   from the header (chrome ships in the SDK's properties-panel.css). */
+.tasks-detail {
+	display: flex;
+	flex-direction: column;
+	min-height: 100%;
+	max-width: 760px;
+	margin: 0 auto;
+	padding: var(--space-5) var(--space-6) var(--space-8);
+}
+
+.tasks-detail__titlerow {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	margin-bottom: var(--space-3);
+}
+
+.tasks-detail__title-group {
+	flex: 1 1 auto;
+	min-width: 0;
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+
+.tasks-detail__title-group .task-row__name {
+	font-size: var(--text-size-2xl);
+	font-weight: var(--text-weight-semibold);
+	line-height: var(--text-line-height-tight, 1.2);
+}
+
+.tasks-detail__chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-1);
+	margin-bottom: var(--space-4);
+	padding-bottom: var(--space-4);
+	border-bottom: var(--border-width) solid var(--color-border-subtle, var(--border));
+}
+
+/* In the detail the user is focused on one task, so unset-field
+   affordances ("Set priority", "Schedule", "Inbox") are always visible —
+   unlike the list rows, where they're revealed on hover. */
+.tasks-detail__chips .task-row__chip--editable[data-empty="true"] {
+	display: inline-flex;
+	opacity: 0.65;
+}
+
+/* Subtask progress badge on a parent task's list row (9.14.7). */
+.task-row__subtasks {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-0_5);
+	padding: 0 var(--space-2);
+	height: 20px;
+	border-radius: var(--radius-sm);
+	font-size: var(--text-size-sm);
+	font-variant-numeric: tabular-nums;
+	color: var(--color-text-secondary, var(--text-dim));
+	background: color-mix(in srgb, currentColor 8%, transparent);
+	white-space: nowrap;
+}
+
+.task-row__subtasks[data-complete="true"] {
+	color: var(--ok, #5fa87d);
+}
+
+/* Blocked / dependencies (9.14.8). The BLOCKED BY section carries the same
+   bottom rhythm as the other detail sections (Tags / Time / Repeat / Subtasks)
+   so it doesn't cram into the next one. */
+.tasks-detail__blockedby {
+	margin-bottom: var(--space-4);
+	padding-bottom: var(--space-4);
+	border-bottom: var(--border-width) solid var(--color-border-subtle, var(--border));
+}
+
+.task-row__blocked,
+.tasks-detail__blocked-flag {
+	display: inline-flex;
+	align-items: center;
+	padding: 0 var(--space-2);
+	height: 20px;
+	border-radius: var(--radius-sm);
+	font-size: var(--text-size-sm);
+	font-weight: var(--text-weight-medium, 500);
+	color: var(--danger, #dd6058);
+	background: color-mix(in srgb, var(--danger, #dd6058) 14%, transparent);
+	white-space: nowrap;
+}
+
+.tasks-detail__dep-remove {
+	flex: 0 0 auto;
+	background: none;
+	border: none;
+	padding: var(--space-0_5);
+	color: var(--color-text-secondary, var(--text-dim));
+	cursor: pointer;
+	border-radius: var(--radius-sm);
+	font: inherit;
+}
+
+.tasks-detail__dep-remove:hover {
+	color: var(--danger, #dd6058);
+	background: color-mix(in srgb, var(--danger, #dd6058) 12%, transparent);
+}
+
+.tasks-detail__dep-add {
+	margin-top: var(--space-1);
+	background: none;
+	border: none;
+	padding: var(--space-1);
+	color: var(--accent);
+	cursor: pointer;
+	border-radius: var(--radius-sm);
+	font: inherit;
+}
+
+.tasks-detail__dep-add:hover {
+	background: var(--color-accent-subtle, color-mix(in srgb, var(--accent) 10%, transparent));
+}
+
+/* Status board (9.14.10). */
+.tasks-board {
+	display: flex;
+	gap: var(--space-3);
+	align-items: flex-start;
+	height: 100%;
+	overflow-x: auto;
+	overflow-y: hidden;
+	padding: var(--space-2);
+	box-sizing: border-box;
+}
+
+.tasks-board__column {
+	/* Fixed, uniform column width. `min-width: 0` is load-bearing: a flex
+	   item defaults to `min-width: auto`, so a card with a long unbreakable
+	   task name would otherwise stretch its column past the basis — giving
+	   every column a different width. Pinning min-width to 0 forces the
+	   content (the card rows) to ellipsize within the column instead. */
+	flex: 0 0 264px;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	max-height: 100%;
+	border-radius: var(--radius-md);
+	background: color-mix(in srgb, currentColor 4%, transparent);
+	border: var(--border-width) solid transparent;
+}
+
+.tasks-board__column[data-drop-target="true"] {
+	border-color: var(--accent);
+	background: var(--color-accent-subtle, color-mix(in srgb, var(--accent) 8%, transparent));
+}
+
+.tasks-board__column-header {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-2) var(--space-2);
+	font-weight: var(--text-weight-semibold, 600);
+	position: sticky;
+	top: 0;
+}
+
+.tasks-board__column-count {
+	color: var(--color-text-secondary, var(--text-dim));
+	font-variant-numeric: tabular-nums;
+	font-weight: var(--text-weight-regular, 400);
+}
+
+.tasks-board__cards {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	padding: 0 var(--space-2) var(--space-2);
+	overflow-y: auto;
+	min-width: 0;
+	min-height: 40px;
+}
+
+.tasks-board__card {
+	border-radius: var(--radius-sm);
+	background: var(--bg-elev, var(--bg-elev, transparent));
+	cursor: grab;
+	/* Let the card row's name/chips ellipsize inside the fixed column rather
+	   than widen it (pairs with the column's min-width: 0). */
+	min-width: 0;
+	overflow: hidden;
+	/* F-206: the cards container is height-constrained, and `overflow: hidden`
+	   zeroes a flex item's automatic min-height — without this every card in a
+	   full column shrinks (default flex-shrink: 1) to a clipped sliver. Each
+	   card keeps its natural height; the column scrolls instead. */
+	flex-shrink: 0;
+}
+
+.tasks-board__card[data-dragging="true"] {
+	opacity: 0.5;
+}
+
+/* In the narrow board card the object-menu ⋯ is hidden at rest and revealed on
+ * hover; if it took flow it would shrink the card content and jump. Float it
+ * top-start instead so hover reveals it WITHOUT reflow. */
+.tasks-board__card .task-row {
+	position: relative;
+}
+
+.tasks-board__card .bs-object-menu__more {
+	position: absolute;
+	inset-block-start: var(--space-2);
+	inset-inline-end: var(--space-2);
+	margin: 0;
+}
+
+.tasks-board__empty {
+	padding: var(--space-2) var(--space-2);
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary, var(--text-dim));
+	font-style: italic;
+}
+
+/* Per-column inline add (F-207). */
+.tasks-board__add {
+	flex-shrink: 0;
+	padding: 0 var(--space-2) var(--space-2);
+}
+
+.tasks-board__add-button {
+	width: 100%;
+	text-align: left;
+	background: none;
+	border: none;
+	padding: var(--space-1);
+	border-radius: var(--radius-sm);
+	color: var(--color-text-secondary, var(--text-dim));
+	font: inherit;
+	font-size: var(--text-size-sm);
+	cursor: pointer;
+}
+
+.tasks-board__add-button:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.tasks-board__add-input {
+	width: 100%;
+	box-sizing: border-box;
+	padding: var(--space-1);
+	border: var(--border-width) solid var(--accent);
+	border-radius: var(--radius-sm);
+	background: var(--bg-elev, transparent);
+	color: var(--text);
+	font: inherit;
+	font-size: var(--text-size-sm);
+}
+
+/* Timeline / Gantt (9.14.11). Geometry (left/width/top/height) is inline
+   from TIMELINE_METRICS; the CSS owns only the skin. */
+.tasks-timeline {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-height: 0;
+	box-sizing: border-box;
+}
+
+/* The toolbar shares the 44px panel-header baseline + subtle bottom border so
+   it reads as one fixed chrome strip above the scrolling stage. */
+.tasks-timeline__toolbar {
+	flex: 0 0 auto;
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: var(--space-2);
+	height: 44px;
+	padding: 0 var(--space-3);
+	border-bottom: var(--border-width) solid var(--color-border-subtle, var(--border));
+}
+
+.tasks-timeline__scroll {
+	position: relative;
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow: auto;
+	padding: 0 var(--space-3) var(--space-5);
+}
+
+.tasks-timeline__scroll:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -2px;
+}
+
+.tasks-timeline__stage {
+	position: relative;
+}
+
+/* Structural under-layer: weekend shading + month separators. */
+.tasks-timeline__grid {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	pointer-events: none;
+}
+
+.tasks-timeline__weekend {
+	position: absolute;
+	background: color-mix(in srgb, var(--text) 3%, transparent);
+}
+
+.tasks-timeline__month-sep {
+	position: absolute;
+	width: var(--border-width);
+	background: var(--color-border-subtle, var(--border));
+	opacity: 0.6;
+}
+
+/* The date stripe stays pinned to the top of the scroll viewport while the
+   lanes scroll under it (sticky); it scrolls horizontally with the stage so
+   the day columns stay aligned with the bars. */
+.tasks-timeline__axis {
+	position: sticky;
+	top: 0;
+	z-index: 4;
+	background: var(--bg);
+	border-bottom: var(--border-width) solid var(--color-border-subtle, var(--border));
+}
+
+.tasks-timeline__axis-day {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	display: flex;
+	align-items: flex-end;
+	justify-content: center;
+	padding-bottom: var(--space-1);
+	box-sizing: border-box;
+	font-size: var(--text-size-sm);
+	color: var(--text-dim);
+	font-variant-numeric: tabular-nums;
+}
+
+.tasks-timeline__axis-day[data-weekend="true"] {
+	color: var(--text-faint);
+}
+
+.tasks-timeline__axis-day[data-today="true"] {
+	color: var(--accent-fg);
+	font-weight: var(--text-weight-semibold, 600);
+}
+
+/* Today's number gets a filled accent pip so the date stripe echoes the
+   today line in the lanes below. */
+.tasks-timeline__axis-day[data-today="true"]::after {
+	content: "";
+	position: absolute;
+	inset: auto auto var(--space-1) 50%;
+	transform: translateX(-50%);
+	z-index: -1;
+	width: 22px;
+	height: 22px;
+	border-radius: 999px;
+	background: var(--accent);
+}
+
+/* Month name lives in the top band of the stripe; day numbers sit in the
+   bottom band, so the two never collide. */
+.tasks-timeline__axis-month {
+	position: absolute;
+	top: 5px;
+	left: var(--space-1);
+	white-space: nowrap;
+	font-size: var(--text-size-xs, 11px);
+	font-weight: var(--text-weight-semibold, 600);
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--text-dim);
+}
+
+.tasks-timeline__edges {
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 1;
+	color: var(--text-faint);
+	pointer-events: none;
+}
+
+.tasks-timeline__edge {
+	stroke-width: 1.5;
+}
+
+.tasks-timeline__bar {
+	position: absolute;
+	z-index: 2;
+	display: flex;
+	align-items: center;
+	box-sizing: border-box;
+	padding: 0 var(--space-2);
+	border: none;
+	border-radius: 999px;
+	background: var(--accent);
+	color: var(--accent-fg);
+	font: inherit;
+	font-size: var(--text-size-sm);
+	font-weight: var(--text-weight-medium, 500);
+	text-align: left;
+	cursor: pointer;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+	transition: filter 120ms ease, transform 120ms ease, box-shadow 120ms ease;
+}
+
+.tasks-timeline__bar:hover {
+	filter: brightness(1.06);
+	transform: translateY(-1px);
+	box-shadow: 0 3px 8px rgba(0, 0, 0, 0.24);
+}
+
+.tasks-timeline__bar[data-state="done"] {
+	background: var(--bg-subtle, var(--bg-elev));
+	box-shadow: inset 0 0 0 var(--border-width) var(--color-border-subtle, var(--border));
+	color: var(--text-faint);
+	text-decoration: line-through;
+}
+
+.tasks-timeline__bar[data-state="overdue"] {
+	background: var(--danger);
+	color: var(--accent-fg);
+}
+
+/* Blocked / inferred-start bars read as outline rather than fill so they're
+   visually distinct from confirmed, scheduled work. */
+.tasks-timeline__bar[data-blocked="true"] {
+	background: var(--accent-soft);
+	box-shadow: inset 0 0 0 var(--border-width) var(--accent);
+	color: var(--text);
+}
+
+.tasks-timeline__bar[data-derived-start="true"] {
+	background: var(--accent-soft);
+	box-shadow: inset 0 0 0 var(--border-width) var(--accent-dim, var(--accent));
+	color: var(--text);
+}
+
+/* Short bars can't hold their label — render the name to the RIGHT of the
+   pill (out in the empty lane) so single-day tasks stay readable. */
+.tasks-timeline__bar--compact {
+	padding: 0;
+	overflow: visible;
+}
+
+.tasks-timeline__bar--compact .tasks-timeline__bar-label {
+	position: absolute;
+	left: 100%;
+	margin-left: var(--space-2);
+	max-width: 240px;
+	color: var(--text);
+	font-weight: var(--text-weight-medium, 500);
+}
+
+.tasks-timeline__bar--compact[data-state="done"] .tasks-timeline__bar-label {
+	color: var(--text-faint);
+}
+
+/* The scroll container is the single Tab stop (aria-activedescendant);
+   the active bar shows the ring only while the container holds focus. */
+.tasks-timeline__scroll:focus-visible .tasks-timeline__bar[aria-selected="true"] {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 2px;
+}
+
+.tasks-timeline__bar-label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.tasks-timeline__today {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	z-index: 1;
+	width: 2px;
+	margin-left: -1px;
+	background: var(--accent);
+	opacity: 0.55;
+	pointer-events: none;
+}
+
+.tasks-timeline__empty {
+	flex: 1 1 auto;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-2);
+	padding: var(--space-6) var(--space-4);
+	color: var(--text-faint);
+	text-align: center;
+}
+
+.tasks-timeline__empty svg {
+	color: var(--text-faint);
+	opacity: 0.7;
+}
+
+.tasks-timeline__empty-copy {
+	margin: 0;
+	max-width: 32ch;
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary, var(--text-dim));
+}
+
+.tasks-timeline__unscheduled {
+	flex: 0 0 auto;
+	padding: var(--space-2);
+	font-size: var(--text-size-sm);
+	color: var(--text-faint);
+	border-top: var(--border-width) solid var(--color-border-subtle, var(--border));
+}
+
+/* Comments / activity (9.14.14). */
+.tasks-detail__comments {
+	margin-top: var(--space-4);
+	padding-top: var(--space-4);
+	border-top: var(--border-width) solid var(--color-border-subtle, var(--border));
+}
+
+.tasks-detail__comment-list {
+	list-style: none;
+	margin: 0 0 var(--space-2) 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.tasks-detail__comment {
+	border-radius: var(--radius-sm);
+	background: color-mix(in srgb, currentColor 4%, transparent);
+	padding: var(--space-2);
+}
+
+.tasks-detail__comment-meta {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-2);
+}
+
+.tasks-detail__comment-time {
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary, var(--text-dim));
+}
+
+.tasks-detail__comment-remove {
+	background: none;
+	border: none;
+	color: var(--color-text-secondary, var(--text-dim));
+	cursor: pointer;
+	padding: 0 var(--space-1);
+	opacity: 0.7;
+}
+
+.tasks-detail__comment-remove:hover {
+	opacity: 1;
+	color: var(--danger, #dd6058);
+}
+
+.tasks-detail__comment-body {
+	margin: var(--space-1) 0 0 0;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
+.tasks-detail__comment-add {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	/* Left-aligned so the submit stays reachable when the right-side
+	   properties overlay is open (it floats over the content's right strip). */
+	align-items: flex-start;
+}
+
+.tasks-detail__comment-input {
+	width: 100%;
+	box-sizing: border-box;
+	resize: vertical;
+	padding: var(--space-2);
+	border: var(--border-width) solid var(--color-border-subtle, var(--border));
+	border-radius: var(--radius-sm);
+	background: var(--bg-elev, transparent);
+	color: inherit;
+	font: inherit;
+}
+
+.tasks-detail__comment-submit {
+	padding: var(--space-1);
+	border: var(--border-width) solid var(--color-border-subtle, var(--border));
+	border-radius: var(--radius-sm);
+	background: var(--bg-elev, transparent);
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+}
+
+.tasks-detail__comment-submit:hover {
+	background: var(--color-accent-subtle, color-mix(in srgb, var(--accent) 10%, transparent));
+}
+
+/* Tags (9.14.10). */
+.tasks-detail__tags {
+	margin-bottom: var(--space-4);
+	padding-bottom: var(--space-4);
+	border-bottom: var(--border-width) solid var(--color-border-subtle, var(--border));
+}
+
+.tasks-detail__tag-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-1);
+	margin-bottom: var(--space-1);
+}
+
+.tasks-detail__tag {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-0_5);
+	padding: 0 var(--space-0_5) 0 var(--space-2);
+	border-radius: var(--radius-full);
+	background: var(--color-accent-subtle, color-mix(in srgb, var(--accent) 12%, transparent));
+	color: var(--accent);
+	font-size: var(--text-size-sm);
+}
+
+.tasks-detail__tag-label {
+	background: none;
+	border: none;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+	padding: 0;
+}
+
+.tasks-detail__tag-remove {
+	background: none;
+	border: none;
+	color: inherit;
+	cursor: pointer;
+	padding: 0 var(--space-1);
+	opacity: 0.7;
+}
+
+.tasks-detail__tag-remove:hover {
+	opacity: 1;
+}
+
+.tasks-detail__tag-add-input {
+	width: 100%;
+	box-sizing: border-box;
+	padding: var(--space-1);
+	border: var(--border-width) solid var(--color-border-subtle, var(--border));
+	border-radius: var(--radius-sm);
+	background: var(--bg-elev, transparent);
+	color: inherit;
+	font: inherit;
+}
+
+.task-row__tag {
+	display: inline-flex;
+	align-items: center;
+	padding: 0 var(--space-2);
+	height: 20px;
+	border: none;
+	border-radius: var(--radius-full);
+	font: inherit;
+	font-size: var(--text-size-sm);
+	color: var(--accent);
+	background: var(--color-accent-subtle, color-mix(in srgb, var(--accent) 10%, transparent));
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+/* Assignee chip (9.14.15) — display-only (editing lives in the detail's
+   properties panel), neutral fill so it doesn't compete with the
+   accent-tinted clickable tag chips. */
+.task-row__assignee {
+	display: inline-flex;
+	align-items: center;
+	padding: 0 var(--space-2);
+	height: 20px;
+	border-radius: var(--radius-full);
+	font-size: var(--text-size-sm);
+	color: var(--text-dim, var(--text));
+	background: var(--hover, color-mix(in srgb, currentColor 8%, transparent));
+	white-space: nowrap;
+	max-width: 14ch;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.tasks-header__filter-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-0_5);
+	padding: var(--space-0_5) var(--space-1) var(--space-0_5) var(--space-2);
+	border-radius: var(--radius-full);
+	background: var(--color-accent-subtle, color-mix(in srgb, var(--accent) 12%, transparent));
+	color: var(--accent);
+	font-size: var(--text-size-sm);
+	margin-left: var(--space-2);
+}
+
+.tasks-header__filter-clear {
+	background: none;
+	border: none;
+	color: inherit;
+	cursor: pointer;
+	padding: 0 var(--space-1);
+	opacity: 0.7;
+}
+
+.tasks-header__filter-clear:hover {
+	opacity: 1;
+}
+
+/* Time estimate / logged section (9.14.13). */
+.tasks-detail__time {
+	margin-bottom: var(--space-4);
+	padding-bottom: var(--space-4);
+	border-bottom: var(--border-width) solid var(--color-border-subtle, var(--border));
+}
+
+.tasks-detail__time-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	margin-top: var(--space-1);
+}
+
+.tasks-detail__time-label {
+	flex: 0 0 84px;
+	color: var(--color-text-secondary, var(--text-dim));
+}
+
+.tasks-detail__time-input {
+	flex: 1 1 auto;
+	min-width: 0;
+	font: inherit;
+	color: inherit;
+	padding: var(--space-1);
+	border: var(--border-width) solid var(--color-border-subtle, var(--border));
+	border-radius: var(--radius-sm);
+	background: var(--bg-elev, transparent);
+}
+
+/* The bare detail text inputs carry no focus style of their own, so they fall
+   back to the UA's native (blue) focus ring — out of step with the purple
+   `--color-focus-ring` every other control (e.g. `.bs-select`) uses. Unify. */
+.tasks-detail__time-input:focus-visible,
+.tasks-detail__comment-input:focus-visible,
+.tasks-detail__tag-add-input:focus-visible,
+.tasks-detail__subtask-add-input:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 1px;
+}
+
+.task-row__time {
+	display: inline-flex;
+	align-items: center;
+	padding: 0 var(--space-2);
+	height: 20px;
+	border-radius: var(--radius-sm);
+	font-size: var(--text-size-sm);
+	font-variant-numeric: tabular-nums;
+	color: var(--color-text-secondary, var(--text-dim));
+	background: color-mix(in srgb, currentColor 8%, transparent);
+	white-space: nowrap;
+}
+
+.task-row__time[data-over="true"] {
+	color: var(--danger, #dd6058);
+	background: color-mix(in srgb, var(--danger, #dd6058) 12%, transparent);
+}
+
+/* Repeat / recurrence section (9.14.12). */
+.tasks-detail__recurrence {
+	margin-bottom: var(--space-4);
+	padding-bottom: var(--space-4);
+	border-bottom: var(--border-width) solid var(--color-border-subtle, var(--border));
+}
+
+/* Match the shared recurrence editor's select/inputs to the rest of the detail
+   fields. Its default uses a `--bg-elev` fallback (white in light theme) + a
+   stronger border; the detail inputs all use a transparent surface + subtle
+   border, so unify on those + the same field padding. */
+.tasks-detail .bs-recur__input {
+	padding: var(--space-1);
+	background: var(--bg-elev, transparent);
+	border-color: var(--color-border-subtle, var(--border));
+}
+
+/* Subtasks section (9.14.7) — sits between the chips and the body editor. */
+.tasks-detail__subtasks {
+	margin-bottom: var(--space-4);
+	padding-bottom: var(--space-4);
+	border-bottom: var(--border-width) solid var(--color-border-subtle, var(--border));
+}
+
+.tasks-detail__subtasks-header {
+	display: flex;
+	align-items: baseline;
+	gap: var(--space-2);
+	margin-bottom: var(--space-2);
+}
+
+.tasks-detail__subtasks-title {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	font-weight: var(--text-weight-semibold, 600);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--color-text-secondary, var(--text-dim));
+}
+
+.tasks-detail__subtasks-count {
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary, var(--text-dim));
+	font-variant-numeric: tabular-nums;
+}
+
+.tasks-detail__subtasks-list {
+	list-style: none;
+	margin: 0 0 var(--space-2) 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+}
+
+.tasks-detail__subtask {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-0_5) 0;
+}
+
+.tasks-detail__subtask-name {
+	flex: 1 1 auto;
+	min-width: 0;
+	text-align: left;
+	background: none;
+	border: none;
+	padding: var(--space-0_5);
+	border-radius: var(--radius-sm);
+	color: inherit;
+	cursor: pointer;
+	font: inherit;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.tasks-detail__subtask-name:hover {
+	background: var(--color-accent-subtle, color-mix(in srgb, var(--accent) 10%, transparent));
+}
+
+.tasks-detail__subtask[data-done="true"] .tasks-detail__subtask-name {
+	text-decoration: line-through;
+	color: var(--color-text-secondary, var(--text-dim));
+}
+
+.tasks-detail__subtask-add-input {
+	width: 100%;
+	box-sizing: border-box;
+	padding: var(--space-1);
+	border: var(--border-width) solid var(--color-border-subtle, var(--border));
+	border-radius: var(--radius-sm);
+	background: var(--bg-elev, transparent);
+	color: inherit;
+	font: inherit;
+}
+
+.tasks-detail__body {
+	flex: 1 1 auto;
+	min-height: 0;
+	font-size: var(--text-size-md);
+	line-height: 1.65;
+	color: var(--text);
+}
+
+.tasks-detail__editor {
+	outline: none;
+}
+
+.tasks-detail__legacy-notes {
+	margin: 0;
+	white-space: pre-wrap;
+	font-size: var(--text-size-md);
+	line-height: 1.6;
+	color: var(--text);
+}
+
+/* ─── Inline search bar (9.22.3) ──────────────────────────────────────
+   Persistent (lives outside the re-rendered content slot so typing
+   never loses focus). */
+/* The searchbar chrome itself lives in the shell's app-theme.ts as
+   `.bs-searchbar` — this slot just gives it a 44px host row with the
+   subtle bottom border that defines the toolbar baseline. */
+.tasks-searchbar-slot {
+	display: flex;
+	align-items: center;
+	height: 44px;
+	flex: none;
+	padding: 0 var(--space-2);
+	border-bottom: var(--border-width) solid var(--color-border-subtle);
+}
+
+.tasks-searchbar-slot > .bs-searchbar {
+	flex: 1;
+	min-width: 0;
+}
+
+/* ─── Sidebar ─────────────────────────────────────────────────────── */
+
+.tasks-sidebar {
+	display: flex;
+	flex-direction: column;
+}
+
+.tasks-sidebar__group {
+	padding: var(--space-2);
+}
+
+.tasks-sidebar__group + .tasks-sidebar__group {
+	border-top: var(--border-width) solid var(--border);
+}
+
+.tasks-sidebar__heading {
+	margin: 0 0 var(--space-2);
+	padding: 0 var(--space-2);
+	font-size: var(--text-size-xs);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--text-dim);
+	font-weight: var(--text-weight-semibold);
+}
+
+.tasks-sidebar__heading--actionable {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+
+.tasks-sidebar__heading--actionable .tasks-sidebar__heading-label {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.tasks-sidebar__heading-add {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 20px;
+	height: 20px;
+	border-radius: var(--radius-sm);
+	color: var(--text-dim);
+	opacity: 0.65;
+	transition:
+		opacity 80ms ease,
+		background-color 80ms ease,
+		color 80ms ease;
+}
+
+.tasks-sidebar__group--projects:hover .tasks-sidebar__heading-add,
+.tasks-sidebar__heading-add:focus-visible {
+	opacity: 1;
+}
+
+.tasks-sidebar__heading-add:hover {
+	background: var(--hover);
+	color: var(--text);
+	opacity: 1;
+}
+
+.tasks-sidebar__item--renaming {
+	padding: 0;
+}
+
+.tasks-sidebar__rename-input {
+	width: 100%;
+	padding: var(--space-2);
+	border: var(--border-width) solid color-mix(in srgb, var(--accent) 40%, transparent);
+	border-radius: var(--radius-md);
+	background: var(--bg-elev);
+	color: var(--text);
+	font-weight: var(--text-weight-medium);
+	font-size: var(--text-size-md);
+}
+
+.tasks-sidebar__rename-input:focus-visible {
+	outline: none;
+	border-color: var(--accent);
+}
+
+.tasks-sidebar__list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+}
+
+.tasks-sidebar__row {
+	/* Flex (not grid) so the row's gap collapses around a missing icon —
+	 * per [[feedback_no_default_type_icon_fallback]] (project-wide) a
+	 * project without its own `icon` renders no sidebar glyph at all,
+	 * and the label must slide left into the slot. A fixed-column grid
+	 * (`18px 1fr minmax(22px, auto)`) reserved the icon track for every
+	 * iconless row. The label's `flex: 1` + the badge/⋯'s `flex: none`
+	 * preserve the prior trailing-slot reservation. */
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	width: 100%;
+	padding: var(--space-1) var(--space-2);
+	border-radius: var(--radius-md);
+	color: var(--text);
+	text-align: start;
+	transition: background-color 80ms ease;
+}
+
+/* F-222 — Board / Timeline are VIEW toggles, not entity nav rows: they sit
+ * on the shared control scale at md (32px). The nav rows above (Inbox /
+ * Today / Upcoming / projects) are list rows and stay off the scale. */
+.tasks-sidebar__row[data-surface="board"],
+.tasks-sidebar__row[data-surface="timeline"] {
+	height: var(--control-height-md, 32px);
+	padding-block: 0;
+}
+
+.tasks-sidebar__row:hover {
+	background: var(--hover);
+}
+
+.tasks-sidebar__row[aria-pressed="true"],
+.tasks-sidebar__row[aria-current="true"] {
+	background: var(--accent-soft);
+	color: var(--text);
+	border-color: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.tasks-sidebar__glyph {
+	width: 18px;
+	height: 18px;
+	flex: 0 0 auto;
+	justify-self: center;
+	color: var(--accent);
+}
+
+.tasks-sidebar__label {
+	flex: 1 1 auto;
+	min-width: 0;
+	font-weight: var(--text-weight-medium);
+	font-size: var(--text-size-md);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.tasks-sidebar__badge {
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	font-variant-numeric: tabular-nums;
+	background: var(--hover);
+	padding: 0 var(--space-1);
+	border-radius: var(--radius-full);
+	min-width: 22px;
+	height: 20px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	transition: opacity 80ms ease;
+}
+
+.tasks-sidebar__row[aria-pressed="true"] .tasks-sidebar__badge {
+	color: var(--text);
+}
+
+/* Hover swap — on item hover, the counter fades out and the ⋯ menu
+   takes its slot. Scoped to rows that ACTUALLY have a ⋯ button (i.e.
+   the object-menu host class is present) so the built-in surfaces
+   (Inbox / Today / Upcoming) — which never get a ⋯ — don't lose their
+   counter on hover with nothing taking its place. */
+.tasks-sidebar__item.bs-object-menu__host--row:hover .tasks-sidebar__badge,
+.tasks-sidebar__item.bs-object-menu__host--row:focus-within .tasks-sidebar__badge {
+	opacity: 0;
+}
+
+/* ─── Surface view ────────────────────────────────────────────────── */
+
+.tasks-surface {
+	padding: var(--space-5) var(--space-5) var(--space-8);
+	max-width: 760px;
+	margin: 0 auto;
+}
+
+.tasks-surface__header {
+	padding-bottom: var(--space-4);
+	margin-bottom: var(--space-2);
+	border-bottom: var(--border-width) solid var(--border);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-4);
+}
+
+/* The OPEN object's identity in the body — icon + title + ⋯ menu on a
+   single baseline. Mirrors Notes' `.notes__header-title-menu` (a
+   single-level inline-flex row, no intermediate wrapper). The h1 is a
+   block element by default; the explicit flex layout overrides that. */
+.tasks-surface__title-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	min-width: 0;
+	flex: 1 1 auto;
+}
+
+.tasks-surface__title {
+	font-size: var(--text-size-2xl);
+	font-weight: var(--text-weight-semibold);
+	line-height: var(--text-line-height-tight, 1.2);
+	margin: 0;
+	padding: 0;
+	color: var(--text);
+	min-width: 0;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* The project body title is an inline rename field — a text cursor hints it;
+   a double-click swaps in `.tasks-surface__title-input`, matching the title
+   face (size + weight) so the text doesn't jump on edit. */
+.tasks-surface__title--editable {
+	cursor: text;
+}
+.tasks-surface__title-input {
+	min-width: 0;
+	flex: 1 1 auto;
+	padding: var(--space-0_5);
+	margin: -2px -4px;
+	font-size: var(--text-size-2xl);
+	font-weight: var(--text-weight-semibold);
+	line-height: var(--text-line-height-tight, 1.2);
+	color: inherit;
+	background: var(--bg-elev);
+	border: var(--border-width) solid var(--accent);
+	border-radius: var(--radius-sm);
+	outline: none;
+}
+
+.tasks-surface__meta {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-3);
+	color: var(--text-faint);
+	font-size: var(--text-size-xs);
+}
+
+.tasks-surface__count {
+	white-space: nowrap;
+}
+
+.tasks-surface__toggle {
+	color: var(--text-dim);
+	font-size: var(--text-size-xs);
+	padding: var(--space-1);
+	border-radius: var(--radius-sm);
+	border: var(--border-width) solid transparent;
+}
+
+.tasks-surface__toggle:hover {
+	background: var(--hover);
+}
+
+/* Icon + label picker triggers (Group by / Sort) — a leading axis glyph
+   ahead of the caption, sharing the toggle chrome. */
+.tasks-surface__toggle--icon {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+}
+
+.tasks-surface__toggle--icon svg {
+	flex: 0 0 auto;
+	color: var(--text-dim);
+}
+
+.tasks-surface__toggle[aria-pressed="true"] {
+	color: var(--text);
+	background: var(--selected);
+	border-color: var(--border-strong);
+}
+
+/* ─── Section ────────────────────────────────────────────────────── */
+
+.tasks-section {
+	margin-top: var(--space-4);
+}
+
+.tasks-section__heading {
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-semibold);
+	color: var(--text-dim);
+	margin: 0 0 var(--space-1);
+	padding: 0 var(--space-2);
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.tasks-section[data-section-key="today.overdue"] .tasks-section__heading {
+	color: var(--danger);
+}
+
+.tasks-section__list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+/* ─── Task row ───────────────────────────────────────────────────── */
+
+.task-row {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--space-3);
+	padding: var(--space-2);
+	min-height: 40px;
+	/* Hairline separator via inset shadow rather than a real border so the
+	 * selected-row accent bar (also an inset shadow) can stack cleanly and
+	 * the last row in a section doesn't double up with the section gap. */
+	box-shadow: inset 0 -1px 0 var(--color-border-subtle, var(--border));
+	border-radius: var(--radius-sm);
+	transition: background-color 80ms ease, box-shadow 80ms ease;
+}
+
+/* The SDK's `.bs-object-menu__host--row` sets `align-items: center` at
+ * equal specificity to the base `.task-row` rule and loads later, so it
+ * would centre the completion toggle against a wrapped two-line row. Pin
+ * the toggle to the first line — the row's content owns the lower lines. */
+.task-row.bs-object-menu__host--row {
+	align-items: flex-start;
+}
+
+.task-row:hover {
+	background: var(--hover);
+}
+
+/* Selected row = the task currently shown in the inspector. An accent
+ * left bar + tint reads as a sustained selection, distinct from the
+ * faint :hover and the transient --highlight ring. Placed after :hover
+ * (equal specificity) so it wins while selected. */
+.task-row[data-selected="true"] {
+	background: var(--selected, color-mix(in srgb, var(--accent) 10%, transparent));
+	box-shadow:
+		inset 2px 0 0 var(--accent),
+		inset 0 -1px 0 var(--color-border-subtle, var(--border));
+}
+
+/* Multi-selected rows = the Mod/Shift-click copy-set (the editor-block-style
+ * selection the user asked for). A fuller accent wash across the whole row
+ * reads as a contiguous block selection, distinct from the single
+ * inspector-open row's left accent bar above. */
+.task-row[data-multiselected="true"] {
+	background: var(--color-accent-subtle, color-mix(in srgb, var(--accent) 16%, transparent));
+	box-shadow: inset 0 -1px 0 var(--color-border-subtle, var(--border));
+}
+.task-row[data-multiselected="true"]:hover {
+	background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.task-row[data-selected="true"] .task-row__chip--editable[data-empty="true"] {
+	/* Keep the unset-field affordances visible while inspecting so the
+	 * selected row's full editable surface is discoverable without hover. */
+	display: inline-flex;
+	opacity: 0.65;
+}
+
+/* Transient highlight ring painted by `highlightTaskRow` after a
+ * cross-app `intent.open` targets this task. Border-color + box-shadow
+ * fade together so the row visually anchors the user's attention for
+ * ~2s without permanently changing the row chrome. */
+.task-row--highlight {
+	animation: task-row-highlight 2200ms ease-out;
+}
+
+@keyframes task-row-highlight {
+	0%,
+	30% {
+		background: color-mix(in srgb, var(--accent) 22%, transparent);
+		box-shadow: inset 0 0 0 1px var(--accent);
+	}
+	100% {
+		background: transparent;
+		box-shadow: inset 0 0 0 1px transparent;
+	}
+}
+
+.task-row[data-done="true"] .task-row__name {
+	color: var(--text-faint);
+	text-decoration: line-through;
+}
+
+.task-row__toggle {
+	flex: 0 0 auto;
+	width: 20px;
+	height: 20px;
+	margin-top: var(--space-0_5);
+	border-radius: 50%;
+	border: 1.5px solid var(--border-strong);
+	background: transparent;
+	color: transparent;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	transition: border-color var(--motion-duration-fast) ease, background-color
+		var(--motion-duration-fast) ease, color var(--motion-duration-fast) ease;
+}
+
+.task-row__toggle:hover {
+	border-color: var(--accent);
+}
+
+.task-row[data-done="true"] .task-row__toggle {
+	background: var(--accent);
+	border-color: var(--accent);
+	color: var(--accent-fg);
+}
+
+.task-row__tick {
+	width: 14px;
+	height: 14px;
+}
+
+.task-row__body {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.task-row__heading {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+
+/* The task's own icon is click-to-change (shared SDK picker): a real
+   button with a subtle hover/focus affordance, hugging the 16px glyph. */
+.task-row__glyph {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: var(--space-1);
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: currentColor;
+	opacity: 0.85;
+	cursor: pointer;
+}
+
+.task-row__glyph:hover {
+	opacity: 1;
+	background: var(--hover);
+}
+
+.task-row__glyph:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+	border-color: transparent;
+}
+
+.task-row__name {
+	flex: 1 1 auto;
+	min-width: 0;
+	color: var(--text);
+	font-size: var(--text-size-md);
+	line-height: 1.4;
+	display: flex;
+	align-items: center;
+	min-height: 22px;
+}
+
+.task-row__name-label {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	text-align: start;
+	padding: var(--space-0_5);
+	margin: -2px -4px;
+	border-radius: var(--radius-sm);
+	border: var(--border-width) solid transparent;
+	color: inherit;
+	background: transparent;
+	cursor: pointer;
+}
+
+/* The label only earns its own hover fill where a single click on it does
+   something distinct from clicking the row — i.e. the detail title, where one
+   click enters inline rename. In the list a click on the label just opens the
+   task (same as the row), so a second hover fill stacked on the row's reads as
+   a "double hover". */
+.tasks-detail__title-group .task-row__name-label:hover {
+	background: var(--hover);
+}
+
+.task-row__name-label:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}
+
+.task-row__name-input {
+	flex: 1 1 auto;
+	min-width: 0;
+	padding: var(--space-0_5);
+	margin: -2px -4px;
+	font: inherit;
+	color: inherit;
+	background: var(--bg-elev);
+	border: var(--border-width) solid var(--accent);
+	border-radius: var(--radius-sm);
+	outline: none;
+}
+
+.task-row__chips {
+	margin-top: var(--space-1);
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-1);
+}
+
+.task-row__chip {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	font-size: var(--text-size-xs);
+	color: var(--text-faint);
+	padding: var(--space-0_5);
+	border-radius: var(--radius-sm);
+	background: var(--bg-elev);
+	border: var(--border-width) solid var(--border);
+}
+
+.task-row__chip[data-kind="date-overdue"] {
+	color: var(--danger);
+	border-color: var(--danger);
+	background: var(--danger-bg);
+}
+
+.task-row__chip[data-kind="priority"][data-value="critical"] {
+	color: var(--danger);
+	border-color: var(--danger);
+}
+
+.task-row__chip[data-kind="priority"][data-value="high"] {
+	color: var(--accent);
+	border-color: var(--accent);
+}
+
+.task-row__chip[data-kind="project"] {
+	color: var(--text-dim);
+	/* Project names are unbounded text — cap the chip and ellipsize so a
+	   long name can't blow out the row or force the chip strip to wrap. */
+	max-width: 220px;
+}
+
+.task-row__chip[data-kind="project"]::before {
+	content: "";
+	flex: 0 0 auto;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--chip-color, var(--accent));
+}
+
+.task-row__chip-text {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.task-row__chip[data-kind="recurring"] {
+	font-size: var(--text-size-sm);
+}
+
+/* Clickable chips reuse `.task-row__chip` for visual parity; the
+   `--editable` modifier adds button-like affordances. Empty chips are
+   dim affordances ("Set priority", "Schedule", "Inbox") that share the
+   same target so handlers don't fork. */
+.task-row__chip--editable {
+	cursor: pointer;
+	transition: border-color 80ms ease, background-color 80ms ease, color 80ms ease;
+}
+
+.task-row__chip--editable:hover {
+	border-color: var(--accent);
+	color: var(--text);
+}
+
+.task-row__chip--editable:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+	border-color: transparent;
+}
+
+/* Empty affordances ("Set priority", "Schedule", "Inbox") are a quiet
+   always-on rail (F-043) — visible at rest so a first-time user discovers
+   them without having to hover the exact row (and keyboard users get them
+   too), brightening when the row is hovered/focused and full on direct
+   hover. They're always shown, so there is no phantom-gap width to avoid —
+   the dashed-stub width is consistently present, not flickering in before
+   populated chips. */
+.task-row__chip--editable[data-empty="true"] {
+	display: inline-flex;
+	opacity: 0.4;
+	color: var(--text-faint);
+	background: transparent;
+	border: var(--border-width) dashed var(--border);
+	transition: opacity 80ms ease, border-color 80ms ease, color 80ms ease,
+		background-color 80ms ease;
+}
+
+.task-row:hover .task-row__chip--editable[data-empty="true"],
+.task-row:focus-within .task-row__chip--editable[data-empty="true"],
+.task-row__chip--editable[data-empty="true"]:focus-visible {
+	opacity: 0.7;
+}
+
+.task-row__chip--editable[data-empty="true"]:hover {
+	opacity: 1;
+	color: var(--text);
+	border-color: var(--accent);
+	border-style: solid;
+}
+
+/* ─── Inline date popover (chip-anchored) ─────────────────────────── */
+
+/* The two-field superset of the shared `.bs-cal-popover` (scheduled/due).
+   `glass--strong` (app-theme) owns the frosted background + border + blur —
+   matching every other calendar popover in the product. This rule owns only
+   layout + elevation, so it doesn't paint a solid fill over the glass. */
+.tasks-date-popover {
+	position: fixed;
+	z-index: 1000;
+	min-width: 260px;
+	padding: var(--space-2);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	color: var(--text);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-popover, var(--shadow-lg, 0 8px 24px rgba(0, 0, 0, 0.2)));
+}
+
+.tasks-date-popover__tabs {
+	display: inline-flex;
+	align-self: stretch;
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-sm);
+	overflow: hidden;
+}
+
+.tasks-date-popover__tab {
+	flex: 1 1 0;
+	padding: var(--space-1);
+	font-size: var(--text-size-md);
+	color: var(--text-dim);
+	background: transparent;
+	border: 0;
+	cursor: pointer;
+	transition: background-color 80ms ease, color 80ms ease;
+}
+
+.tasks-date-popover__tab + .tasks-date-popover__tab {
+	border-inline-start: var(--border-width) solid var(--border);
+}
+
+.tasks-date-popover__tab:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.tasks-date-popover__tab[data-active="true"] {
+	background: var(--selected);
+	color: var(--text);
+}
+
+.tasks-date-popover__body {
+	min-height: 0;
+}
+
+.tasks-date-popover__body .bs-cal-mini {
+	padding: 0;
+}
+
+.tasks-date-popover__actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--space-2);
+}
+
+/* Date-popover actions use the shared `.bs-btn` primitive (secondary ·
+ * data-bs-primary). */
+
+/* ─── Empty state ─────────────────────────────────────────────────── */
+
+.tasks-empty {
+	margin-top: var(--space-8);
+	text-align: center;
+	color: var(--text-dim);
+}
+
+.tasks-empty h2 {
+	margin: 0 0 var(--space-1);
+	font-size: var(--text-size-lg);
+	font-weight: var(--text-weight-semibold);
+	color: var(--text);
+}
+
+.tasks-empty p {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--text-faint);
+}
+
+/* ─── Object-menu ⋯ affordance — the SDK `bs-object-menu__host--row`
+ *     modifier (applied on the <li>) owns hide-by-default /
+ *     reveal-on-hover + absolute positioning. Nothing app-side here. */
+
+.tasks-sidebar__item {
+	display: flex;
+	align-items: center;
+	/* Anchor for the absolutely-overlaid ⋯ (see below). The sidebar's ⋯
+	 * is a swap-in-place over the count badge, so unlike the SDK's default
+	 * trailing-flex ⋯ it stays absolute and re-uses the badge's footprint
+	 * instead of taking its own slot. */
+	position: relative;
+}
+
+/* The ⋯ takes the badge's slot on hover. Match the badge's footprint
+   (min-width × height + radius) so toggling between counter and menu
+   never moves anything. The SDK `bs-object-menu__host--row` modifier now
+   reveals the ⋯ as a trailing FLEX child (display none → inline-flex);
+   the sidebar instead overlays it absolutely over the badge so the
+   counter↔menu swap never shifts layout. The compound class selector
+   (0,3,0) beats the SDK's (0,2,0) base so these stay. */
+.tasks-sidebar__item.bs-object-menu__host--row > .tasks-sidebar__more {
+	position: absolute;
+	top: 50%;
+	inset-inline-end: var(--space-2);
+	transform: translateY(-50%);
+	margin: 0;
+	color: var(--text-dim);
+}
+
+.tasks-sidebar__item.bs-object-menu__host--row > .tasks-sidebar__more:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.tasks-sidebar__row[aria-pressed="true"] ~ .tasks-sidebar__more {
+	color: var(--text);
+}
+
+/* ─── Quick-look fact sheet (intent.quick-look popover body) ───────── */
+
+.tasks-quicklook {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	gap: var(--space-2) var(--space-4);
+	margin: 0;
+}
+
+.tasks-quicklook__label {
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+	color: var(--text-faint);
+	margin: 0;
+}
+
+.tasks-quicklook__value {
+	font-size: var(--text-size-md);
+	color: var(--text);
+	margin: 0;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
+.tasks-quicklook__empty {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--text-faint);
+}
+
+/* ─── Compose form (intent.compose popover body) ──────────────────── */
+
+.tasks-compose {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+}
+
+.tasks-compose__label {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+	color: var(--text-dim);
+}
+
+/* The project / priority pickers ride the shared `.bs-select` face; only the
+   row-filling width is local. */
+.tasks-compose__control {
+	width: 100%;
+}
+
+.tasks-compose__input,
+.tasks-compose__textarea {
+	width: 100%;
+	padding: var(--space-2) var(--space-2);
+	font-size: var(--text-size-md);
+	color: var(--text);
+	background: var(--bg-elev);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-sm);
+	font-family: inherit;
+}
+
+.tasks-compose__textarea {
+	resize: vertical;
+	min-height: 64px;
+}
+
+.tasks-compose__input:focus-visible,
+.tasks-compose__textarea:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+	border-color: transparent;
+}
+
+.tasks-compose__row {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: var(--space-3);
+}
+
+/* Date fields open the shared `@brainstorm/sdk/calendar` popover instead of
+   a native `<input type="date">` (F-229). The trigger borrows the input face
+   so it sits flush with the text fields above it. */
+.tasks-compose__date-trigger {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-2);
+	width: 100%;
+	padding: var(--space-2) var(--space-2);
+	font-size: var(--text-size-md);
+	font-family: inherit;
+	text-align: left;
+	color: var(--text);
+	background: var(--bg-elev);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+}
+
+.tasks-compose__date-trigger:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+	border-color: transparent;
+}
+
+.tasks-compose__date-text[data-empty="true"] {
+	color: var(--text-faint);
+}
+
+.tasks-compose__date-clear {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	font-size: var(--text-size-md);
+	line-height: 1;
+	color: var(--text-dim);
+	background: transparent;
+	border: none;
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+}
+
+.tasks-compose__date-clear:hover {
+	color: var(--text);
+	background: var(--hover);
+}
+
+/* Duplicate-name warning under the compose name field (F-045). Advisory,
+   not an error — a muted caution tint, never blocks the create. */
+.tasks-compose__hint {
+	margin: calc(-1 * var(--space-1)) 0 0;
+	font-size: var(--text-size-xs);
+	color: var(--warn, var(--text-faint));
+}
+
+.tasks-compose__actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--space-2);
+}
+
+/* Compose actions use the shared `.bs-btn` primitive (neutral ·
+ * data-bs-primary). */
+
+/* ─── Sidebar + task list drag-and-drop affordances ──────────────── */
+
+.tasks-sidebar__item--draggable {
+	cursor: grab;
+}
+
+.tasks-sidebar__item--draggable:active {
+	cursor: grabbing;
+}
+
+.tasks-sidebar__item--dragging,
+.task-row--dragging {
+	opacity: 0.45;
+}
+
+/* Drop markers — a 2px accent rule sits flush with the row edge (above
+ * or below) so the insert position is unambiguous. Pointer-events off
+ * because they're decoration, not click targets. */
+.tasks-sidebar__item--drop-above {
+	box-shadow: inset 0 2px 0 var(--accent);
+}
+
+.tasks-sidebar__item--drop-below {
+	box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+.tasks-sidebar__item-list--drop-end {
+	box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+/* The row's primary affordance is "click to open", so it rests on a pointer
+   even though the whole row is a drag source; the grabbing cursor only kicks
+   in once a drag is actually under way. */
+.tasks-section__list--draggable .task-row[draggable="true"] {
+	cursor: pointer;
+}
+
+.tasks-section__list--draggable .task-row[draggable="true"]:active,
+.task-row--dragging {
+	cursor: grabbing;
+}
+
+.task-row--drop-above {
+	box-shadow: inset 0 2px 0 var(--accent);
+}
+
+.task-row--drop-below {
+	box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+.tasks-section__list--draggable.task-row-list--drop-end {
+	box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+/* ── Inline-task embed (9.14.3) ───────────────────────────────────────────
+ * The `/task` slash command drops a `TaskEmbedNode` rendered as a card. The
+ * static fallback paints icon-less title + type; the BP variant stacks a
+ * chrome row over the live sandboxed mount. Mirrors Notes' `.notes__embed-*`
+ * classes (kept app-local — the node is app-local). */
+.tasks-embed-card {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	width: 100%;
+	padding: var(--space-3) var(--space-2);
+	border: var(--border-width) solid var(--border-subtle);
+	border-radius: var(--radius-md);
+	background: var(--bg-elevated, var(--bg));
+	color: inherit;
+	text-align: left;
+	cursor: pointer;
+	min-width: 0;
+	transition: background var(--motion-duration-fast) ease, border-color var(--motion-duration-fast)
+		ease;
+}
+
+.tasks-embed-card:hover,
+.tasks-embed-card:focus-visible {
+	background: var(--hover);
+	border-color: var(--border-strong);
+}
+
+.tasks-embed-card-body {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+	min-width: 0;
+}
+
+.tasks-embed-card-title {
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium);
+	color: var(--text);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.tasks-embed-card-type {
+	font-size: var(--text-size-xs);
+	color: var(--text-faint);
+}
+
+.tasks-embed-card--bp {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	padding: 0;
+	gap: 0;
+	cursor: default;
+}
+
+.tasks-embed-card--bp:hover,
+.tasks-embed-card--bp:focus-visible {
+	background: var(--bg-elevated, var(--bg));
+	border-color: var(--border-subtle);
+}
+
+.tasks-embed-card-chrome {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	padding: var(--space-3) var(--space-2);
+	border: 0;
+	border-bottom: var(--border-width) solid var(--border-subtle);
+	background: transparent;
+	color: inherit;
+	text-align: left;
+	cursor: pointer;
+	min-width: 0;
+	transition: background var(--motion-duration-fast) ease;
+}
+
+.tasks-embed-card-chrome:hover,
+.tasks-embed-card-chrome:focus-visible {
+	background: var(--hover);
+}
+
+.tasks-embed-card-mount {
+	display: block;
+	min-height: 44px;
+	width: 100%;
+}
+
+.tasks-embed-card-mount > iframe {
+	display: block;
+	width: 100%;
+	height: 100%;
+	min-height: 44px;
+	border: 0;
+	background: transparent;
+}

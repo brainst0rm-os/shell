@@ -1,0 +1,123 @@
+.sync-status-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	height: 28px;
+	padding: 0 var(--space-2);
+	border-radius: var(--radius-md);
+	border: var(--border-width) solid var(--color-border-subtle);
+	background: transparent;
+	color: var(--color-text-secondary);
+	font-size: var(--text-size-xs);
+	cursor: pointer;
+	transition: background-color 120ms ease, border-color 120ms ease;
+	max-width: 160px;
+}
+
+.sync-status-chip:hover {
+	background: var(--color-surface-hover);
+	border-color: var(--color-border-strong);
+}
+
+.sync-status-chip:focus-visible {
+	outline: 2px solid var(--color-state-info);
+	outline-offset: -1px;
+	border-color: transparent;
+}
+
+.sync-status-chip__label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width: 96px;
+}
+
+.sync-status-chip--syncing {
+	color: var(--color-state-success);
+}
+
+.sync-status-chip--stale {
+	color: var(--color-state-warning);
+}
+
+.sync-status-chip--offline {
+	color: var(--color-text-tertiary);
+}
+
+.sync-status-chip--error {
+	color: var(--color-state-error);
+}
+
+.sync-status-chip--local-only {
+	color: var(--color-text-tertiary);
+}
+
+/* OQ-210 — LocalOnly stays discoverable but quiet. Dim icon, no
+ * coloured label, no badge ring on hover. */
+.sync-status-chip--quiet {
+	opacity: 0.72;
+}
+
+.sync-status-chip--quiet:hover {
+	opacity: 1;
+}
+
+.sync-status-popover__list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	margin: 0;
+}
+
+.sync-status-popover__row {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: var(--space-3);
+}
+
+.sync-status-popover__label {
+	color: var(--color-text-secondary);
+	font-size: var(--text-size-xs);
+	margin: 0;
+	flex: 0 0 auto;
+}
+
+.sync-status-popover__value {
+	color: var(--color-text-primary);
+	font-size: var(--text-size-md);
+	margin: 0;
+	text-align: end;
+	font-variant-numeric: tabular-nums;
+}
+
+.sync-status-popover__value--clip {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width: 220px;
+}
+
+.sync-status-popover__value--syncing {
+	color: var(--color-state-success);
+}
+
+.sync-status-popover__value--stale {
+	color: var(--color-state-warning);
+}
+
+.sync-status-popover__value--offline,
+.sync-status-popover__value--local-only {
+	color: var(--color-text-tertiary);
+}
+
+.sync-status-popover__value--error {
+	color: var(--color-state-error);
+}
+
+.sync-status-popover__tooltip {
+	color: var(--color-text-secondary);
+	font-size: var(--text-size-xs);
+	margin: 0 0 var(--space-2);
+	line-height: 1.45;
+}

@@ -1,0 +1,405 @@
+/**
+ * Dictionary editor (vocabulary manager) chrome — the styles for the
+ * `<DictionaryEditor>` opened by a Tag cell's "Manage values…" footer.
+ *
+ * Canonical home for these rules: the editor is an SDK component, so any
+ * app that mounts `<PropertiesProvider>` (which auto-mounts the editor
+ * host) can `import "@brainstorm/sdk/property-ui/dictionary-editor.css"`
+ * and get a working, styled "Manage values…".
+ *
+ * NOTE: the `notes__dict*` class names are retained verbatim to match the
+ * component + its existing duplicate copies in `notes/styles.css` and
+ * `@brainstorm/editor`'s `editor-theme.css`. Renaming to a `bs-dict*`
+ * prefix and removing those two duplicates is queued for the right-panel
+ * consistency pass.
+ */
+
+.notes__dict-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 240;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: color-mix(in srgb, var(--bg) 55%, transparent);
+	backdrop-filter: blur(2px);
+	-webkit-backdrop-filter: blur(2px);
+}
+
+.notes__dict {
+	display: flex;
+	flex-direction: column;
+	width: min(560px, 92vw);
+	max-height: 80vh;
+	background: var(--color-glass-background, var(--bg));
+	backdrop-filter: blur(var(--glass-blur, 18px)) saturate(var(--glass-saturate, 180%));
+	-webkit-backdrop-filter: blur(var(--glass-blur, 18px)) saturate(var(--glass-saturate, 180%));
+	border: var(--border-width) solid var(--color-glass-border, var(--border-strong));
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-xl, 0 16px 40px -12px rgba(0, 0, 0, 0.45));
+	overflow: hidden;
+}
+
+.notes__dict-head {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	height: 44px;
+	flex: 0 0 44px;
+	padding: 0 var(--space-2) 0 var(--space-4);
+	border-bottom: var(--border-width) solid var(--color-border-subtle, var(--border));
+}
+
+.notes__dict-name {
+	flex: 1 1 auto;
+	min-width: 0;
+	height: 28px;
+	padding: 0 var(--space-2);
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text);
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-semibold);
+	outline: none;
+	outline-offset: -1px;
+}
+
+.notes__dict-name:focus {
+	border-color: transparent;
+	outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+	outline-offset: -1px;
+	background: var(--bg-elev);
+}
+
+.notes__dict-count {
+	font-size: var(--text-size-xs);
+	color: var(--text-faint);
+	white-space: nowrap;
+}
+
+.notes__dict-close {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	height: 26px;
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text-dim);
+	cursor: pointer;
+	font-size: var(--text-size-lg);
+}
+
+.notes__dict-close:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.notes__dict-toolbar {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-2);
+	border-bottom: var(--border-width) solid var(--color-border-subtle, var(--border));
+}
+
+.notes__dict-search {
+	flex: 1 1 auto;
+	min-width: 0;
+	height: 30px;
+	padding: 0 var(--space-2);
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-md);
+	background: var(--bg-elev);
+	color: var(--text);
+	font-size: var(--text-size-md);
+	outline: none;
+	outline-offset: -1px;
+}
+
+.notes__dict-search:focus {
+	border-color: transparent;
+	outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+	outline-offset: -1px;
+}
+
+.notes__dict-sort {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+}
+
+/* Field face comes from the shared .bs-select trigger; pin only the
+   toolbar's 28px / xs density (matches .notes__dict-add and friends). */
+.notes__dict-sort .bs-select {
+	height: 28px;
+	font-size: var(--text-size-xs);
+}
+
+.notes__dict-add,
+.notes__dict-io-btn {
+	height: 28px;
+	padding: 0 10px;
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-sm);
+	background: var(--bg-elev);
+	color: var(--text);
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+.notes__dict-add:hover,
+.notes__dict-io-btn:hover {
+	background: var(--hover);
+}
+
+.notes__dict-io {
+	position: relative;
+}
+
+.notes__dict-io-panel {
+	position: absolute;
+	inset-inline-end: 0;
+	top: 32px;
+	z-index: 1;
+	width: 260px;
+	padding: var(--space-2);
+	background: var(--bg);
+	border: var(--border-width) solid var(--border-strong);
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-lg, 0 8px 24px -8px rgba(0, 0, 0, 0.4));
+}
+
+.notes__dict-io-input {
+	width: 100%;
+	min-height: 96px;
+	resize: vertical;
+	padding: var(--space-2);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-sm);
+	background: var(--bg-elev);
+	color: var(--text);
+	font-size: var(--text-size-xs);
+	font-family: var(--text-family-code, monospace);
+}
+
+.notes__dict-io-actions {
+	display: flex;
+	gap: var(--space-2);
+	margin-top: var(--space-2);
+}
+
+.notes__dict-io-action {
+	flex: 1 1 0;
+	height: 28px;
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-sm);
+	background: var(--bg-elev);
+	color: var(--text);
+	font-size: var(--text-size-xs);
+	cursor: pointer;
+}
+
+.notes__dict-io-action:hover {
+	background: var(--hover);
+}
+
+.notes__dict-io-caption {
+	margin: var(--space-2) 0 0;
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+}
+
+.notes__dict-io-caption[data-kind="error"] {
+	color: var(--danger);
+}
+
+.notes__dict-list,
+.notes__dict-archived-list {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow-y: auto;
+	margin: 0;
+	padding: var(--space-2);
+	list-style: none;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+}
+
+.notes__dict-empty {
+	padding: var(--space-5) var(--space-2);
+	text-align: center;
+	color: var(--text-faint);
+	font-size: var(--text-size-sm);
+}
+
+.notes__dict-row {
+	display: grid;
+	grid-template-columns: 20px 12px 1fr auto auto;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-1);
+	border-radius: var(--radius-md);
+}
+
+.notes__dict-row:hover {
+	background: var(--hover);
+}
+
+.notes__dict-row[data-picked-up="true"] {
+	background: color-mix(in srgb, var(--accent) 14%, transparent);
+	outline: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.notes__dict-grip {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 20px;
+	height: 24px;
+	border: 0;
+	background: transparent;
+	color: var(--text-faint);
+	cursor: grab;
+	font-size: var(--text-size-sm);
+}
+
+.notes__dict-grip--disabled {
+	cursor: default;
+}
+
+.notes__dict-grip:focus-visible {
+	outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+	outline-offset: -1px;
+	border-radius: var(--radius-sm);
+}
+
+.notes__dict-swatch {
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+}
+
+.notes__dict-row-input {
+	min-width: 0;
+	height: 28px;
+	padding: 0 var(--space-2);
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text);
+	font-size: var(--text-size-md);
+	outline: none;
+	outline-offset: -1px;
+}
+
+.notes__dict-row-input:focus {
+	border-color: transparent;
+	outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+	outline-offset: -1px;
+	background: var(--bg-elev);
+}
+
+.notes__dict-usage {
+	font-size: var(--text-size-xs);
+	color: var(--text-faint);
+	white-space: nowrap;
+}
+
+.notes__dict-row-menu {
+	position: relative;
+}
+
+.notes__dict-row-menu-btn,
+.notes__dict-merge-target,
+.notes__dict-unarchive,
+.notes__dict-archived-toggle {
+	border: 0;
+	background: transparent;
+	color: var(--text-dim);
+	cursor: pointer;
+	font: inherit;
+	font-size: var(--text-size-xs);
+	border-radius: var(--radius-sm);
+	padding: var(--space-1);
+}
+
+.notes__dict-row-menu-btn:hover,
+.notes__dict-merge-target:hover,
+.notes__dict-unarchive:hover,
+.notes__dict-archived-toggle:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.notes__dict-merge-target {
+	color: var(--accent);
+	font-weight: var(--text-weight-medium);
+}
+
+.notes__dict-menu {
+	position: absolute;
+	inset-inline-end: 0;
+	top: 26px;
+	z-index: 1;
+	min-width: 140px;
+	padding: var(--space-1);
+	background: var(--bg);
+	border: var(--border-width) solid var(--border-strong);
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-lg, 0 8px 24px -8px rgba(0, 0, 0, 0.4));
+	display: flex;
+	flex-direction: column;
+}
+
+.notes__dict-menu-item {
+	border: 0;
+	background: transparent;
+	color: var(--text);
+	cursor: pointer;
+	font: inherit;
+	font-size: var(--text-size-md);
+	text-align: start;
+	padding: var(--space-2) var(--space-2);
+	border-radius: var(--radius-sm);
+}
+
+.notes__dict-menu-item:hover {
+	background: var(--hover);
+}
+
+.notes__dict-menu-item--danger {
+	color: var(--danger);
+}
+
+.notes__dict-foot {
+	flex: 0 0 auto;
+	border-top: var(--border-width) solid var(--color-border-subtle, var(--border));
+	padding: var(--space-2) var(--space-2);
+	max-height: 30vh;
+	overflow-y: auto;
+}
+
+.notes__dict-archived-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-2);
+	padding: 3px;
+}
+
+.notes__dict-row-label {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: var(--text-size-md);
+	color: var(--text-dim);
+}

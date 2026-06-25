@@ -1,0 +1,74 @@
+.identity-section__row {
+	display: flex;
+	gap: var(--space-2);
+	align-items: center;
+	max-width: 420px;
+}
+
+.identity-section__avatar {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--control-height-md);
+	height: var(--control-height-md);
+	padding: 0;
+	overflow: hidden;
+	border: 1px solid var(--color-border-subtle);
+	border-radius: 50%;
+	background: var(--color-surface-sunken);
+	color: var(--color-text-secondary);
+	cursor: pointer;
+}
+
+.identity-section__avatar:hover:not(:disabled) {
+	border-color: var(--color-border-strong);
+	color: var(--color-text-primary);
+}
+
+.identity-section__avatar:disabled {
+	cursor: default;
+	opacity: 0.6;
+}
+
+/* Uploaded photo fills the circular button regardless of the EntityIcon
+ * intrinsic size; the button's overflow:hidden clips it to the circle. */
+.identity-section__avatar-img {
+	width: 100% !important;
+	height: 100% !important;
+	border-radius: 50% !important;
+	object-fit: cover;
+}
+
+.identity-section__initials {
+	font-size: 0.75rem;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	color: inherit;
+}
+
+/* Wraps the shared `<TextField>` so it grows to fill the row; the field's
+ * border/focus chrome comes from the primitive. */
+.identity-section__input {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.identity-section__saved {
+	color: var(--color-state-success);
+}
+
+.identity-section__fingerprint-title {
+	margin-top: var(--space-5);
+}
+
+.identity-section__fingerprint {
+	display: inline-block;
+	padding: var(--space-1) var(--space-2);
+	border-radius: var(--radius-sm);
+	background: var(--color-surface-sunken);
+	color: var(--color-text-tertiary);
+	font-family: var(--font-mono);
+	font-size: 0.85em;
+	user-select: all;
+}

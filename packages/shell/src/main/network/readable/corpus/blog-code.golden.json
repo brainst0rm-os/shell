@@ -1,0 +1,103 @@
+{
+  "meta": {
+    "title": "Debouncing in TypeScript",
+    "byline": null,
+    "siteName": null,
+    "excerpt": "A debounce delays a function until activity settles. Here is a small, dependency-free implementation you can drop into any project today.",
+    "lang": "en",
+    "publishedAt": null
+  },
+  "blocks": [
+    {
+      "type": "paragraph",
+      "version": 1,
+      "direction": null,
+      "format": "",
+      "indent": 0,
+      "children": [
+        {
+          "type": "text",
+          "version": 1,
+          "text": "A debounce delays a function until activity settles. Here is a small, dependency-free implementation you can drop into any project today.",
+          "format": 0,
+          "detail": 0,
+          "mode": "normal",
+          "style": ""
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "version": 1,
+      "direction": null,
+      "format": "",
+      "indent": 0,
+      "children": [
+        {
+          "type": "text",
+          "version": 1,
+          "text": "This paragraph carries enough genuine prose for Mozilla Readability to score the article body above the surrounding navigation and sidebar chrome, which is the whole point of the readable-extraction pass.",
+          "format": 0,
+          "detail": 0,
+          "mode": "normal",
+          "style": ""
+        }
+      ]
+    },
+    {
+      "type": "code",
+      "version": 1,
+      "direction": null,
+      "format": "",
+      "indent": 0,
+      "language": null,
+      "children": [
+        {
+          "type": "text",
+          "version": 1,
+          "text": "const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };",
+          "format": 0,
+          "detail": 0,
+          "mode": "normal",
+          "style": ""
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "version": 1,
+      "direction": null,
+      "format": "",
+      "indent": 0,
+      "children": [
+        {
+          "type": "text",
+          "version": 1,
+          "text": "The closure keeps the timer handle private, and each call resets it.",
+          "format": 0,
+          "detail": 0,
+          "mode": "normal",
+          "style": ""
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "version": 1,
+      "direction": null,
+      "format": "",
+      "indent": 0,
+      "children": [
+        {
+          "type": "text",
+          "version": 1,
+          "text": "This paragraph carries enough genuine prose for Mozilla Readability to score the article body above the surrounding navigation and sidebar chrome, which is the whole point of the readable-extraction pass.",
+          "format": 0,
+          "detail": 0,
+          "mode": "normal",
+          "style": ""
+        }
+      ]
+    }
+  ]
+}

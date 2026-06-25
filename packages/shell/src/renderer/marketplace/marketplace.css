@@ -1,0 +1,553 @@
+/*
+ * Marketplace overlay. Privileged shell view; full-window glass surface
+ * (the user is in a destination, not tweaking a setting), structured as
+ * sidebar nav + main grid/detail per 47-marketplace.md §The Marketplace
+ * surface.
+ *
+ * Panel headers share the 44px height and 1px subtle bottom border with
+ * `.dashboard__header` / `.settings__main-header` (project convention).
+ */
+
+.marketplace {
+	position: fixed;
+	inset: 0;
+	z-index: var(--z-modal);
+	display: flex;
+	align-items: stretch;
+	justify-content: stretch;
+	pointer-events: none;
+}
+
+.marketplace__backdrop {
+	position: absolute;
+	inset: 0;
+	background: var(--color-dimmer);
+	border: 0;
+	cursor: default;
+	pointer-events: auto;
+}
+
+.marketplace__panel {
+	position: relative;
+	margin: var(--space-6);
+	flex: 1;
+	display: grid;
+	grid-template-columns: 240px 1fr;
+	border: var(--border-width) solid var(--color-glass-border);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-xl);
+	overflow: hidden;
+	pointer-events: auto;
+}
+
+.marketplace__sidebar {
+	display: flex;
+	flex-direction: column;
+	background: rgba(0, 0, 0, 0.18);
+	border-inline-end: var(--border-width) solid var(--color-glass-border);
+	min-height: 0;
+}
+
+.marketplace__sidebar-header {
+	height: var(--app-header-height);
+	box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	padding: 0 var(--space-2);
+	border-bottom: var(--border-width) solid var(--color-border-subtle);
+	flex-shrink: 0;
+}
+
+.marketplace__title {
+	margin: 0;
+	font-size: var(--text-size-lg);
+	font-weight: var(--text-weight-semibold);
+	color: var(--color-text-primary);
+}
+
+.marketplace__sidebar-body {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	padding: var(--space-2);
+}
+
+.marketplace__nav {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+}
+
+.marketplace__nav-item {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	background: transparent;
+	border: 0;
+	color: var(--color-text-secondary);
+	font: inherit;
+	font-size: var(--text-size-md);
+	text-align: start;
+	padding: var(--space-2) var(--space-2);
+	border-radius: var(--radius-md);
+	cursor: pointer;
+}
+
+.marketplace__nav-item:hover {
+	background: var(--color-interactive-hover);
+	color: var(--color-text-primary);
+}
+
+.marketplace__nav-item--active {
+	background: var(--color-accent-subtle);
+	color: var(--color-text-primary);
+}
+
+.marketplace__nav-icon {
+	width: 18px;
+	display: inline-flex;
+	justify-content: center;
+	color: var(--color-text-tertiary);
+}
+
+.marketplace__nav-item--active .marketplace__nav-icon {
+	color: var(--color-accent-default);
+}
+
+.marketplace__main {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	min-height: 0;
+}
+
+.marketplace__main-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: var(--space-4) var(--space-2) var(--space-4) var(--space-4);
+	border-bottom: var(--border-width) solid var(--color-border-subtle);
+	height: var(--app-header-height);
+	box-sizing: border-box;
+}
+
+.marketplace__main-title {
+	margin: 0;
+	font-size: var(--text-size-lg);
+	font-weight: var(--text-weight-semibold);
+	color: var(--color-text-primary);
+	text-transform: capitalize;
+}
+
+.marketplace__body {
+	flex: 1;
+	overflow-y: auto;
+	min-height: 0;
+	padding: var(--space-4);
+}
+
+.marketplace__body-inner {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+}
+
+.marketplace__toolbar {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	justify-content: space-between;
+	flex-wrap: wrap;
+}
+
+.marketplace__chips {
+	display: flex;
+	gap: var(--space-1);
+}
+
+.marketplace__chip {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	padding: var(--space-1);
+	border-radius: var(--radius-md);
+	border: var(--border-width) solid var(--color-border-subtle);
+	background: transparent;
+	color: var(--color-text-secondary);
+	font: inherit;
+	font-size: var(--text-size-xs);
+	cursor: pointer;
+}
+
+.marketplace__chip:hover {
+	background: var(--color-interactive-hover);
+	color: var(--color-text-primary);
+}
+
+.marketplace__chip--active {
+	background: var(--color-accent-subtle);
+	border-color: var(--color-accent-default);
+	color: var(--color-text-primary);
+}
+
+.marketplace__chip-count {
+	color: var(--color-text-tertiary);
+	font-variant-numeric: tabular-nums;
+}
+
+.marketplace__chip--active .marketplace__chip-count {
+	color: var(--color-accent-default);
+}
+
+/* The bar chrome itself is `.bs-searchbar` (loaded by
+ * `packages/shell/src/renderer/main.tsx` via
+ * `@brainstorm/sdk/searchbar/searchbar.css`); this rule stretches it within
+ * the toolbar row and applies the marketplace-only tinted surround. */
+.marketplace__search {
+	min-width: 220px;
+	flex: 0 1 280px;
+	background: rgba(0, 0, 0, 0.18);
+	border: var(--border-width) solid var(--color-border-subtle);
+}
+
+.marketplace__grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	gap: var(--space-3);
+}
+
+.marketplace__card {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	padding: var(--space-2);
+	background: rgba(0, 0, 0, 0.18);
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+	color: var(--color-text-primary);
+	text-align: start;
+	cursor: pointer;
+	font: inherit;
+}
+
+.marketplace__card:hover {
+	border-color: var(--color-border-strong);
+	background: rgba(0, 0, 0, 0.24);
+}
+
+.marketplace__card:focus-visible {
+	outline: 2px solid var(--color-accent-default);
+	outline-offset: -1px;
+	border-color: transparent;
+}
+
+.marketplace__card-preview {
+	width: 100%;
+	height: 96px;
+	border-radius: var(--radius-sm);
+	overflow: hidden;
+	background: var(--color-surface-secondary);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.marketplace__theme-preview {
+	width: 100%;
+	height: 100%;
+}
+
+.marketplace__theme-preview--blank {
+	background: var(--color-surface-tertiary);
+}
+
+/* App tiles render the shared `<AppIcon>` flush-left at the top of the
+ * card — no surrounding frame, no centering — so the squircle shape and
+ * shadow stack match the dashboard pixel-for-pixel. */
+.marketplace__card-icon {
+	display: flex;
+	align-items: flex-start;
+	justify-content: flex-start;
+	padding: var(--space-1) 0;
+}
+
+.marketplace__card-meta {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+}
+
+.marketplace__card-name {
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium);
+	color: var(--color-text-primary);
+}
+
+.marketplace__card-kind {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.marketplace__card-summary {
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.marketplace__card-state {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+}
+
+.marketplace__loading,
+.marketplace__empty {
+	font-size: var(--text-size-sm);
+	color: var(--color-text-tertiary);
+	font-style: italic;
+}
+
+.marketplace__section-summary {
+	margin: 0 0 var(--space-3) 0;
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+}
+
+/* Sources panel */
+.marketplace__sources {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+}
+
+.marketplace__sources-list {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.marketplace__sources-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-2);
+	background: rgba(0, 0, 0, 0.18);
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+}
+
+.marketplace__sources-icon {
+	display: inline-flex;
+	color: var(--color-text-tertiary);
+}
+
+.marketplace__sources-meta {
+	display: flex;
+	flex-direction: column;
+}
+
+.marketplace__sources-name {
+	font-size: var(--text-size-md);
+	color: var(--color-text-primary);
+	font-weight: var(--text-weight-medium);
+}
+
+.marketplace__sources-kind {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+}
+
+.marketplace__sources-hint {
+	margin: 0;
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+	font-style: italic;
+}
+
+/* Updates panel */
+.marketplace__updates {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.marketplace__update-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+	padding: var(--space-2);
+	background: rgba(0, 0, 0, 0.18);
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+}
+
+.marketplace__update-info {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+}
+
+.marketplace__update-name {
+	font-size: var(--text-size-md);
+	color: var(--color-text-primary);
+	font-weight: var(--text-weight-medium);
+}
+
+.marketplace__update-version {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+}
+
+.marketplace__update-caps {
+	font-size: var(--text-size-xs);
+	color: var(--color-accent-default);
+}
+
+/* Detail view */
+.marketplace__detail {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+}
+
+.marketplace__detail-header {
+	display: flex;
+}
+
+.marketplace__detail-hero {
+	display: grid;
+	grid-template-columns: 200px 1fr;
+	gap: var(--space-4);
+	align-items: start;
+}
+
+.marketplace__detail-hero-preview {
+	width: 100%;
+	height: 200px;
+	border-radius: var(--radius-md);
+	overflow: hidden;
+	background: var(--color-surface-secondary);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.marketplace__detail-hero-preview--blank {
+	background: var(--color-surface-tertiary);
+}
+
+.marketplace__detail-hero-icon {
+	display: flex;
+	align-items: flex-start;
+	justify-content: flex-start;
+	padding: var(--space-2) 0;
+}
+
+.marketplace__detail-meta {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.marketplace__detail-title {
+	margin: 0;
+	font-size: var(--text-size-2xl);
+	font-weight: var(--text-weight-semibold);
+	color: var(--color-text-primary);
+}
+
+.marketplace__detail-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-1);
+}
+
+.marketplace__detail-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	padding: var(--space-0_5);
+	background: rgba(0, 0, 0, 0.18);
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-sm);
+	font-size: var(--text-size-xs);
+	color: var(--color-text-secondary);
+}
+
+.marketplace__detail-summary {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+}
+
+.marketplace__detail-actions {
+	display: flex;
+	gap: var(--space-2);
+	margin-top: var(--space-2);
+}
+
+.marketplace__detail-spec {
+	border-top: var(--border-width) solid var(--color-border-subtle);
+	padding-top: var(--space-3);
+}
+
+.marketplace__detail-spec-list {
+	margin: 0;
+	display: grid;
+	grid-template-columns: 140px 1fr;
+	gap: var(--space-2) var(--space-3);
+}
+
+.marketplace__detail-spec-row {
+	display: contents;
+}
+
+.marketplace__detail-spec-row dt {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.marketplace__detail-spec-row dd {
+	margin: 0;
+	font-size: var(--text-size-md);
+	color: var(--color-text-primary);
+}
+
+.marketplace__detail-spec-mono {
+	font-family: var(--text-family-code);
+	font-size: var(--text-size-xs);
+	color: var(--color-text-secondary);
+	word-break: break-all;
+}
+
+.marketplace__state {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-0_5);
+	font-size: var(--text-size-xs);
+}
+
+.marketplace__state--active {
+	color: var(--color-state-success);
+}
+
+.marketplace__state--installed {
+	color: var(--color-text-secondary);
+}
+
+.marketplace__state--available {
+	color: var(--color-text-tertiary);
+}

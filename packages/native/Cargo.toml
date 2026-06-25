@@ -1,0 +1,30 @@
+[package]
+name = "brainstorm_native"
+version = "0.0.1"
+edition = "2021"
+publish = false
+license = "UNLICENSED"
+description = "Native NAPI-RS bindings for Brainstorm (Argon2id KDF, crypto suite, Graph force simulation)."
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+napi = { version = "3", default-features = false, features = ["napi8"] }
+napi-derive = "3"
+argon2 = { version = "0.5", default-features = false, features = ["alloc"] }
+ed25519-dalek = { version = "2", default-features = false, features = ["std", "fast", "zeroize"] }
+sha2 = { version = "0.10", default-features = false }
+hkdf = { version = "0.12", default-features = false }
+x25519-dalek = { version = "2", default-features = false, features = ["static_secrets", "zeroize"] }
+chacha20poly1305 = { version = "0.10", default-features = false, features = ["alloc"] }
+rand_core = { version = "0.6", default-features = false, features = ["getrandom"] }
+
+[build-dependencies]
+napi-build = "2"
+
+[profile.release]
+lto = true
+strip = "symbols"
+codegen-units = 1
+opt-level = 3

@@ -1,0 +1,154 @@
+/*
+ * Checkbox — the shared SDK checkbox chrome (adapted from a Uiverse glass
+ * design, re-themed onto our accent tokens). ONE definition for the shell and
+ * every sandboxed app: the shell imports this subpath directly; apps get it via
+ * the `@import` in `app-theme.css`. Pattern mirrors `searchbar.css`.
+ *
+ * State is driven two ways so the same markup serves both worlds:
+ *   - native: `.checkbox__input:checked / :indeterminate ~ .checkbox__box`
+ *     (a plain `<input>` + box — what `createCheckbox` and form usage rely on);
+ *   - controlled: `.checkbox__box--checked / --indeterminate` classes (React /
+ *     decorative listbox rows, where no live input drives the box).
+ *
+ * Every selector is `:root`-prefixed (per the app-theme convention) so a
+ * per-app single-class base loading afterwards can't strip the chrome.
+ */
+
+:root .checkbox {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	cursor: pointer;
+	user-select: none;
+}
+
+:root .checkbox--disabled {
+	opacity: 0.55;
+	cursor: not-allowed;
+}
+
+/* Visually hidden — carries semantics, keyboard, and focus; the painted box
+ * mirrors its state. */
+:root .checkbox__input {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: 0;
+	opacity: 0;
+	pointer-events: none;
+}
+
+:root .checkbox__box {
+	position: relative;
+	width: 18px;
+	height: 18px;
+	min-width: 18px;
+	border-radius: var(--radius-sm);
+	background: var(--color-surface-default);
+	border: var(--border-width) solid var(--color-border-strong);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	transition:
+		background 0.25s ease,
+		border-color 0.25s ease,
+		box-shadow 0.25s ease,
+		transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Accent glow that blooms in on check. */
+:root .checkbox__box::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: radial-gradient(
+		circle at center,
+		color-mix(in srgb, var(--color-accent-default) 35%, transparent) 0%,
+		transparent 70%
+	);
+	opacity: 0;
+	transform: scale(0);
+	transition:
+		opacity 0.3s ease,
+		transform 0.4s ease;
+}
+
+:root .checkbox:hover .checkbox__box {
+	border-color: color-mix(in srgb, var(--color-accent-default) 45%, var(--color-border-strong));
+	transform: scale(1.06);
+}
+
+:root .checkbox__input:checked ~ .checkbox__box,
+:root .checkbox__input:indeterminate ~ .checkbox__box,
+:root .checkbox__box--checked,
+:root .checkbox__box--indeterminate {
+	background: linear-gradient(135deg, var(--color-accent-default), var(--color-accent-strong));
+	border-color: transparent;
+	box-shadow:
+		0 0 0 3px color-mix(in srgb, var(--color-accent-default) 16%, transparent),
+		0 4px 14px color-mix(in srgb, var(--color-accent-default) 30%, transparent);
+	transform: scale(1.05);
+}
+
+:root .checkbox__input:checked ~ .checkbox__box::before,
+:root .checkbox__input:indeterminate ~ .checkbox__box::before,
+:root .checkbox__box--checked::before,
+:root .checkbox__box--indeterminate::before {
+	opacity: 1;
+	transform: scale(1.5);
+}
+
+/* Focus ring rides on the box, since the native input is visually hidden. */
+:root .checkbox__input:focus-visible ~ .checkbox__box {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 2px;
+}
+
+:root .checkbox__check {
+	width: 12px;
+	height: 12px;
+	color: var(--color-accent-text);
+	/* `pathLength=1` normalises the tick so a single dash sweeps it on. */
+	stroke-dasharray: 1;
+	stroke-dashoffset: 1;
+	transition: stroke-dashoffset 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.05s;
+}
+
+:root .checkbox__input:checked ~ .checkbox__box .checkbox__check,
+:root .checkbox__box--checked .checkbox__check {
+	stroke-dashoffset: 0;
+}
+
+/* Indeterminate dash — shown instead of the tick (and the tick suppressed). */
+:root .checkbox__dash {
+	position: absolute;
+	width: 9px;
+	height: 2px;
+	border-radius: var(--radius-xs);
+	background: var(--color-accent-text);
+	opacity: 0;
+	transform: scaleX(0);
+	transition:
+		opacity 0.2s ease,
+		transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+:root .checkbox__input:indeterminate ~ .checkbox__box .checkbox__dash,
+:root .checkbox__box--indeterminate .checkbox__dash {
+	opacity: 1;
+	transform: scaleX(1);
+}
+
+:root .checkbox__input:indeterminate ~ .checkbox__box .checkbox__check,
+:root .checkbox__box--indeterminate .checkbox__check {
+	stroke-dashoffset: 1;
+}
+
+/* Labels read at full primary contrast at rest — the label is the
+ * load-bearing copy on consent / security checkboxes (egress allow, feedback
+ * opt-in), so it must not start muted. */
+:root .checkbox__label {
+	font-size: var(--text-size-md);
+	color: var(--color-text-primary);
+}

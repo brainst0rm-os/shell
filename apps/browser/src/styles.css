@@ -1,0 +1,392 @@
+/* Web Browser chrome. The page lives in a shell `WebContentsView` floating over
+ * `.browser__region`; everything here is chrome only. */
+
+/* `border-box` keeps the 1px `.app-header` border INSIDE the shell's 44px
+ * height (content-box renders it 45px). */
+* {
+	box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+	height: 100%;
+	margin: 0;
+}
+
+body {
+	background: var(--color-background-primary, #fff);
+	color: var(--color-text-primary, #111);
+	font-family: var(--text-family-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+}
+
+.browser {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	overflow: hidden;
+}
+
+.browser--unavailable {
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-2, var(--space-2));
+	text-align: center;
+	padding: var(--space-6, var(--space-6));
+}
+
+/* Tab strip — floating rounded tabs on the shared `.app-header` skeleton
+ * (flex/height/padding/border come from the SDK + preload). Tabs are
+ * direct children, so the skeleton's `space-between` (meant for left/right
+ * groups) would scatter them across the strip — pin everything to the
+ * leading edge, and tighten the gap for tab density. */
+:root .app-header.browser__tabstrip {
+	justify-content: flex-start;
+	gap: var(--space-1, var(--space-1));
+	overflow-x: auto;
+	scrollbar-width: none;
+}
+
+.browser__tabstrip::-webkit-scrollbar {
+	display: none;
+}
+
+.browser__tab {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1, var(--space-1));
+	height: 30px;
+	min-width: 96px;
+	max-width: 220px;
+	padding: 0 var(--space-1, var(--space-1)) 0 var(--space-3, var(--space-3));
+	border-radius: var(--radius-md);
+	color: var(--color-text-secondary, #555);
+	transition: background var(--motion-duration-fast, 120ms) ease, color var(--motion-duration-fast, 120ms) ease;
+}
+
+.browser__tab:hover {
+	background: var(--hover);
+	color: var(--color-text-primary, #111);
+}
+
+.browser__tab--active,
+.browser__tab--active:hover {
+	background: var(--color-surface-default, color-mix(in srgb, currentColor 8%, transparent));
+	color: var(--color-text-primary, #111);
+	box-shadow: inset 0 0 0 1px var(--color-border-subtle, #e3e3e3), var(--shadow-sm);
+}
+
+.browser__tab-label {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2, var(--space-2));
+	flex: 1;
+	min-width: 0;
+	border: none;
+	background: none;
+	color: inherit;
+	text-align: left;
+	cursor: pointer;
+	padding: 0;
+}
+
+/* Carries the shared `app-header__title` face; the tab governs its own width
+ * (max-width: 220px, label is `flex: 1; min-width: 0`), so override the shared
+ * face's `max-width: min(440px, 60vw)` and let the flex parent ellipsis it. */
+:root .app-header .browser__tab-title {
+	max-width: none;
+}
+
+.browser__tab-favicon {
+	flex: none;
+	width: 14px;
+	height: 14px;
+	object-fit: contain;
+	color: var(--color-text-secondary, #555);
+}
+
+.browser__tab-spin {
+	flex: none;
+	width: 12px;
+	height: 12px;
+	border: 1.5px solid currentColor;
+	border-top-color: transparent;
+	border-radius: var(--radius-full);
+	opacity: 0.6;
+	animation: browser-tab-spin 0.7s linear infinite;
+}
+
+@keyframes browser-tab-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+.browser__tab-close {
+	flex: none;
+	display: grid;
+	place-items: center;
+	width: 18px;
+	height: 18px;
+	padding: 0;
+	border: none;
+	border-radius: var(--radius-full);
+	background: none;
+	color: var(--color-text-secondary, #555);
+	cursor: pointer;
+	opacity: 0;
+	transition: opacity var(--motion-duration-fast, 120ms) ease, background var(--motion-duration-fast, 120ms) ease, color var(--motion-duration-fast, 120ms) ease;
+}
+
+.browser__tab:hover .browser__tab-close,
+.browser__tab--active .browser__tab-close,
+.browser__tab-close:focus-visible {
+	opacity: 1;
+}
+
+.browser__tab-close:hover {
+	background: var(--hover);
+	color: var(--color-text-primary, #111);
+}
+
+.browser__newtab,
+.browser__navbtn {
+	display: grid;
+	place-items: center;
+	border: none;
+	background: none;
+	color: var(--color-text-secondary, #555);
+	cursor: pointer;
+	border-radius: var(--radius-md);
+}
+
+.browser__newtab:hover,
+.browser__navbtn:hover:not(:disabled) {
+	background: var(--hover);
+	color: var(--color-text-primary, #111);
+}
+
+.browser__navbtn:disabled {
+	opacity: 0.4;
+	cursor: default;
+}
+
+.browser__newtab {
+	flex: none;
+	width: 28px;
+	height: 28px;
+	margin-left: var(--space-1, var(--space-1));
+}
+
+/* Toolbar — nav buttons + omnibox. */
+.browser__toolbar {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1, var(--space-1));
+	padding: var(--space-1, var(--space-1)) var(--space-2, var(--space-2));
+	border-bottom: var(--border-width) solid var(--color-border-subtle, #e3e3e3);
+}
+
+.browser__navbtn {
+	flex: none;
+	width: 30px;
+	height: 30px;
+}
+
+.browser__security {
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	margin: 0 var(--space-1, var(--space-1));
+	flex: none;
+	background: var(--color-text-tertiary);
+}
+
+.browser__security--secure {
+	background: var(--color-state-success);
+}
+
+.browser__security--insecure,
+.browser__security--mixed {
+	background: var(--color-state-warning);
+}
+
+.browser__omnibox-wrap {
+	position: relative;
+	display: flex;
+	flex: 1;
+	min-width: 0;
+}
+
+/* History suggestions render through the shared typeahead runtime (anchored
+ * under the omnibox); the dropdown chrome lives in `@brainstorm/sdk/menus`. */
+
+.browser__omnibox {
+	flex: 1;
+	min-width: 0;
+	height: 32px;
+	padding: 0 var(--space-3, var(--space-3));
+	border: var(--border-width) solid var(--color-border-subtle, #e3e3e3);
+	border-radius: var(--radius-full);
+	background: var(--color-surface-default, color-mix(in srgb, currentColor 6%, transparent));
+	color: var(--color-text-primary);
+	font-size: var(--text-size-md);
+}
+
+.browser__omnibox:focus {
+	outline: none;
+	border-color: var(--color-focus-ring, #4c7dff);
+}
+
+.browser__shield {
+	flex: none;
+	font-size: var(--text-size-xs);
+	color: var(--color-text-secondary, #555);
+}
+
+/* Clip-to-vault (Browser-5) — per-tab "Save to vault" affordance. */
+.browser__clip {
+	display: grid;
+	place-items: center;
+	flex: none;
+	width: 30px;
+	height: 30px;
+	border: none;
+	background: none;
+	color: var(--color-text-secondary, #555);
+	cursor: pointer;
+	border-radius: var(--radius-md);
+}
+
+.browser__clip:hover:not(:disabled) {
+	background: var(--hover);
+	color: var(--color-text-primary, #111);
+}
+
+.browser__clip:disabled {
+	opacity: 0.4;
+	cursor: default;
+}
+
+.browser__clip--saved,
+.browser__clip--saved:hover:not(:disabled) {
+	color: var(--color-accent-default);
+	background: var(--color-accent-subtle);
+}
+
+.browser__clip--failed {
+	color: var(--color-state-warning);
+}
+
+/* Visually hidden live region announcing the clip outcome. */
+.browser__clip-status {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+/* The shell's WebContentsView floats over this; it must paint nothing of its
+ * own (the page is behind/above it natively). */
+.browser__region {
+	flex: 1;
+	min-height: 0;
+	background: var(--color-background-primary, #fff);
+}
+
+/* ── Find-in-page bar ─────────────────────────────────────────────────── */
+
+.browser__findbar {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1, var(--space-1));
+	padding: var(--space-1, var(--space-1)) var(--space-2, var(--space-2));
+	border-bottom: var(--border-width) solid var(--color-border-subtle, #e3e3e3);
+	background: var(--bg-elev);
+}
+
+.browser__findbar-input {
+	flex: 0 1 280px;
+	min-width: 120px;
+	height: var(--control-height-sm, 24px);
+	padding: 0 var(--space-2, var(--space-2));
+	border: var(--border-width) solid var(--color-border-subtle, #e3e3e3);
+	border-radius: var(--radius-sm);
+	background: var(--color-background-primary);
+	color: var(--text);
+	font: inherit;
+	font-size: var(--text-size-md);
+}
+
+.browser__findbar-input:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}
+
+.browser__findbar-count {
+	min-width: 72px;
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+	font-variant-numeric: tabular-nums;
+}
+
+/* The SDK glyph pack carries horizontal carets only — rotate for up/down. */
+.browser__navbtn--caret-up svg {
+	transform: rotate(90deg);
+}
+
+.browser__navbtn--caret-down svg {
+	transform: rotate(-90deg);
+}
+
+/* ── Per-site permission ask ──────────────────────────────────────────── */
+
+.browser__permission {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2, var(--space-2));
+	padding: var(--space-1, var(--space-1)) var(--space-2, var(--space-2));
+	border-bottom: var(--border-width) solid var(--color-border-subtle, #e3e3e3);
+	background: var(--color-accent-subtle);
+	color: var(--text);
+	font-size: var(--text-size-md);
+}
+
+.browser__permission-text {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.browser__permission-allow,
+.browser__permission-block {
+	flex: none;
+	height: var(--control-height-sm, 24px);
+	padding: 0 var(--space-3, var(--space-3));
+	border-radius: var(--radius-sm);
+	border: var(--border-width) solid var(--color-border-subtle, #e3e3e3);
+	background: var(--color-background-primary);
+	color: var(--text);
+	font: inherit;
+	font-size: var(--text-size-sm);
+	font-weight: var(--text-weight-medium);
+	cursor: pointer;
+}
+
+.browser__permission-allow {
+	background: var(--color-accent-default);
+	border-color: var(--color-accent-default);
+	color: var(--color-text-inverse);
+}
+
+.browser__permission-allow:hover {
+	filter: brightness(1.05);
+}
+
+.browser__permission-block:hover {
+	background: var(--hover);
+}

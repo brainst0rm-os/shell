@@ -1,0 +1,3814 @@
+/* Brainstorm — Database first-party app (preview state).
+ *
+ * Mirrors apps/graph and apps/files structurally — 44px app header, body,
+ * shared `--color-*` tokens pushed by the shell (per the
+ * [[apps-inherit-shell-theme]] memory). Per-view kinds live behind
+ * `.dbv-*` selectors so the renderer modules don't have to ship style
+ * blocks of their own.
+ */
+
+/* Theming is the shell's job, not the app's. The shell preload injects
+ * the active theme tokens AND the alias layer (--accent / --bg / --text /
+ * …) + component styles (buttons, glass, header icon) via a single
+ * stylesheet — packages/shell/src/preload/app-theme.ts, the single source
+ * of truth. This app declares ZERO theme values; it only consumes the
+ * injected aliases. Don't reintroduce a :root alias block here. */
+:root {
+	color-scheme: light dark;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	background: var(--bg);
+	color: var(--text);
+	font: 13px / 1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+	-webkit-font-smoothing: antialiased;
+	overflow: hidden;
+}
+
+body {
+	display: grid;
+	grid-template-rows: 44px 1fr;
+	position: relative;
+}
+
+/* ── App header ────────────────────────────────────────────────────────── */
+
+/* Header chrome (flex skeleton, left/right groups, drag region, height /
+ * padding) is the shared `.app-header` rule in `@brainstorm/sdk/app-theme.css`;
+ * the glass surface is the shared default — no modifier needed. Only the
+ * bespoke object-icon stays local. */
+
+/* Per-object icon mounted by the app header: shared `bs-icon-pick` button
+ * from `@brainstorm/sdk/picker-host` (same control Notes' header uses for
+ * its note icon). Sits left of the subtitle so the header reads as
+ *   [back/fwd] [object icon] [object name] [⋯]
+ * — the universal header-navigation pattern. */
+.app-header__object-icon {
+	display: inline-flex;
+	align-items: center;
+	flex: none;
+}
+
+/* The header leads with the document: nav buttons → active-list name,
+   rendered with the shared `.app-header__title` face from
+   `@brainstorm/sdk/app-theme.css`. */
+
+.db-search-input {
+	height: var(--control-height-md, 32px);
+	width: 180px;
+	max-width: 32vw;
+	padding: 0 var(--space-2);
+	margin-inline-end: var(--space-1);
+	border: var(--border-width) solid var(--border-strong);
+	border-radius: var(--radius-md);
+	background: var(--bg-elev);
+	color: var(--text);
+	font-size: var(--text-size-md);
+}
+
+.db-search-input:focus {
+	outline: none;
+	border-color: var(--accent);
+}
+
+/* ── Main 3-pane layout ───────────────────────────────────────────────── */
+
+/* Sidebar (left, nav) — stage (center, view) — inspector (right, details).
+ * Convention: navigation panels left, inspector/settings right
+ * ([[app-panel-sides]] memory).
+ *
+ * Both side panels are absolutely positioned at stable widths so their
+ * `translateX(±100%)` slides resolve to constant pixel offsets. The grid's
+ * own `grid-template-columns` transition animates the stage's width in sync
+ * with the sidebar slide, so the stage smoothly fills the freed space
+ * instead of snapping. (The inspector is overlay-only — it doesn't reflow
+ * the stage.) Both panels slide on GPU transform per
+ * [[animate-transform-not-width]]. */
+.db-main {
+	position: relative;
+	display: grid;
+	/* `minmax(0,1fr)` (not `1fr`): a default grid track has implicit
+	 * min-width:auto and won't shrink below the stage's content, so a
+	 * wide header/toolbar overflowed and `overflow:hidden` clipped the
+	 * toolbar buttons until the window was maximised. minmax(0,…) lets
+	 * the stage shrink; its own wrap/scroll then keeps buttons visible. */
+	grid-template-columns: var(--db-sidebar-width, 248px) minmax(0, 1fr);
+	transition: grid-template-columns var(--motion-duration-normal, 200ms)
+		var(--motion-easing-standard, ease);
+	overflow: hidden;
+	min-height: 0;
+}
+
+.db-main[data-sidebar-open="false"] {
+	grid-template-columns: 0 minmax(0, 1fr);
+}
+
+/* The transition above is the TOGGLE-button animation; during a mouse-
+   resize drag the shell's app-theme zeroes transition-duration globally
+   under `body.is-resizing`, so the divider stays synced to the cursor. */
+
+.db-sidebar,
+.db-inspector {
+	overflow: hidden;
+	transition: transform var(--motion-duration-normal, 200ms) var(--motion-easing-standard, ease);
+	will-change: transform;
+	z-index: 100;
+}
+
+.db-inspector {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	inset-inline-end: 0;
+	width: var(--db-inspector-width, 320px);
+	box-shadow: var(--shadow-xl, 0 12px 32px -8px rgba(0, 0, 0, 0.4));
+}
+
+/* Drag handle on the inspector's LEFT edge. Inspector slides via
+ * transform on close, so the handle (a child of `.db-inspector`)
+ * goes with it — `pointer-events:none` on the parent's hidden state
+ * isn't needed because the inspector is `transform: translateX(100%)`
+ * which moves the handle off-screen too. */
+/* PHYSICAL-AXIS INTENTIONAL: resize handle straddles the inspector's left edge geometrically */
+.db-inspector__resize {
+	position: absolute;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	width: 6px;
+	margin-left: -3px;
+	cursor: col-resize;
+	z-index: 1;
+	background: transparent;
+	transition: background 120ms ease;
+	touch-action: none;
+}
+
+/* Drag handle straddling the LEFT sidebar's right edge. Sits in the
+ * grid container (db-main); on sidebar close the grid track collapses
+ * to 0 so the handle's `left:` resolves to 0 — combined with
+ * `data-sidebar-open="false"` we hide it explicitly so the cursor
+ * doesn't shift into "col-resize" against an invisible edge. */
+/* PHYSICAL-AXIS INTENTIONAL: resize handle straddles the sidebar's right edge geometrically */
+.db-sidebar-resize {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: var(--db-sidebar-width, 248px);
+	width: 6px;
+	margin-left: -3px;
+	cursor: col-resize;
+	z-index: 101;
+	background: transparent;
+	transition: background 120ms ease;
+	touch-action: none;
+}
+
+.db-main[data-sidebar-open="false"] .db-sidebar-resize {
+	display: none;
+}
+
+.db-main[data-inspector-open="false"] .db-inspector__resize {
+	display: none;
+}
+
+.db-sidebar-resize:hover,
+.db-sidebar-resize:focus-visible,
+.db-inspector__resize:hover,
+.db-inspector__resize:focus-visible,
+body.is-resizing .db-sidebar-resize,
+body.is-resizing .db-inspector__resize {
+	background: var(--color-accent-subtle, rgba(255, 255, 255, 0.1));
+	outline: none;
+}
+
+.db-main[data-sidebar-open="false"] .db-sidebar {
+	transform: translateX(-100%);
+}
+
+.db-main[data-inspector-open="false"] .db-inspector {
+	transform: translateX(100%);
+	box-shadow: none;
+}
+
+.db-main[data-sidebar-open="false"] .db-sidebar,
+.db-main[data-inspector-open="false"] .db-inspector {
+	border-color: transparent;
+}
+
+/* ── Sidebar ──────────────────────────────────────────────────────────── */
+
+.db-sidebar {
+	position: absolute;
+	top: 0;
+	inset-inline-start: 0;
+	bottom: 0;
+	width: var(--db-sidebar-width, 248px);
+	display: flex;
+	flex-direction: column;
+	border-inline-end: var(--border-width) solid var(--color-glass-border);
+	overflow: hidden;
+}
+
+.db-sidebar__section {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-height: 0;
+	padding: var(--space-3) var(--space-2);
+}
+
+.db-sidebar__section-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	/* Match the list rows' inner inline padding so the title + `+` button
+	 * align with the row labels and count pills below (rows carry their own
+	 * `padding: 0 var(--space-2)` on top of the section's). */
+	padding: 0 var(--space-2);
+	margin-bottom: var(--space-2);
+}
+
+.db-sidebar__section-title {
+	margin: 0;
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-semibold);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--text-dim);
+}
+
+.db-sidebar__new {
+	width: var(--control-height-sm, 24px);
+	height: var(--control-height-sm, 24px);
+	border-radius: var(--radius-sm);
+	border: var(--border-width) solid transparent;
+	background: transparent;
+	color: var(--text-dim);
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+}
+
+.db-sidebar__new svg {
+	width: 18px;
+	height: 18px;
+}
+
+.db-sidebar__new:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.db-sidebar__new:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+	border-color: transparent;
+}
+
+/* The source list is the scroll viewport; the SDK's `.bs-vlist__spacer`
+ * (from `@brainstorm/sdk/virtual-list.css`) carries the full virtual height
+ * and rows are absolutely positioned within it. */
+.db-sidebar__list {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	position: relative;
+}
+
+.db-sidebar__list-item {
+	/* Flex (not grid) so the row's gap collapses around a missing icon —
+	 * per [[feedback_no_default_type_icon_fallback]] a list with no
+	 * `properties.icon` renders no glyph wrapper at all, and the label
+	 * must slide all the way left into the slot. A fixed-column grid
+	 * (`20px 1fr auto`) reserved the icon track regardless and indented
+	 * every iconless row. */
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: 0 var(--space-2);
+	background: transparent;
+	border: var(--border-width) solid transparent;
+	/* Clip the hover/selected fill to the padding box so the 1px transparent
+	 * border insets the highlight, leaving a 1px gap between adjacent rows
+	 * (the virtualizer stacks fixed 32px slots flush, so the breathing room
+	 * has to come from inside each row, not from a margin). */
+	background-clip: padding-box;
+	border-radius: var(--radius-md);
+	text-align: start;
+	font: inherit;
+	color: var(--text);
+	cursor: pointer;
+}
+
+.db-sidebar__list-item:hover {
+	background: var(--hover);
+}
+
+.db-sidebar__list-item[aria-selected="true"] {
+	background: var(--accent-soft);
+	color: var(--text);
+	border-color: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.db-sidebar__list-glyph {
+	/* Without an explicit flex container, the icon wrap inside aligns to
+	 * the inline baseline, which sits below the text's optical centre and
+	 * makes the glyph read as nudged-up. Flex-centering forces the icon
+	 * to the cell's true vertical centre regardless of the wrap's intrinsic
+	 * baseline. */
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	color: var(--accent);
+}
+
+.db-sidebar__list-name {
+	font-weight: var(--text-weight-medium);
+	font-size: var(--text-size-md);
+	/* line-height matches the adjacent glyph box (20px) so the icon and
+	 * text baseline-align without per-cell magic. Same-height rule:
+	 * any icon next to a text string sets its size to that text's
+	 * line-height — keeps emoji + SVG visually flush. */
+	line-height: 20px;
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* The list-row count pill is the shared `.bs-count-badge`
+ * (`@brainstorm/sdk/count-badge`) — no per-app pill CSS. */
+
+/* The collapsed "System" disclosure under the user's lists (F-212) —
+ * follows the section-header face (xs uppercase, dim) but is a clickable
+ * virtual-list row at the same 32px stride as the list items. */
+.db-sidebar__system-header {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	width: 100%;
+	padding: 0 var(--space-2);
+	background: transparent;
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-sm);
+	text-align: start;
+	font: inherit;
+	cursor: pointer;
+	color: var(--text-dim);
+}
+
+.db-sidebar__system-header:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.db-sidebar__system-caret {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	transition: transform 120ms ease;
+}
+
+.db-sidebar__system-header[aria-expanded="true"] .db-sidebar__system-caret {
+	transform: rotate(90deg);
+}
+
+.db-sidebar__system-label {
+	flex: 1 1 auto;
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-semibold);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+}
+
+/* ── Stage (the active view container) ────────────────────────────────── */
+
+.db-stage {
+	grid-column: 2;
+	display: grid;
+	grid-template-rows: auto 1fr;
+	/* Pin the single column to the stage's own width. Without this the
+	 * implicit grid column is `auto` (= max-content), so the wide grid
+	 * body (`.dbv-grid__table` is `width:max-content` for h-scroll)
+	 * blows the stage out and the right-aligned header toolbar
+	 * (filter/sort/settings/New) is pushed past `overflow:hidden` and
+	 * clipped. `minmax(0,1fr)` keeps header + body at the stage width;
+	 * the body's own `overflow:auto` handles the wide grid. */
+	grid-template-columns: minmax(0, 1fr);
+	min-height: 0;
+	min-width: 0;
+	overflow: hidden;
+}
+
+.db-stage__header {
+	padding: var(--space-4) 20px 0;
+	background: var(--bg);
+	border-bottom: var(--border-width) solid var(--border);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.db-stage__title-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	flex-wrap: wrap;
+}
+
+/* The icon affordance itself is the shared `.bs-icon-pick` component
+ * (markup: @brainstorm/sdk/picker-host; look: shell app-theme). This host
+ * span only keeps it as a non-shrinking flex item on the title row. */
+.db-stage__icon-host {
+	display: inline-flex;
+	flex: none;
+}
+
+.db-stage__title {
+	margin: 0;
+	font-size: var(--text-size-2xl);
+	font-weight: var(--text-weight-bold);
+	letter-spacing: -0.01em;
+	cursor: text;
+	border-radius: var(--radius-sm);
+}
+
+.db-stage__title:focus,
+.db-stage__title:focus-visible {
+	outline: none;
+}
+
+.db-stage__count {
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium);
+	color: var(--text-dim);
+	font-variant-numeric: tabular-nums;
+}
+
+/* Mode caption — quiet metadata, not a competing chip. Sits next to the
+ * count: "10 · Query". Hybrid still earns a tint because mixed membership
+ * is genuinely a state worth signalling. */
+.db-stage__mode-badge {
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--text-faint);
+	padding: 0;
+	border: 0;
+	background: transparent;
+}
+
+.db-stage__mode-badge::before {
+	content: "·";
+	margin-inline-end: var(--space-2);
+	color: var(--text-faint);
+}
+
+.db-stage__mode-badge[data-mode="query"] {
+	color: var(--text-dim);
+}
+
+.db-stage__mode-badge[data-mode="manual"] {
+	color: var(--text-faint);
+}
+
+.db-stage__mode-badge[data-mode="hybrid"] {
+	color: var(--warn);
+}
+
+.db-stage__description {
+	margin: 0;
+	color: var(--text-dim);
+	font-size: var(--text-size-sm);
+}
+
+.db-stage__view-bar {
+	margin-top: var(--space-2);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+	flex-wrap: wrap;
+	padding-bottom: 0;
+}
+
+/* The inspector is a right-edge glass overlay (it floats above the rows so they
+   don't reflow — the right-panel rule). But it also covered the view-bar's
+   toolbar, making "+ New" / filter / sort / settings unclickable while open
+   (F-011). Inset only the toolbar row by the inspector width so its buttons sit
+   to the left of the overlay; the data rows below stay full-width underneath. */
+.db-main[data-inspector-open="true"] .db-stage__view-bar,
+.db-main[data-inspector-open="true"] .db-filter-bar {
+	padding-inline-end: var(--db-inspector-width, 320px);
+}
+
+/* ── View tabs ────────────────────────────────────────────────────────── */
+
+.db-tabs {
+	display: flex;
+	gap: var(--space-0_5);
+	padding-bottom: 0;
+	flex-wrap: wrap;
+}
+
+.db-tab {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	/* On the control scale (F-222): 32px total including the 2px selected
+	 * underline — vertical centring comes from the fixed height, padding
+	 * stays horizontal-only so the strip sits flush under the 44px
+	 * toolbar row. */
+	height: var(--control-height-md, 32px);
+	padding: 0 var(--space-2);
+	background: transparent;
+	border: 0;
+	border-bottom: var(--border-width-thick) solid transparent;
+	font: inherit;
+	font-size: var(--text-size-md);
+	color: var(--text-dim);
+	cursor: pointer;
+	font-family: inherit;
+}
+
+.db-tab:hover {
+	color: var(--text);
+}
+
+.db-tab[aria-selected="true"] {
+	color: var(--accent-strong);
+	border-bottom-color: var(--accent);
+}
+
+.db-tab__icon {
+	display: inline-flex;
+	align-items: center;
+	color: currentColor;
+}
+
+.db-tab__label {
+	font-weight: var(--text-weight-medium);
+}
+
+/* The trailing "+" tab — a small icon-only button that adds a view to the
+ * active list. Never picks up the selected underline (it's not a view). */
+.db-tab--add {
+	padding: 0 var(--space-2);
+	color: var(--text-faint);
+}
+
+.db-tab--add:hover {
+	color: var(--text);
+}
+
+.db-tab--add[aria-selected="true"] {
+	color: var(--text-faint);
+	border-bottom-color: transparent;
+}
+
+/* ── Toolbar ──────────────────────────────────────────────────────────── */
+
+.db-toolbar {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding-bottom: var(--space-2);
+}
+
+/* Toolbar buttons use the shared `.bs-btn` primitive (filter / sort / settings
+ * are `bs-btn bs-btn--icon bs-btn--ghost`; "+ New" is `bs-btn` + data-bs-primary).
+ * Only the gear/menu open-state accent stays local. */
+
+.db-toolbar__icon {
+	display: inline-flex;
+	align-items: center;
+	color: currentColor;
+}
+
+/* Icon toolbar buttons surface their open state (filter / sort popover up). */
+.db-toolbar__btn--icon[aria-expanded="true"] {
+	color: var(--accent-strong, var(--accent));
+}
+
+/* ── Filter / sort pill bar (above the rows) ──────────────────────────── */
+
+/* Active filters + sorts surface as removable pills above the content — the
+ * Notion / Anytype affordance — so a filtered view is never a silent lie. The
+ * bar is `hidden` (no filters / sorts) until there's something to show. */
+.db-filter-bar {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+	padding-bottom: var(--space-3);
+}
+
+.db-filter-bar[hidden] {
+	display: none;
+}
+
+.db-pill {
+	display: inline-flex;
+	align-items: center;
+	height: 24px;
+	border-radius: var(--radius-full);
+	background: var(--color-accent-subtle, var(--hover));
+	border: var(--border-width) solid transparent;
+	overflow: hidden;
+	max-width: 280px;
+	gap: var(--space-0_5);
+}
+
+.db-pill:hover {
+	border-color: var(--accent);
+}
+
+.db-pill--sort {
+	background: var(--hover);
+}
+
+.db-pill__main {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	min-width: 0;
+	padding: 0 var(--space-1) 0 var(--space-2);
+	background: transparent;
+	border: 0;
+	color: var(--text);
+	font: inherit;
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+	font-family: inherit;
+	cursor: pointer;
+}
+
+.db-pill__icon {
+	display: inline-flex;
+	align-items: center;
+	color: var(--accent-strong, var(--accent));
+	flex-shrink: 0;
+}
+
+.db-pill--sort .db-pill__icon {
+	color: var(--text-dim);
+}
+
+.db-pill__label {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.db-pill__remove {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	margin-inline-end: 3px;
+	padding: 0;
+	background: transparent;
+	border: 0;
+	border-radius: var(--radius-full);
+	color: var(--text-faint);
+	cursor: pointer;
+	flex-shrink: 0;
+}
+
+/* A contained, rounded hover chip distinct from the pill's own tint (the
+ * full-height accent-subtle bleed read as part of the pill, not a button). */
+.db-pill__remove:hover {
+	color: var(--text);
+	background: color-mix(in srgb, currentColor 18%, transparent);
+}
+
+.db-filter-bar__clear {
+	background: transparent;
+	border: 0;
+	padding: 0 var(--space-1);
+	color: var(--text-dim);
+	font: inherit;
+	font-size: var(--text-size-xs);
+	font-family: inherit;
+	cursor: pointer;
+	border-radius: var(--radius-xs);
+}
+
+.db-filter-bar__clear:hover {
+	color: var(--text);
+	text-decoration: underline;
+}
+
+/* "+ Filter" / "+ Sort" — quiet dashed add chips, distinct from the solid
+ * active pills so they read as "add", not "active condition". */
+.db-filter-bar__add {
+	display: inline-flex;
+	align-items: center;
+	height: 24px;
+	padding: 0 var(--space-2);
+	background: transparent;
+	border: var(--border-width) dashed var(--border-strong);
+	border-radius: var(--radius-full);
+	color: var(--text-dim);
+	font: inherit;
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+	font-family: inherit;
+	cursor: pointer;
+}
+
+.db-filter-bar__add:hover {
+	border-color: var(--accent);
+	color: var(--text);
+}
+
+/* Labelled value popover for free-text filter values — the title names the
+ * property + operator ("Name contains") so the input never reads as search. */
+.db-value-prompt {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	min-width: 200px;
+	padding: var(--space-2);
+	border: var(--border-width) solid var(--color-glass-border);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-xl, 0 12px 28px rgba(0, 0, 0, 0.4));
+}
+
+.db-value-prompt__title {
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-semibold);
+	color: var(--text-dim);
+}
+
+.db-value-prompt__input {
+	width: 100%;
+	height: var(--control-height-md, 32px);
+	padding: 0 var(--space-2);
+	background: var(--bg);
+	border: var(--border-width) solid var(--border-strong);
+	border-radius: var(--radius-sm);
+	color: var(--text);
+	font: inherit;
+	font-size: var(--text-size-md);
+	font-family: inherit;
+}
+
+.db-value-prompt__input:focus,
+.db-value-prompt__input:focus-visible {
+	outline: none;
+	border-color: var(--accent);
+	box-shadow: 0 0 0 2px var(--color-accent-subtle, transparent);
+}
+
+/* ── Stage body (per-view area) ───────────────────────────────────────── */
+
+.db-stage__body {
+	overflow: auto;
+	min-width: 0;
+	min-height: 0;
+	background: var(--bg);
+}
+
+.db-stage__body:focus {
+	outline: none;
+}
+
+.dbv-empty {
+	padding: var(--space-8) var(--space-5);
+	text-align: center;
+	color: var(--text-dim);
+}
+
+/* ── Shared property value primitives ────────────────────────────────── */
+
+/* Bare property value — quiet muted text, no chrome. Author names, page
+ * counts, dates, prices all read as text first, type-of-thing second. */
+.dbv-value {
+	color: var(--text);
+	font-size: var(--text-size-md);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.dbv-value[data-kind="number"],
+.dbv-value[data-kind="money"] {
+	font-variant-numeric: tabular-nums;
+}
+
+.dbv-value[data-kind="empty"] {
+	color: var(--text-faint);
+}
+
+/* Vocabulary chip — Done / In progress / Blocked. The colour is tinted
+ * from the property's vocabulary mapping via inline style. */
+.dbv-chip {
+	display: inline-flex;
+	align-items: center;
+	padding: var(--space-0_5);
+	border-radius: var(--radius-sm);
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+	line-height: 18px;
+	background: var(--hover);
+	color: var(--text-dim);
+	border: var(--border-width) solid transparent;
+	max-width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* Stars render bare — no chip, no border, just gold glyphs. */
+.dbv-rating {
+	color: var(--warn);
+	letter-spacing: 0.5px;
+}
+
+/* Multi-value enumerations (tags, keywords). */
+.dbv-tags {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	/* Single line by default so a row is one line — pills clip with the
+	 * cell's overflow:hidden. Only the grid's Wrap toggle lets them flow
+	 * (rule below). */
+	flex-wrap: nowrap;
+	overflow: hidden;
+	min-width: 0;
+}
+
+.dbv-grid[data-wrap="true"] .dbv-tags {
+	flex-wrap: wrap;
+	overflow: visible;
+}
+
+.dbv-tag {
+	display: inline-flex;
+	align-items: center;
+	padding: 1px;
+	border-radius: var(--radius-sm);
+	font-size: var(--text-size-xs);
+	background: var(--hover);
+	color: var(--text-dim);
+	border: var(--border-width) solid var(--border);
+}
+
+/* Compat aliases — older views still emit `.dbv-pill`. */
+.dbv-pill {
+	display: inline-flex;
+	align-items: center;
+	padding: var(--space-0_5);
+	border-radius: var(--radius-sm);
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+	background: var(--hover);
+	color: var(--text-dim);
+	border: var(--border-width) solid transparent;
+	max-width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.dbv-checkbox {
+	display: inline-block;
+	width: 14px;
+	height: 14px;
+	border-radius: var(--radius-sm);
+	border: 1.5px solid var(--border-strong);
+	background: var(--bg);
+	vertical-align: middle;
+	position: relative;
+}
+
+.dbv-checkbox[data-checked="true"] {
+	background: var(--accent);
+	border-color: var(--accent);
+}
+
+.dbv-checkbox[data-checked="true"]::after {
+	content: "";
+	position: absolute;
+	/* PHYSICAL-AXIS INTENTIONAL: checkmark glyph is geometrically positioned inside the box */
+	left: 3px;
+	top: 0;
+	width: 4px;
+	height: 8px;
+	border: solid var(--accent-fg);
+	border-width: 0 2px 2px 0;
+	transform: rotate(45deg);
+}
+
+.dbv-cell--empty {
+	color: var(--text-faint);
+}
+
+/* ── Grid view ────────────────────────────────────────────────────────── */
+
+.dbv-grid {
+	/* `.dbv-grid` is applied to `#stage-body` ITSELF — the same element
+	 * that is `.db-stage__body { overflow:auto }`. `min-width:max-content`
+	 * here made that element grow to its content width, so content never
+	 * exceeded its box and `overflow:auto` produced NO scrollbar (it just
+	 * overflowed `.db-stage` and got clipped). The scroll container must
+	 * stay narrower than its content: keep it at 0 so the inner
+	 * `.dbv-grid__table { width:max-content }` overflows it → real
+	 * horizontal scroll. */
+	min-width: 0;
+}
+
+.dbv-grid__table {
+	display: flex;
+	flex-direction: column;
+	/* Size to the summed column widths so `.db-stage__body`'s
+	 * `overflow:auto` produces a HORIZONTAL scrollbar when columns
+	 * exceed the viewport, instead of cells clipping. Still fills the
+	 * full width when there are only a few narrow columns. */
+	width: max-content;
+	min-width: 100%;
+	/* Align the grid's content gutter with the stage header (`.db-stage__header`
+	 * is inset 20px). Cells carry 8px of their own inline padding, so 12px here
+	 * lands the first column on the same 20px baseline as the title + toolbar
+	 * above — without this the table sits flush inside the header's gutter and
+	 * the columns read as misaligned with everything above them. The horizontal
+	 * scrollbar stays full-bleed: it lives on `.db-stage__body`, not here. */
+	padding-inline: var(--space-3);
+}
+
+.dbv-grid__row {
+	display: flex;
+	min-height: 34px;
+	/* A 1px transparent bottom border (not a visible separator line) leaves a
+	 * 1px gap between adjacent rows: the virtualizer stacks fixed-height slots
+	 * flush, so the breathing room comes from inside each row. `background-clip:
+	 * padding-box` keeps the hover/selected fill out of that 1px so the gap
+	 * shows the page background between rows (same technique as the sidebar
+	 * list + Files content-list). */
+	border-bottom: var(--border-width) solid transparent;
+	background-clip: padding-box;
+	cursor: pointer;
+	/* Match the table so rows span the full scroll width and the row
+	 * hover/selection background covers scrolled-in columns. */
+	min-width: 100%;
+}
+
+/* Cross-app drag grip (DND-4) — a hover-revealed handle pinned to the row's
+ * left gutter; the pointer-driven shell drag session starts here, so it doesn't
+ * shift the cell layout and the row body keeps its native reorder drag. */
+.dbv-grid__drag-grip {
+	position: absolute;
+	left: 0;
+	top: 50%;
+	transform: translateY(-50%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 16px;
+	height: 22px;
+	padding: 0;
+	border: none;
+	background: transparent;
+	color: var(--text-faint);
+	cursor: grab;
+	opacity: 0;
+	transition: opacity 0.1s ease;
+	touch-action: none;
+}
+.dbv-grid__row:hover .dbv-grid__drag-grip,
+.dbv-grid__drag-grip:focus-visible {
+	opacity: 1;
+}
+.dbv-grid__row[data-dragging="true"] {
+	opacity: 0.5;
+}
+.dbv-grid__row[data-dragging="true"] .dbv-grid__drag-grip {
+	cursor: grabbing;
+}
+
+.dbv-grid[data-density="compact"] .dbv-grid__row {
+	min-height: 28px;
+}
+
+.dbv-grid[data-density="tall"] .dbv-grid__row {
+	min-height: 48px;
+}
+
+.dbv-grid__row--head {
+	background: var(--bg-elev);
+	border-bottom: var(--border-width) solid var(--border-strong);
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	font-weight: var(--text-weight-semibold);
+	cursor: default;
+	position: sticky;
+	top: 0;
+	z-index: 1;
+}
+
+/* Aggregation footer (9.12.18) — sticks to the bottom of the scroll
+ * viewport, mirroring the sticky header. Each non-title cell is a button
+ * that cycles the column's aggregation; the title cell shows the row total. */
+.dbv-grid__row--foot {
+	background: var(--bg-elev);
+	border-top: var(--border-width) solid var(--border-strong);
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	cursor: default;
+	position: sticky;
+	bottom: 0;
+	z-index: 1;
+}
+
+.dbv-grid__foot-cell {
+	justify-content: flex-end;
+}
+
+.dbv-grid__foot-cell[data-col="title"] {
+	justify-content: flex-start;
+}
+
+.dbv-grid__foot-total {
+	font-variant-numeric: tabular-nums;
+}
+
+.dbv-grid__foot-button {
+	display: inline-flex;
+	align-items: baseline;
+	gap: var(--space-2);
+	max-width: 100%;
+	padding: 0 var(--space-1);
+	border: 0;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+	border-radius: var(--radius-sm);
+	overflow: hidden;
+}
+
+.dbv-grid__foot-button:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+/* Read-only footer (no aggregation picker wired) — no pointer affordance. */
+.dbv-grid__foot-button--static {
+	cursor: default;
+}
+.dbv-grid__foot-button--static:hover {
+	background: transparent;
+	color: inherit;
+}
+
+.dbv-grid__foot-kind {
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--text-faint);
+	flex-shrink: 0;
+}
+
+.dbv-grid__foot-value {
+	font-variant-numeric: tabular-nums;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.dbv-grid__row:not(.dbv-grid__row--head):not(.dbv-grid__row--foot):hover {
+	background: var(--hover);
+}
+
+.dbv-grid__row[data-selected="true"] {
+	background: var(--accent-soft);
+}
+
+.dbv-grid__cell {
+	padding: var(--space-2) var(--space-2);
+	border-inline-end: var(--border-width) solid var(--border);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	flex-shrink: 0;
+	position: relative;
+}
+
+.dbv-grid__cell:last-child {
+	border-inline-end: 0;
+}
+
+/* Cell-level keyboard cursor (12.4 — KBN-A-database grid). The grid is a
+ * single Tab stop; arrow keys move an `aria-activedescendant` cursor and the
+ * active cell carries `aria-selected`. The inset ring shows only while the
+ * grid holds focus, so it reads as a keyboard affordance — not a persistent
+ * selection — and never shifts layout. */
+.dbv-grid__table:focus .dbv-grid__cell[aria-selected="true"] {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -2px;
+}
+
+/* The scalar editor (text / number / formatted) is an `inline-flex` button
+ * sized to its content, so in a wide grid cell most of the cell is dead space
+ * — clicking it selects the row instead of opening the editor (F-021). Stretch
+ * it to fill the cell so the WHOLE cell is the edit click-target (Notion-style
+ * full-cell hover + click). Text stays left-aligned via the button's own
+ * `text-align: start`. Tag/Select already fills via its own trigger. */
+.dbv-grid__cell--editable > .bs-cell-pill,
+.dbv-grid__cell--editable > .bs-cell-plain {
+	flex: 1;
+	max-width: none;
+}
+
+/* Rollup cell (9.12.17): a read-only computed aggregation. Reads like the
+ * footer value (tabular numerals) and is visibly non-editable (no hover
+ * affordance, muted) so it never looks like a typo-able field. */
+.dbv-grid__rollup-value {
+	font-variant-numeric: tabular-nums;
+	color: var(--text-faint);
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* Wrap toggle (view settings). Default is single-line + ellipsis;
+ * `data-wrap="true"` lets cell content flow onto multiple lines and the
+ * row grow to fit (top-aligned so wrapped text reads naturally). */
+.dbv-grid[data-wrap="true"] .dbv-grid__cell {
+	white-space: normal;
+	overflow: visible;
+	text-overflow: clip;
+	align-items: flex-start;
+	word-break: break-word;
+}
+
+.dbv-grid[data-wrap="true"] .dbv-grid__row {
+	align-items: stretch;
+}
+
+.dbv-grid__cell--head {
+	gap: var(--space-1);
+}
+
+/* PHYSICAL-AXIS INTENTIONAL: column resize handle straddles the cell's right edge geometrically */
+.dbv-grid__resize {
+	position: absolute;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	width: 4px;
+	cursor: col-resize;
+	background: transparent;
+}
+
+.dbv-grid__resize:hover {
+	background: var(--border-strong);
+}
+
+.dbv-grid__title-glyph {
+	/* Universal-icon centering: every host that pairs an icon with a
+	 * text label sets the glyph cell to an inline-flex centred box at the
+	 * icon's nominal size (here matching the entityIcon default of 14px).
+	 * Without it the icon wrap inside aligns to inline baseline — under
+	 * the text's optical centre — and reads as nudged up. Same rule as
+	 * `.db-sidebar__list-glyph`. */
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 16px;
+	height: 16px;
+	color: var(--accent);
+}
+
+/* React `<DomSlot>` always renders its outer span; when the build function
+ * returns null (no `properties.icon` set) the span is empty. Per
+ * [[feedback_no_default_type_icon_fallback]] (project-wide), an unset
+ * icon takes no space — collapse the wrapper so the label slides left. */
+.dbv-grid__title-glyph:empty {
+	display: none;
+}
+
+.dbv-grid__title-label {
+	flex: 1 1 auto;
+	min-width: 0;
+	font-weight: var(--text-weight-medium);
+	color: var(--text);
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* The explicit "Open" affordance (F-023): sits at the title cell's trailing
+ * edge, hidden until the row is hovered/focused — the deliberate way to open
+ * a row's Details inspector now that selecting a cell never auto-opens it. */
+.dbv-grid__open {
+	flex: 0 0 auto;
+	margin-inline-start: auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	padding: 0;
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text-dim);
+	cursor: pointer;
+	opacity: 0;
+	transition:
+		opacity 80ms ease,
+		background-color 80ms ease,
+		color 80ms ease;
+}
+
+.dbv-grid__row:hover .dbv-grid__open,
+.dbv-grid__open:focus-visible {
+	opacity: 1;
+}
+
+.dbv-grid__open:hover {
+	background: var(--hover);
+	color: var(--text);
+	opacity: 1;
+}
+
+/* Generic-Object rows rename inline: the label is a button that reads exactly
+ * like the static span, but double-click swaps it for the input below. Reset
+ * the button chrome so it's visually identical to a plain label. */
+.dbv-grid__title-label--editable {
+	flex: 1;
+	min-width: 0;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: none;
+	font: inherit;
+	text-align: start;
+	white-space: nowrap;
+	cursor: text;
+}
+
+.dbv-grid__title-input {
+	flex: 1;
+	min-width: 0;
+	margin: 0;
+	padding: var(--space-0_5);
+	border: var(--border-width) solid var(--accent);
+	border-radius: var(--radius-sm);
+	background: var(--bg);
+	color: var(--text);
+	font: inherit;
+	font-weight: var(--text-weight-medium);
+	outline: none;
+}
+
+/* Pin first column (view setting): the Name column sticks to the left edge
+ * during horizontal scroll. Opaque backgrounds let other columns scroll
+ * underneath; the row state (hover / selected) is mirrored onto the pinned
+ * cell so it doesn't read as detached. The header title cell needs the
+ * highest z to win the top-left corner against the sticky header row. */
+.dbv-grid[data-pinned="true"] .dbv-grid__cell[data-col="title"] {
+	position: sticky;
+	left: 0;
+	z-index: 2;
+	background: var(--bg);
+}
+
+.dbv-grid[data-pinned="true"] .dbv-grid__row:not(.dbv-grid__row--head):hover .dbv-grid__cell[data-col="title"] {
+	background: var(--hover);
+}
+
+.dbv-grid[data-pinned="true"] .dbv-grid__row[data-selected="true"] .dbv-grid__cell[data-col="title"] {
+	background: var(--accent-soft);
+}
+
+.dbv-grid[data-pinned="true"] .dbv-grid__row--head .dbv-grid__cell[data-col="title"] {
+	z-index: 3;
+	background: var(--bg-elev);
+}
+
+/* ── List view ────────────────────────────────────────────────────────── */
+
+.dbv-list {
+	padding: var(--space-2) var(--space-2);
+}
+
+.dbv-list__items {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.dbv-list__item {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) minmax(0, auto);
+	align-items: center;
+	gap: var(--space-3);
+	padding: var(--space-2) var(--space-2);
+	background: transparent;
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-md);
+	cursor: pointer;
+}
+
+.dbv-list[data-density="compact"] .dbv-list__item {
+	padding: var(--space-1);
+}
+
+.dbv-list__item:hover {
+	background: var(--hover);
+}
+
+.dbv-list__item[data-selected="true"] {
+	background: var(--accent-soft);
+	border-color: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.dbv-list__glyph {
+	width: 22px;
+	height: 22px;
+	border-radius: var(--radius-sm);
+	background: var(--hover);
+	color: var(--accent);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.dbv-list__glyph:empty {
+	display: none;
+}
+
+.dbv-list__title {
+	font-weight: var(--text-weight-medium);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.dbv-list__props {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	justify-content: flex-end;
+	min-width: 0;
+	font-size: var(--text-size-sm);
+}
+
+.dbv-list__props > * {
+	flex-shrink: 0;
+}
+
+/* Inline-editable row strip: the shared cells (not painted chips) sit in the
+   same horizontal flow, each capped so a wide value can't blow out the
+   single-line row. Tighter gap since editable cells carry their own padding. */
+.dbv-list__props--editable {
+	gap: var(--space-2);
+}
+
+.dbv-list__props--editable > * {
+	max-width: min(28ch, 22vw);
+}
+
+.dbv-list__props .dbv-value {
+	color: var(--text-dim);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
+}
+
+.dbv-list__props .dbv-value[data-kind="text"],
+.dbv-list__props .dbv-value[data-kind="richtext"] {
+	flex-shrink: 1;
+	max-width: min(60ch, 40vw);
+}
+
+.dbv-list__props .dbv-value[data-kind="number"],
+.dbv-list__props .dbv-value[data-kind="money"] {
+	font-variant-numeric: tabular-nums;
+}
+
+.dbv-list__props .dbv-tags {
+	display: inline-flex;
+	gap: var(--space-1);
+	flex-shrink: 1;
+	overflow: hidden;
+}
+
+/* ── Gallery view ─────────────────────────────────────────────────────── */
+
+.dbv-gallery {
+	padding: var(--space-4);
+	--dbv-card-w: 220px;
+	--dbv-card-aspect: 3 / 4;
+}
+
+/* Virtualized gallery: rows of cards are absolutely positioned inside this
+ * sized container (height = total of all rows). Each row's grid template is
+ * set inline from the measured column count. */
+.dbv-gallery__virtual {
+	min-width: 0;
+}
+
+.dbv-card {
+	display: flex;
+	flex-direction: column;
+	background: var(--bg-elev);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-lg);
+	overflow: hidden;
+	cursor: pointer;
+	text-align: start;
+}
+
+.dbv-card:hover {
+	border-color: var(--border-strong);
+	transform: translateY(-1px);
+	transition: transform 120ms ease, border-color 120ms ease;
+}
+
+.dbv-card[data-selected="true"] {
+	border-color: var(--accent);
+	box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.dbv-card__cover {
+	width: 100%;
+	aspect-ratio: var(--dbv-card-aspect);
+	background-size: cover;
+	background-position: center;
+}
+
+.dbv-card__body {
+	padding: var(--space-3) var(--space-2) var(--space-3);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.dbv-card__title {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--space-1);
+	font-weight: var(--text-weight-semibold);
+	font-size: var(--text-size-md);
+	line-height: 1.3;
+}
+
+.dbv-card__title-glyph {
+	/* Gallery cards: card titles can wrap to 2 lines, so the glyph stays
+	 * at the top of the cluster (matches the board card rule). Explicit
+	 * 16×16 inline-flex container forces the icon to centre within its
+	 * own box rather than aligning to the inline baseline. */
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 16px;
+	height: 16px;
+	margin-top: var(--space-0_5);
+}
+
+.dbv-card__title-glyph:empty {
+	display: none;
+}
+
+.dbv-card__title-text {
+	overflow: hidden;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+}
+
+.dbv-card__subtitle {
+	color: var(--text-dim);
+	font-size: var(--text-size-sm);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.dbv-card__chips {
+	margin-top: var(--space-2);
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-1);
+}
+
+.dbv-card__chip {
+	display: inline-flex;
+	padding: 1px;
+	border-radius: var(--radius-sm);
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	background: var(--hover);
+	border: var(--border-width) solid var(--border);
+}
+
+/* Editable card fields (9.12.23): a compact label + cell list — the card
+ * analogue of the inspector property list. */
+.dbv-card__fields {
+	margin: var(--space-2) 0 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+}
+
+.dbv-card__field {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+	align-items: center;
+	gap: var(--space-2);
+	min-height: 24px;
+}
+
+.dbv-card__field-label {
+	margin: 0;
+	color: var(--text-faint);
+	font-size: var(--text-size-xs);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.dbv-card__field-value {
+	margin: 0;
+	min-width: 0;
+}
+
+/* ── Board view ───────────────────────────────────────────────────────── */
+
+.dbv-board {
+	padding: var(--space-3) var(--space-1) var(--space-4) var(--space-4);
+	overflow-x: auto;
+	--dbv-board-col-w: 260px;
+}
+
+.dbv-board__stage {
+	display: flex;
+	gap: var(--space-3);
+	align-items: flex-start;
+	min-width: max-content;
+	padding-inline-end: var(--space-4);
+}
+
+.dbv-board__column {
+	width: var(--dbv-board-col-w);
+	background: var(--bg-elev);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-lg);
+	display: flex;
+	flex-direction: column;
+	max-height: calc(100vh - 220px);
+}
+
+.dbv-board__header {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-3) var(--space-2);
+	border-bottom: var(--border-width) solid var(--border);
+}
+
+.dbv-board__header[draggable="true"] {
+	cursor: grab;
+}
+
+.dbv-board__header[draggable="true"]:active {
+	cursor: grabbing;
+}
+
+.dbv-board__column[data-col-dragging="true"] {
+	opacity: 0.5;
+}
+
+/* Insertion indicator while reordering columns — an accent rule on the
+ * leading edge of the column the drop would land before. Inset shadow
+ * (no layout shift, unlike a real border). */
+.dbv-board__column[data-col-drop-target="true"] {
+	box-shadow: inset 3px 0 0 0 var(--accent);
+}
+
+/* Cross-app object hovering this column (DND-4) — a full accent ring so it
+ * reads as a drop-the-object-here target, distinct from the column-reorder
+ * leading-edge indicator above. */
+.dbv-board__column[data-cross-over="true"] {
+	box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.dbv-board__dot {
+	width: 8px;
+	height: 8px;
+	border-radius: var(--radius-full);
+	background: var(--text-faint);
+	flex-shrink: 0;
+}
+
+.dbv-board__label {
+	font-weight: var(--text-weight-semibold);
+	font-size: var(--text-size-md);
+}
+
+.dbv-board__count {
+	margin-inline-start: auto;
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	font-variant-numeric: tabular-nums;
+	background: var(--hover);
+	padding: 1px;
+	border-radius: var(--radius-full);
+}
+
+.dbv-board__cards {
+	padding: var(--space-2);
+	overflow: auto;
+	min-height: 0;
+}
+
+/* Sized container for the column's windowed cards — absolute card wrappers
+ * position against this; its height is the virtualizer's total. */
+.dbv-board__cards-inner {
+	min-width: 0;
+}
+
+.dbv-board__placeholder {
+	color: var(--text-faint);
+	font-size: var(--text-size-xs);
+	text-align: center;
+	padding: var(--space-2);
+	border: var(--border-width) dashed var(--border-strong);
+	border-radius: var(--radius-md);
+}
+
+.dbv-board__card {
+	padding: var(--space-3) var(--space-2);
+	background: var(--bg);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-md);
+	gap: var(--space-2);
+	display: flex;
+	flex-direction: column;
+	/* The column track is a flex container and `.dbv-card` is
+	 * `overflow:hidden` (auto min-size → 0), so without this every card
+	 * flex-shrinks to fit the track: 88 cards collapse to clipped single
+	 * lines while a 4-card column stays roomy. Pin to content height —
+	 * the track already scrolls (`.dbv-board__cards { overflow:auto }`). */
+	flex: 0 0 auto;
+}
+
+/* Kanban cards must not shift on hover. The shared `.dbv-card:hover`
+ * lifts with `translateY(-1px)`, which reads as the card "jumping" in a
+ * dense board — keep only the border-colour affordance here. */
+.dbv-board__card:hover {
+	transform: none;
+}
+
+.dbv-board__card-title {
+	font-weight: var(--text-weight-medium);
+	display: flex;
+	align-items: flex-start;
+	gap: var(--space-2);
+	/* Long iteration titles wrap to as many lines as needed instead of
+	 * clipping — card height follows content. */
+	overflow-wrap: anywhere;
+	min-width: 0;
+}
+
+.dbv-board__card-glyph {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: none;
+	width: 16px;
+	height: 16px;
+	margin-top: var(--space-0_5);
+	color: var(--accent);
+}
+
+/* Empty `<DomSlot>` wrapper when the entity has no own icon — collapse. */
+.dbv-board__card-glyph:empty {
+	display: none;
+}
+
+.dbv-board__card-subtitle {
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+}
+
+.dbv-board__card-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-1);
+	margin-top: var(--space-0_5);
+}
+
+.dbv-board__add-column {
+	width: var(--dbv-board-col-w);
+	min-height: 44px;
+	background: transparent;
+	border: var(--border-width) dashed var(--border-strong);
+	border-radius: var(--radius-lg);
+	color: var(--text-dim);
+	cursor: pointer;
+	font: inherit;
+	font-size: var(--text-size-md);
+}
+
+.dbv-board__add-column:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+/* ── Calendar view ────────────────────────────────────────────────────── */
+
+.dbv-calendar {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+
+.dbv-cal__toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: var(--space-3) var(--space-4) var(--space-2);
+}
+
+.dbv-cal__title {
+	margin: 0;
+	font-size: var(--text-size-lg);
+	font-weight: var(--text-weight-semibold);
+}
+
+.dbv-cal__controls {
+	display: flex;
+	gap: var(--space-1);
+}
+
+.dbv-cal__weekrow {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	padding: 0 var(--space-2);
+	gap: var(--space-0_5);
+}
+
+.dbv-cal__weekday {
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	padding: var(--space-1);
+}
+
+.dbv-cal__grid {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	grid-auto-rows: minmax(96px, 1fr);
+	gap: var(--space-0_5);
+	padding: 0 var(--space-2) var(--space-3);
+	background: var(--border);
+	margin: 0 var(--space-1);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-lg);
+	overflow: hidden;
+}
+
+.dbv-cal__cell {
+	background: var(--bg);
+	padding: var(--space-1);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	min-height: 0;
+	overflow: hidden;
+}
+
+.dbv-cal__cell[data-other-month="true"] {
+	background: color-mix(in srgb, var(--bg) 80%, transparent);
+	color: var(--text-faint);
+}
+
+.dbv-cal__cell[data-today="true"] {
+	background: color-mix(in srgb, var(--accent) 8%, var(--bg));
+}
+
+.dbv-cal__day {
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-semibold);
+	color: var(--text-dim);
+	font-variant-numeric: tabular-nums;
+}
+
+.dbv-cal__cell[data-today="true"] .dbv-cal__day {
+	color: var(--accent-strong);
+}
+
+.dbv-cal__pills {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+	overflow: hidden;
+}
+
+.dbv-cal__pill {
+	display: inline-flex;
+	align-items: center;
+	font-size: var(--text-size-xs);
+	padding: var(--space-0_5);
+	border-radius: var(--radius-sm);
+	background: var(--accent-soft);
+	color: var(--text);
+	border: var(--border-width) solid color-mix(in srgb, var(--accent) 28%, transparent);
+	cursor: pointer;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width: 100%;
+	font-family: inherit;
+	font-size: var(--text-size-xs);
+	text-align: start;
+	gap: var(--space-1);
+}
+
+.dbv-cal__pill-glyph {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+}
+
+.dbv-cal__pill-label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.dbv-cal__pill[data-selected="true"] {
+	box-shadow: 0 0 0 2px var(--accent);
+}
+
+.dbv-cal__more {
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	padding: 0 var(--space-0_5);
+}
+
+/* ── Timeline view ────────────────────────────────────────────────────── */
+
+.dbv-timeline {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	overflow: hidden;
+}
+
+.dbv-tl__stage {
+	position: relative;
+	display: flex;
+	flex: 1;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.dbv-tl__labels {
+	flex-shrink: 0;
+	width: var(--dbv-tl-label-width, 140px);
+	background: var(--bg-elev);
+	border-inline-end: var(--border-width) solid var(--border);
+	overflow: hidden;
+}
+
+/* PHYSICAL-AXIS INTENTIONAL: resize handle straddles the labels' right edge geometrically */
+.dbv-tl__labels-resize {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: var(--dbv-tl-label-width, 140px);
+	width: 6px;
+	margin-left: -3px;
+	cursor: col-resize;
+	z-index: 5;
+	background: transparent;
+	transition: background 120ms ease;
+	touch-action: none;
+}
+
+.dbv-tl__labels-resize:hover,
+.dbv-tl__labels-resize:focus-visible,
+body.is-resizing .dbv-tl__labels-resize {
+	background: var(--color-accent-subtle, rgba(255, 255, 255, 0.1));
+	outline: none;
+}
+
+.dbv-tl__labels-inner {
+	display: flex;
+	flex-direction: column;
+	will-change: transform;
+}
+
+.dbv-tl__label-spacer {
+	flex: none;
+	border-bottom: var(--border-width) solid var(--border);
+}
+
+.dbv-tl__label {
+	flex: none;
+	padding: 0 var(--space-2);
+	display: flex;
+	align-items: center;
+	font-size: var(--text-size-md);
+	color: var(--text-dim);
+	border-bottom: var(--border-width) solid var(--border);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.dbv-tl__scroll {
+	flex: 1;
+	overflow: auto;
+}
+
+.dbv-tl__track {
+	position: relative;
+	background: var(--bg);
+}
+
+.dbv-tl__axis-row {
+	position: absolute;
+	inset-inline-start: 0;
+	top: 0;
+	inset-inline-end: 0;
+	background: var(--bg-elev);
+	border-bottom: var(--border-width) solid var(--border);
+	pointer-events: none;
+}
+
+.dbv-tl__axis-row--secondary {
+	background: var(--bg);
+	border-top: var(--border-width) solid var(--border);
+}
+
+.dbv-tl__tick {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	display: flex;
+	align-items: center;
+	padding: 0 var(--space-2);
+	border-inline-end: var(--border-width) solid var(--border);
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+}
+
+.dbv-tl__tick--primary {
+	font-weight: var(--text-weight-semibold);
+	color: var(--text);
+}
+
+.dbv-tl__lane {
+	position: absolute;
+	inset-inline-start: 0;
+	inset-inline-end: 0;
+	border-bottom: var(--border-width) dashed var(--border);
+	pointer-events: none;
+}
+
+.dbv-tl__marker {
+	position: absolute;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: 0 var(--space-2) 0 var(--space-2);
+	background: transparent;
+	border: 0;
+	font: inherit;
+	font-size: var(--text-size-xs);
+	color: var(--text);
+	cursor: pointer;
+	--dbv-tl-color: var(--accent);
+}
+
+.dbv-tl__marker-dot {
+	width: 10px;
+	height: 10px;
+	border-radius: var(--radius-full);
+	background: var(--dbv-tl-color);
+	position: absolute;
+	inset-inline-start: 0;
+	top: 50%;
+	transform: translateY(-50%);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--dbv-tl-color) 22%, transparent);
+}
+
+.dbv-tl__marker-label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width: 220px;
+}
+
+.dbv-tl__glyph {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+}
+
+.dbv-tl__bar-label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.dbv-tl__marker[data-selected="true"] .dbv-tl__marker-dot {
+	box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 36%, transparent);
+}
+
+.dbv-tl__bar {
+	position: absolute;
+	display: inline-flex;
+	align-items: center;
+	padding: 0 var(--space-2);
+	border-radius: var(--radius-sm);
+	font: inherit;
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+	background: var(--accent-soft);
+	color: var(--accent-strong);
+	border: var(--border-width) solid color-mix(in srgb, var(--accent) 36%, transparent);
+	cursor: pointer;
+	overflow: hidden;
+	white-space: nowrap;
+	text-align: start;
+	gap: var(--space-1);
+}
+
+.dbv-tl__bar[data-selected="true"] {
+	box-shadow: 0 0 0 2px var(--accent);
+}
+
+/* 9.12.10 — drag-to-move / drag-to-resize feedback. The transform/width
+ * live preview is inline; this rule only carries the affordance state. */
+.dbv-tl__bar[data-dragging="true"] {
+	opacity: 0.85;
+	cursor: grabbing;
+}
+
+.dbv-tl__resize {
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 8px;
+	height: 100%;
+	cursor: ew-resize;
+	border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.dbv-tl__bar:hover .dbv-tl__resize {
+	background: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+/* 9.12.10 — dependency arrows: one non-interactive SVG overlay; the
+ * arrowhead fills with currentColor so one rule themes both. */
+.dbv-tl__deps {
+	position: absolute;
+	top: 0;
+	left: 0;
+	pointer-events: none;
+	color: var(--text-faint);
+}
+
+.dbv-tl__dep {
+	stroke: currentColor;
+	stroke-width: 1.5;
+}
+
+.dbv-tl__now {
+	position: absolute;
+	width: 0;
+	border-inline-start: var(--border-width-thick) solid var(--accent);
+	pointer-events: none;
+}
+
+.dbv-tl__weekend {
+	position: absolute;
+	background: color-mix(in srgb, var(--text) 4%, transparent);
+	pointer-events: none;
+}
+
+.dbv-tl__now-tag {
+	position: absolute;
+	top: 52px;
+	/* PHYSICAL-AXIS INTENTIONAL: symmetric centring around the now-line position */
+	left: 0;
+	transform: translate(-50%, 0);
+	background: var(--accent);
+	color: var(--accent-fg);
+	font-size: var(--text-size-xs);
+	padding: var(--space-0_5);
+	border-radius: var(--radius-full);
+	font-weight: var(--text-weight-semibold);
+	letter-spacing: 0.02em;
+	box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.18));
+}
+
+/* ── Inspector ────────────────────────────────────────────────────────── */
+
+.db-inspector {
+	display: flex;
+	flex-direction: column;
+	border-inline-start: var(--border-width) solid var(--color-glass-border);
+	overflow: hidden;
+}
+
+.db-inspector__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	height: var(--app-header-height);
+	padding: 0 var(--space-2) 0 var(--space-4);
+	border-bottom: var(--border-width) solid var(--border);
+}
+
+.db-inspector__title {
+	margin: 0;
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-semibold);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.db-inspector__close {
+	width: var(--control-height-sm, 24px);
+	height: var(--control-height-sm, 24px);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background: transparent;
+	border: 0;
+	color: var(--text-dim);
+	cursor: pointer;
+	border-radius: var(--radius-sm);
+}
+
+.db-inspector__close:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.db-inspector__body {
+	padding: var(--space-4);
+	overflow: auto;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+}
+
+.db-inspector__empty {
+	color: var(--text-dim);
+	font-size: var(--text-size-sm);
+	margin: 0;
+}
+
+.db-inspector__meta {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+
+/* The object's OWN icon, click-to-edit. Button, not a static chip — sized
+ * on the shared sm control-height for cross-app consistency. */
+.db-inspector__icon-btn {
+	width: var(--control-height-sm, 24px);
+	height: var(--control-height-sm, 24px);
+	padding: 0;
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-md);
+	background: var(--hover);
+	color: var(--accent);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: var(--text-size-md);
+	cursor: pointer;
+}
+
+.db-inspector__icon-btn:hover {
+	border-color: color-mix(in srgb, var(--accent) 32%, transparent);
+}
+
+.db-inspector__icon-btn:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+	border-color: transparent;
+}
+
+/* Cover band — full-bleed at the top of the inspector body. */
+.db-inspector__cover {
+	display: block;
+	width: 100%;
+	/* Cover host in a column flex panel — pin it so the body's other rows
+	 * can't flex-shrink the aspect-ratio'd band (height would otherwise vary
+	 * with the object's property count). See CLAUDE.md. */
+	flex-shrink: 0;
+	padding: 0;
+	margin: 0 0 var(--space-3) 0;
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-md);
+	overflow: hidden;
+	cursor: pointer;
+	background: transparent;
+}
+
+.db-inspector__cover:hover {
+	border-color: var(--border);
+}
+
+.db-inspector__cover:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+	border-color: transparent;
+}
+
+.db-inspector__type {
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	background: var(--hover);
+	padding: var(--space-0_5);
+	border-radius: var(--radius-full);
+}
+
+/* "Open in <App>" — tertiary action, not a competing primary button. */
+.db-inspector__actions {
+	display: flex;
+	gap: var(--space-2);
+	flex-wrap: wrap;
+}
+
+.db-inspector__open {
+	align-self: flex-start;
+	padding: var(--space-1);
+	background: transparent;
+	color: var(--text-dim);
+	border: var(--border-width) solid var(--border-strong);
+	border-radius: var(--radius-sm);
+	font: inherit;
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+	cursor: pointer;
+}
+
+.db-inspector__open:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.db-inspector__section-title {
+	margin: var(--space-3) 0 var(--space-2);
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-semibold);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--text-faint);
+}
+
+/* The editable property list is the shared `<PropertiesPanel>` content
+ * (`.bs-props`), mounted inline inside the inspector's own scrolling body —
+ * so neutralize the panel's full-height flex + nested scroll + outer padding;
+ * the `.bs-props__list` rows keep their shared label/value grid + hover. */
+.db-inspector .bs-props__inner {
+	height: auto;
+}
+
+.db-inspector .bs-props__body {
+	overflow: visible;
+	padding: 0;
+}
+
+/* Two-column property grid — label left, value right, baseline-aligned.
+ * Used by the System metadata block (created / updated / id). */
+.db-inspector__props {
+	margin: 0;
+	display: grid;
+	grid-template-columns: 110px 1fr;
+	column-gap: var(--space-3);
+	row-gap: var(--space-2);
+	align-items: center;
+}
+
+.db-inspector__props dt {
+	color: var(--text-dim);
+	margin: 0;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.db-inspector__props dd {
+	margin: 0;
+	color: var(--text);
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-2);
+	min-width: 0;
+	overflow-wrap: anywhere;
+}
+
+.db-inspector__props--meta {
+	border-top: var(--border-width) solid var(--border);
+	padding-top: var(--space-3);
+	margin-top: var(--space-1);
+}
+
+.db-inspector__chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-1);
+}
+
+.db-inspector__mono {
+	font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	overflow-wrap: anywhere;
+}
+
+.db-inspector__empty-value {
+	color: var(--text-faint);
+}
+
+.db-inspector__multi-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.db-inspector__multi-item {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-1);
+	background: var(--bg);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-sm);
+	font-size: var(--text-size-md);
+}
+
+.db-inspector__multi-glyph {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 14px;
+	height: 14px;
+	color: var(--accent);
+}
+
+.db-inspector__multi-label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
+}
+
+.db-inspector__multi-more {
+	padding: var(--space-1);
+	color: var(--text-dim);
+	font-size: var(--text-size-xs);
+	text-align: center;
+}
+
+/* 9.3.5.U — multi-membership UX. The "Collections containing this object"
+ * panel between Properties and System. Layout: list rows of `icon + name +
+ * badge + ✕`; an "Add to collection" pill below. */
+.db-inspector__collections {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.db-inspector__collections-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+/* Reverse typed-relation browse (9.12.22): "Referenced by" list of entities
+ * that point at the selected object. */
+.db-inspector__backlinks {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.db-inspector__backlinks-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.db-inspector__backlink-link {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	width: 100%;
+	padding: var(--space-1);
+	background: transparent;
+	border: 0;
+	border-radius: var(--radius-sm);
+	color: var(--text);
+	font: inherit;
+	font-size: var(--text-size-md);
+	text-align: start;
+	cursor: pointer;
+	min-width: 0;
+}
+
+.db-inspector__backlink-link:hover {
+	background: var(--hover);
+}
+
+.db-inspector__backlink-link:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}
+
+.db-inspector__backlink-glyph {
+	display: inline-flex;
+	flex-shrink: 0;
+}
+
+.db-inspector__backlink-label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
+}
+
+.db-inspector__backlink-rel {
+	margin-inline-start: auto;
+	flex-shrink: 0;
+	color: var(--text-faint);
+	font-size: var(--text-size-xs);
+}
+
+.db-inspector__collection-row {
+	display: grid;
+	grid-template-columns: 1fr auto auto;
+	align-items: center;
+	gap: var(--space-2);
+	padding: 0 var(--space-1) 0 0;
+	border-radius: var(--radius-sm);
+}
+
+.db-inspector__collection-row:hover {
+	background: var(--hover);
+}
+
+.db-inspector__collection-open {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-1);
+	background: transparent;
+	border: 0;
+	border-radius: var(--radius-sm);
+	color: var(--text);
+	font: inherit;
+	font-size: var(--text-size-md);
+	text-align: start;
+	cursor: pointer;
+	min-width: 0;
+	overflow: hidden;
+}
+
+.db-inspector__collection-open:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}
+
+.db-inspector__collection-name {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
+}
+
+.db-inspector__collection-badge {
+	padding: 0 var(--space-2);
+	font-size: var(--text-size-xs);
+	color: var(--text-faint);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	white-space: nowrap;
+}
+
+.db-inspector__collection-badge[data-kind="excluded"] {
+	color: var(--warn, var(--text-dim));
+}
+
+.db-inspector__collection-remove {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 20px;
+	height: 20px;
+	padding: 0;
+	background: transparent;
+	border: 0;
+	border-radius: var(--radius-xs);
+	color: var(--text-faint);
+	cursor: pointer;
+	opacity: 0.55;
+	transition: opacity 80ms ease;
+}
+
+.db-inspector__collection-row:hover .db-inspector__collection-remove,
+.db-inspector__collection-remove:focus-visible {
+	opacity: 1;
+}
+
+.db-inspector__collection-remove:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.db-inspector__add-to-collection {
+	align-self: flex-start;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	padding: var(--space-1);
+	background: transparent;
+	border: var(--border-width) dashed var(--border);
+	border-radius: var(--radius-sm);
+	color: var(--text-dim);
+	font: inherit;
+	font-size: var(--text-size-md);
+	cursor: pointer;
+}
+
+.db-inspector__add-to-collection:hover {
+	background: var(--hover);
+	color: var(--text);
+	border-style: solid;
+}
+
+.db-inspector__add-to-collection:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}
+
+/* ── Toolbar settings icon-only button ─────────────────────────────── */
+
+.db-toolbar__icon svg {
+	display: block;
+}
+
+/* ── Selection bar (sticky multi-select chrome) ────────────────────── */
+
+.db-selection-bar {
+	position: sticky;
+	top: 0;
+	z-index: 2;
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	padding: var(--space-2);
+	background: var(--accent-soft);
+	border-bottom: var(--border-width) solid color-mix(in srgb, var(--accent) 28%, transparent);
+	color: var(--text);
+}
+
+.db-selection-bar__count {
+	font-weight: var(--text-weight-medium);
+	font-variant-numeric: tabular-nums;
+}
+
+/* Pushes the shared secondary button (`.bs-btn`) to the trailing edge of the
+ * selection strip — the only layout delta over the shared button chrome. */
+.db-selection-bar__clear {
+	margin-inline-start: auto;
+}
+
+/* ── Drag state (cross-view DnD) ───────────────────────────────────── */
+
+[data-dragging="true"] {
+	opacity: 0.45;
+}
+
+[data-dropping="true"] {
+	outline: 2px dashed var(--accent);
+	outline-offset: -2px;
+	background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+/* ── Popover (view settings) ────────────────────────────────────────── */
+
+.db-popover__backdrop {
+	position: fixed;
+	inset: 0;
+	z-index: 100;
+	background: transparent;
+}
+
+.db-popover {
+	position: fixed;
+	z-index: 101;
+	max-height: calc(100vh - 96px);
+	overflow-y: auto;
+	border: var(--border-width) solid var(--color-glass-border);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-xl, 0 12px 28px rgba(0, 0, 0, 0.4));
+	display: flex;
+	flex-direction: column;
+}
+
+/* Right-click / point-anchored menus now render through the shared SDK
+ * `.bs-object-menu` chrome (packages/sdk/src/object-menu/object-menu.css),
+ * imported by the renderer — no Database-local menu CSS. */
+
+.db-popover__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	height: var(--app-header-height);
+	padding: 0 var(--space-2) 0 var(--space-2);
+	border-bottom: var(--border-width) solid var(--border);
+}
+
+.db-popover__title {
+	flex: 1;
+	min-width: 0;
+	margin: 0;
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-semibold);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.db-popover__close {
+	width: var(--control-height-sm, 24px);
+	height: var(--control-height-sm, 24px);
+	background: transparent;
+	border: 0;
+	color: var(--text-dim);
+	cursor: pointer;
+	border-radius: var(--radius-sm);
+	font-size: var(--text-size-md);
+}
+
+.db-popover__close:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.db-popover__body {
+	padding: var(--space-2);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+/* The back arrow on a sub-page header — sits before the title, same quiet
+ * treatment as the close button so the header reads as one cluster. */
+.db-popover__back {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--control-height-sm, 24px);
+	height: var(--control-height-sm, 24px);
+	margin-inline-end: var(--space-1);
+	background: transparent;
+	border: 0;
+	color: var(--text-dim);
+	cursor: pointer;
+	border-radius: var(--radius-sm);
+}
+
+.db-popover__back:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+
+.db-popover__section {
+	padding: var(--space-3) var(--space-2);
+	border-bottom: var(--border-width) solid var(--color-border-subtle, var(--border));
+}
+
+.db-popover__section:last-child {
+	border-bottom: 0;
+}
+
+/* The view-name field is the one always-visible control on the root page —
+ * sits flush in the padded body, divided from the nav rows below. */
+.db-popover__section--name {
+	padding: 0 0 var(--space-3);
+	margin-bottom: var(--space-1);
+}
+
+.db-popover__field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.db-popover__field-label {
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-semibold);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--text-dim);
+}
+
+/* Text inputs inside the popover — one shared face so the name field and
+ * the source search read identically. */
+.db-popover__input {
+	width: 100%;
+	height: var(--control-height-md, 32px);
+	padding: 0 var(--space-2);
+	background: var(--bg);
+	border: var(--border-width) solid var(--border-strong);
+	border-radius: var(--radius-sm);
+	color: var(--text);
+	font: inherit;
+	font-size: var(--text-size-md);
+	font-family: inherit;
+}
+
+.db-popover__input:hover {
+	border-color: var(--text-faint);
+}
+
+.db-popover__input:focus,
+.db-popover__input:focus-visible {
+	outline: none;
+	border-color: var(--accent);
+	box-shadow: 0 0 0 2px var(--color-accent-subtle, transparent);
+}
+
+/* Property pickers (shared `.bs-select` trigger) — fill the row remainder up
+ * to the same cap the old native select had, right-aligned after the label. */
+.db-popover__row .db-popover__select {
+	flex: 1 1 auto;
+	min-width: 0;
+	max-width: 160px;
+	margin-inline-start: auto;
+}
+
+/* Add-column button — full-width dashed affordance under the column list,
+ * reads as "create" without competing with the primary New button. */
+.db-popover__add-column {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	width: 100%;
+	margin-top: var(--space-1);
+	padding: var(--space-2) var(--space-2);
+	background: transparent;
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-md);
+	color: var(--text-dim);
+	font: inherit;
+	font-size: var(--text-size-md);
+	font-family: inherit;
+	cursor: pointer;
+	transition:
+		background 120ms ease,
+		color 120ms ease;
+}
+
+.db-popover__add-column:hover {
+	color: var(--text);
+	background: var(--hover);
+}
+
+/* ── Formula authoring page ───────────────────────────────────────────── */
+
+/* Monospace face for the expression field — `{fee} * {quantity}` reads as code. */
+.db-popover__input--mono {
+	font-family: var(--text-family-code, ui-monospace, monospace);
+	font-size: var(--text-size-sm);
+}
+
+/* "+ Insert property" reference picker trigger — a small inline link-button
+ * under the expression field, distinct from the primary dashed Add affordance. */
+.db-popover__formula-insert {
+	align-self: flex-start;
+	padding: var(--space-1) 0;
+	background: transparent;
+	border: none;
+	color: var(--accent);
+	font: inherit;
+	font-size: var(--text-size-sm);
+	cursor: pointer;
+}
+
+.db-popover__formula-insert:hover {
+	text-decoration: underline;
+}
+
+/* Inline validation message: a faint warning for an unknown reference, a
+ * stronger danger tone for a syntax error. */
+.db-popover__formula-message {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--text-dim);
+}
+
+.db-popover__formula-message[data-kind="syntax"],
+.db-popover__formula-message[data-kind="empty"] {
+	color: var(--danger);
+}
+
+/* Primary "Add formula" button — solid accent, the commit action of the page. */
+.db-popover__formula-add {
+	width: 100%;
+	margin-top: var(--space-1);
+	padding: var(--space-2) var(--space-2);
+	background: var(--accent);
+	border: var(--border-width) solid var(--accent);
+	border-radius: var(--radius-sm);
+	color: var(--accent-fg);
+	font: inherit;
+	font-size: var(--text-size-md);
+	font-family: inherit;
+	cursor: pointer;
+}
+
+.db-popover__formula-add:hover:not(:disabled) {
+	filter: brightness(1.05);
+}
+
+.db-popover__formula-add:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+/* ── Settings navigation (root → sub-page) ────────────────────────────── */
+
+.db-popover__nav {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+}
+
+.db-popover__nav-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	width: 100%;
+	padding: var(--space-2);
+	background: transparent;
+	border: 0;
+	border-radius: var(--radius-md);
+	color: var(--text);
+	font: inherit;
+	font-size: var(--text-size-md);
+	font-family: inherit;
+	cursor: pointer;
+	text-align: start;
+}
+
+.db-popover__nav-row:hover {
+	background: var(--hover);
+}
+
+.db-popover__nav-icon {
+	display: inline-flex;
+	align-items: center;
+	color: var(--text-dim);
+	flex-shrink: 0;
+}
+
+.db-popover__nav-label {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.db-popover__nav-value {
+	color: var(--text-dim);
+	font-size: var(--text-size-sm);
+	font-variant-numeric: tabular-nums;
+	flex-shrink: 0;
+}
+
+.db-popover__nav-chevron {
+	display: inline-flex;
+	align-items: center;
+	color: var(--text-faint);
+	flex-shrink: 0;
+}
+
+.db-popover__nav-row:hover .db-popover__nav-chevron {
+	color: var(--text-dim);
+}
+
+/* A focused control stack inside a sub-page (layout / grouping). */
+.db-popover__rows {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+/* ── Option list (view-type picker) ───────────────────────────────────── */
+
+.db-popover__options {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+}
+
+.db-popover__option {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	width: 100%;
+	padding: var(--space-2);
+	background: transparent;
+	border: 0;
+	border-radius: var(--radius-md);
+	color: var(--text);
+	font: inherit;
+	font-size: var(--text-size-md);
+	font-family: inherit;
+	cursor: pointer;
+	text-align: start;
+}
+
+.db-popover__option:hover {
+	background: var(--hover);
+}
+
+.db-popover__option[data-selected="true"] {
+	background: var(--color-accent-subtle, var(--hover));
+}
+
+.db-popover__option-icon {
+	display: inline-flex;
+	align-items: center;
+	color: var(--text-dim);
+	flex-shrink: 0;
+}
+
+.db-popover__option[data-selected="true"] .db-popover__option-icon {
+	color: var(--accent-strong, var(--accent));
+}
+
+.db-popover__option-label {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.db-popover__option-check {
+	display: inline-flex;
+	align-items: center;
+	width: 16px;
+	color: var(--accent-strong, var(--accent));
+	flex-shrink: 0;
+}
+
+.db-popover__row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	padding: var(--space-1) 0;
+	min-height: 28px;
+}
+
+.db-popover__row + .db-popover__row {
+	margin-top: var(--space-0_5);
+}
+
+.db-popover__row--toggle {
+	justify-content: space-between;
+	cursor: pointer;
+}
+
+.db-popover__row--slider {
+	flex-wrap: wrap;
+}
+
+.db-popover__row-label {
+	color: var(--text-dim);
+	font-size: var(--text-size-md);
+	flex-shrink: 0;
+	min-width: 96px;
+}
+
+.db-popover__row-value {
+	min-width: 32px;
+	text-align: end;
+	font-variant-numeric: tabular-nums;
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+}
+
+.db-popover__segments {
+	display: inline-flex;
+	background: var(--bg);
+	border: var(--border-width) solid var(--border-strong);
+	border-radius: var(--radius-md);
+	padding: var(--space-0_5);
+	margin-inline-start: auto;
+}
+
+.db-popover__segment {
+	padding: var(--space-0_5);
+	background: transparent;
+	border: 0;
+	color: var(--text-dim);
+	font: inherit;
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+	cursor: pointer;
+	border-radius: var(--radius-sm);
+}
+
+.db-popover__segment:hover {
+	color: var(--text);
+}
+
+.db-popover__segment[data-active="true"] {
+	background: var(--accent);
+	color: var(--accent-fg);
+}
+
+.db-popover__switch {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+}
+
+.db-popover__switch input {
+	opacity: 0;
+	width: 28px;
+	height: 16px;
+	margin: 0;
+	cursor: pointer;
+	position: absolute;
+	inset: 0;
+}
+
+.db-popover__switch-track {
+	display: inline-block;
+	width: 28px;
+	height: 16px;
+	border-radius: var(--radius-full);
+	background: var(--border-strong);
+	position: relative;
+	transition: background 120ms ease;
+}
+
+.db-popover__switch-track::after {
+	content: "";
+	position: absolute;
+	inset-inline-start: 2px;
+	top: 2px;
+	width: 12px;
+	height: 12px;
+	border-radius: var(--radius-full);
+	background: var(--text);
+	transition: transform 120ms ease;
+}
+
+.db-popover__switch input:checked + .db-popover__switch-track {
+	background: var(--accent);
+}
+
+.db-popover__switch input:checked + .db-popover__switch-track::after {
+	transform: translateX(12px);
+	background: var(--accent-fg);
+}
+
+.db-popover__slider {
+	flex: 1;
+	min-width: 0;
+	accent-color: var(--accent);
+}
+
+.db-popover__column-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+}
+
+.db-popover__column-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-1);
+	border-radius: var(--radius-sm);
+	background: transparent;
+	cursor: grab;
+}
+
+.db-popover__column-row:hover {
+	background: var(--hover);
+}
+
+.db-popover__column-row[data-dragging="true"] {
+	opacity: 0.5;
+}
+
+.db-popover__column-handle {
+	color: var(--text-faint);
+	font-size: var(--text-size-xs);
+	letter-spacing: -2px;
+	user-select: none;
+}
+
+.db-popover__column-toggle {
+	appearance: none;
+	-webkit-appearance: none;
+	position: relative;
+	width: 16px;
+	height: 16px;
+	flex-shrink: 0;
+	margin: 0;
+	border: 1.5px solid var(--border-strong);
+	border-radius: var(--radius-sm);
+	background: transparent;
+	cursor: pointer;
+	transition:
+		background 120ms ease,
+		border-color 120ms ease;
+}
+
+.db-popover__column-toggle:checked {
+	background: var(--accent);
+	border-color: var(--accent);
+}
+
+.db-popover__column-toggle:checked::after {
+	content: "";
+	position: absolute;
+	left: 4.5px;
+	top: 1px;
+	width: 4px;
+	height: 8px;
+	border: solid #fff;
+	border-width: 0 2px 2px 0;
+	transform: rotate(45deg);
+}
+
+.db-popover__column-name {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--text);
+	font-size: var(--text-size-md);
+}
+
+/* Remove-column affordance (F-022): dim, brightens on row hover; sits at the
+ * trailing edge after the flex-grown name. */
+.db-popover__column-remove {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 20px;
+	height: 20px;
+	flex-shrink: 0;
+	border: 0;
+	border-radius: var(--radius-xs);
+	background: transparent;
+	color: var(--text-faint);
+	cursor: pointer;
+	opacity: 0;
+	transition: opacity 100ms ease, background 100ms ease, color 100ms ease;
+}
+
+.db-popover__column-row:hover .db-popover__column-remove,
+.db-popover__column-remove:focus-visible {
+	opacity: 1;
+}
+
+.db-popover__column-remove:hover {
+	background: var(--color-accent-subtle, var(--hover));
+	color: var(--text);
+}
+
+.db-popover__note {
+	margin: 0;
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	line-height: 1.4;
+}
+
+/* ── Source picker — "which objects does this list show" ──────────── */
+
+.db-source__search {
+	margin: 0 var(--space-3) var(--space-2);
+}
+
+.db-source__list-host {
+	max-height: 320px;
+	overflow-y: auto;
+}
+
+.db-source__list-host--inline {
+	max-height: 220px;
+	margin: 0 calc(-1 * var(--space-3));
+}
+
+.db-source__list {
+	list-style: none;
+	margin: 0;
+	padding: 0 var(--space-2);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+}
+
+.db-source__option {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	align-items: center;
+	gap: var(--space-3);
+	padding: var(--space-1);
+	border-radius: var(--radius-md);
+	cursor: pointer;
+}
+
+.db-source__option:hover {
+	background: var(--hover);
+}
+
+.db-source__check {
+	width: 16px;
+	height: 16px;
+	accent-color: var(--accent);
+	cursor: pointer;
+}
+
+.db-source__name {
+	color: var(--text);
+	font-size: var(--text-size-md);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.db-source__count {
+	color: var(--text-faint);
+	font-size: var(--text-size-xs);
+	font-variant-numeric: tabular-nums;
+}
+
+.db-source__empty {
+	padding: var(--space-4) var(--space-2);
+	text-align: center;
+	color: var(--text-faint);
+	font-size: var(--text-size-sm);
+}
+
+.db-source__footer {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--space-2);
+	padding: var(--space-2);
+	border-top: var(--border-width) solid var(--border);
+}
+
+/* Footer / confirm action buttons use the shared `.bs-btn` primitive
+ * (ghost · data-bs-primary · --danger). Only the row layout stays local. */
+
+.db-confirm__actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--space-2);
+	width: 100%;
+}
+
+/* ── Calendar — toolbar, segments, week, year ─────────────────────── */
+
+.dbv-cal__toolbar {
+	flex-wrap: wrap;
+	gap: var(--space-3);
+}
+
+.dbv-cal__toolbar-right {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	margin-inline-start: auto;
+}
+
+.dbv-cal__segments {
+	display: inline-flex;
+	background: var(--bg-elev);
+	border: var(--border-width) solid var(--border-strong);
+	border-radius: var(--radius-md);
+	padding: var(--space-0_5);
+}
+
+.dbv-cal__segment {
+	padding: var(--space-1);
+	background: transparent;
+	border: 0;
+	color: var(--text-dim);
+	font: inherit;
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+	cursor: pointer;
+	border-radius: var(--radius-sm);
+}
+
+.dbv-cal__segment:hover {
+	color: var(--text);
+}
+
+.dbv-cal__segment[data-active="true"] {
+	background: var(--accent);
+	color: var(--accent-fg);
+}
+
+/* Week view */
+.dbv-cal__weekwrap {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-height: 0;
+}
+
+.dbv-cal__weekgrid {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: var(--space-0_5);
+	padding: 0 var(--space-2) var(--space-3);
+	background: var(--border);
+	margin: 0 var(--space-1);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-md);
+	overflow: hidden;
+	flex: 1;
+	min-height: 320px;
+}
+
+.dbv-cal__weekcell {
+	min-height: 280px;
+	overflow: auto;
+}
+
+.dbv-cal__weekday-num {
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	font-weight: var(--text-weight-semibold);
+	padding-bottom: var(--space-2);
+	border-bottom: var(--border-width) dashed var(--border);
+	margin-bottom: var(--space-2);
+}
+
+.dbv-cal__cell[data-today="true"] .dbv-cal__weekday-num {
+	color: var(--accent-strong);
+	border-bottom-color: color-mix(in srgb, var(--accent) 32%, transparent);
+}
+
+.dbv-cal__pills--stack > .dbv-cal__pill {
+	display: flex;
+}
+
+.dbv-cal__weekempty {
+	color: var(--text-faint);
+	font-size: var(--text-size-xs);
+}
+
+/* Year view */
+.dbv-cal__yearwrap {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	gap: var(--space-3);
+	padding: var(--space-2);
+	overflow: auto;
+}
+
+.dbv-cal__month-tile {
+	background: var(--bg-elev);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-lg);
+	padding: var(--space-2);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.dbv-cal__month-tile-title {
+	margin: 0;
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-semibold);
+}
+
+.dbv-cal__mini-weekrow {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: var(--space-0_5);
+	font-size: var(--text-size-xs);
+	color: var(--text-faint);
+	text-align: center;
+}
+
+.dbv-cal__mini-grid {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: var(--space-0_5);
+}
+
+.dbv-cal__mini-cell {
+	position: relative;
+	aspect-ratio: 1 / 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: transparent;
+	border: 0;
+	border-radius: var(--radius-sm);
+	color: var(--text);
+	font-size: var(--text-size-xs);
+	font-variant-numeric: tabular-nums;
+	cursor: default;
+	font-family: inherit;
+}
+
+.dbv-cal__mini-cell[data-other-month="true"] {
+	color: var(--text-faint);
+}
+
+.dbv-cal__mini-cell[data-today="true"] {
+	background: var(--accent-soft);
+	color: var(--accent-strong);
+	font-weight: var(--text-weight-semibold);
+}
+
+.dbv-cal__mini-cell[data-has-items="true"] {
+	cursor: pointer;
+	background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.dbv-cal__mini-cell[data-has-items="true"]:hover {
+	background: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.dbv-cal__mini-dot {
+	position: absolute;
+	bottom: 2px;
+	/* PHYSICAL-AXIS INTENTIONAL: symmetric centring */
+	left: 50%;
+	transform: translateX(-50%);
+	width: 4px;
+	height: 4px;
+	border-radius: var(--radius-full);
+	background: var(--accent);
+}
+
+.dbv-cal__monthwrap {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-height: 0;
+}
+
+/* ── Grid — row-number column ──────────────────────────────────────── */
+
+.dbv-grid__cell--num {
+	width: 40px;
+	min-width: 40px;
+	color: var(--text-faint);
+	font-variant-numeric: tabular-nums;
+	justify-content: flex-end;
+	font-size: var(--text-size-xs);
+}
+
+/* ── Tighten oversized header gap on stage description ─────────────── */
+
+.db-stage__description:empty {
+	display: none;
+}
+
+/* ── Empty vault / no-selection placeholder (9.12.2) ──────────────── */
+
+.db-stage__empty {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-2);
+	height: 100%;
+	padding: var(--space-6);
+	text-align: center;
+}
+
+.db-stage__empty-title {
+	margin: 0;
+	font-size: var(--text-size-lg);
+	font-weight: var(--text-weight-semibold);
+	color: var(--text);
+}
+
+.db-stage__empty-body {
+	margin: 0;
+	max-width: 420px;
+	font-size: var(--text-size-sm);
+	color: var(--text-faint);
+	line-height: 1.4;
+}
+
+/* 9.12.16-UI — Import contacts modal. Native <dialog> gets focus trap +
+   Escape close + backdrop for free; we just style the surface. Slice 2
+   adds the per-row preview-and-override grid (`--preview`). */
+.db-import-modal {
+	border: var(--border-width) solid var(--border-strong);
+	border-radius: var(--radius-lg);
+	background: var(--bg);
+	color: var(--text);
+	padding: var(--space-4);
+	min-width: 360px;
+	max-width: 480px;
+	box-shadow: var(--shadow-lg, 0 12px 32px rgba(0, 0, 0, 0.2)),
+		var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.08));
+	font-family: inherit;
+}
+
+.db-import-modal--preview {
+	min-width: 460px;
+	max-width: 560px;
+}
+
+.db-import-modal::backdrop {
+	background: rgba(0, 0, 0, 0.32);
+	backdrop-filter: blur(2px);
+}
+
+.db-import-modal__title {
+	margin: 0 0 var(--space-2);
+	font-size: var(--text-size-lg);
+	font-weight: var(--text-weight-medium);
+	color: var(--text);
+}
+
+.db-import-modal__filename {
+	margin: 0 0 var(--space-1);
+	font-size: var(--text-size-sm);
+	color: var(--text-dim);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.db-import-modal__summary {
+	margin: 0 0 var(--space-5);
+	font-size: var(--text-size-md);
+	color: var(--text);
+}
+
+.db-import-modal__actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--space-2);
+}
+
+.db-import-modal__cancel,
+.db-import-modal__import {
+	min-width: 80px;
+	padding: var(--space-2);
+	border-radius: var(--radius-sm);
+	font: inherit;
+	cursor: pointer;
+}
+
+.db-import-modal__cancel {
+	background: transparent;
+	border: var(--border-width) solid var(--border-subtle);
+	color: var(--text);
+}
+
+.db-import-modal__cancel:hover,
+.db-import-modal__cancel:focus-visible {
+	background: var(--hover);
+}
+
+.db-import-modal__import {
+	background: var(--accent);
+	border: var(--border-width) solid var(--accent);
+	color: var(--accent-fg, white);
+}
+
+.db-import-modal__import:hover:not(:disabled),
+.db-import-modal__import:focus-visible:not(:disabled) {
+	filter: brightness(0.92);
+}
+
+.db-import-modal__import:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+/* Slice-2 preview grid: one scrollable list of rows between the summary
+   and the action row. The summary's bottom margin tightens because the
+   grid now sits below it. */
+.db-import-modal--preview .db-import-modal__summary {
+	margin-bottom: var(--space-3);
+}
+
+.db-import-grid {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	max-height: min(52vh, 420px);
+	overflow-y: auto;
+	margin-bottom: var(--space-4);
+	padding-right: var(--space-0_5);
+}
+
+.db-import-row {
+	border: var(--border-width) solid var(--border-subtle);
+	border-radius: var(--radius-md);
+	background: var(--bg-elevated, var(--bg));
+}
+
+.db-import-row[data-action="skip"] {
+	opacity: 0.55;
+}
+
+.db-import-row__head {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-2) var(--space-2);
+}
+
+.db-import-row__action {
+	flex: 0 0 auto;
+	min-width: 56px;
+	padding: var(--space-0_5);
+	border: var(--border-width) solid var(--border-subtle);
+	border-radius: var(--radius-full);
+	background: var(--hover);
+	color: var(--text-dim);
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+	cursor: pointer;
+}
+
+.db-import-row[data-action="merge"] .db-import-row__action {
+	color: var(--accent);
+	border-color: var(--color-accent-subtle, var(--accent));
+}
+
+.db-import-row__title {
+	flex: 1 1 auto;
+	min-width: 0;
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text);
+	font: inherit;
+	padding: var(--space-1);
+}
+
+.db-import-row__title:hover {
+	border-color: var(--border-subtle);
+}
+
+.db-import-row__title:focus-visible {
+	outline: none;
+	border-color: var(--accent);
+	box-shadow: 0 0 0 2px var(--color-accent-subtle, transparent);
+}
+
+.db-import-row__expand {
+	flex: 0 0 auto;
+	padding: var(--space-0_5);
+	border: var(--border-width) solid var(--border-subtle);
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text-dim);
+	font-size: var(--text-size-xs);
+	cursor: pointer;
+}
+
+.db-import-row__detail {
+	padding: var(--space-2) var(--space-2) var(--space-3);
+	border-top: var(--border-width) solid var(--border-subtle);
+}
+
+.db-import-row__fields {
+	display: grid;
+	grid-template-columns: minmax(80px, auto) 1fr;
+	gap: var(--space-1) var(--space-3);
+	margin: 0;
+	align-items: center;
+}
+
+.db-import-row__fields dt {
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+}
+
+.db-import-row__fields dd {
+	margin: 0;
+	min-width: 0;
+}
+
+.db-import-row__fields dd input {
+	width: 100%;
+	border: var(--border-width) solid var(--border-subtle);
+	border-radius: var(--radius-sm);
+	background: var(--bg);
+	color: var(--text);
+	font: inherit;
+	padding: var(--space-1);
+}
+
+.db-import-row__fields dd input:focus-visible {
+	outline: none;
+	border-color: var(--accent);
+	box-shadow: 0 0 0 2px var(--color-accent-subtle, transparent);
+}
+
+.db-import-row__readonly {
+	color: var(--text-dim);
+}
+
+.db-import-row__diff {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+	margin-top: var(--space-2);
+	font-size: var(--text-size-xs);
+}
+
+.db-import-row__diff-line {
+	display: grid;
+	grid-template-columns: minmax(80px, auto) 1fr 1fr;
+	gap: var(--space-2);
+	align-items: baseline;
+	color: var(--text-dim);
+}
+
+.db-import-row__diff-line[data-changed="true"] {
+	color: var(--text);
+}
+
+.db-import-row__diff-label {
+	color: var(--text-dim);
+}
+
+.db-import-row__diff-before {
+	text-decoration: line-through;
+	opacity: 0.7;
+}
+
+.db-import-row__diff-line[data-changed="true"] .db-import-row__diff-after {
+	color: var(--accent);
+}
+
+/* The before→after split reads left-to-right; the arrow is the third
+   grid column between them. */
+.db-import-row__diff-after::before {
+	content: "→ ";
+	color: var(--text-faint, var(--text-dim));
+}

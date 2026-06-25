@@ -1,0 +1,92 @@
+/* Settings → Privacy — Browser groups (Browser-7). Shares the
+ * network-egress group chrome; only the grant list + per-host egress
+ * table are new. */
+
+.browser-privacy__list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.browser-privacy__row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-1);
+	border-radius: var(--radius-sm);
+	background: var(--color-surface-2);
+}
+
+.browser-privacy__origin {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: var(--text-size-md);
+	color: var(--color-text-primary);
+}
+
+.browser-privacy__permission {
+	flex-shrink: 0;
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+}
+
+.browser-privacy__pill--allowed {
+	color: var(--color-state-success);
+}
+
+.browser-privacy__pill--blocked {
+	color: var(--color-state-error);
+}
+
+.browser-privacy__egress {
+	display: flex;
+	flex-direction: column;
+	max-height: 320px;
+	overflow-y: auto;
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+}
+
+.browser-privacy__egress-header,
+.browser-privacy__egress-row {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 80px 80px 110px;
+	gap: var(--space-2);
+	align-items: center;
+	padding: var(--space-1);
+	font-size: var(--text-size-sm);
+}
+
+.browser-privacy__egress-header {
+	position: sticky;
+	top: 0;
+	z-index: 1;
+	background: var(--color-surface-2);
+	color: var(--color-text-tertiary);
+	font-weight: var(--text-weight-medium);
+	border-bottom: var(--border-width) solid var(--color-border-subtle);
+}
+
+.browser-privacy__egress-row {
+	color: var(--color-text-secondary);
+	border-bottom: var(--border-width) solid var(--color-border-subtle);
+}
+
+.browser-privacy__egress-row:last-child {
+	border-bottom: none;
+}
+
+.browser-privacy__egress-row .browser-privacy__origin {
+	font-size: var(--text-size-sm);
+}
+
+.browser-privacy__num {
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+}

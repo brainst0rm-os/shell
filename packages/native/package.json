@@ -1,0 +1,62 @@
+{
+  "name": "@brainstorm/native",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Native NAPI-RS bindings for Brainstorm — Argon2id KDF, crypto suite, Graph force simulation. See docs/implementation-plan.md §Native acceleration.",
+  "license": "UNLICENSED",
+  "main": "loader.cjs",
+  "module": "native.mjs",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./native.mjs",
+      "require": "./loader.cjs"
+    },
+    "./packaged-resolver.cjs": "./packaged-resolver.cjs",
+    "./index.js": "./index.js",
+    "./brainstorm-native.*.node": "./brainstorm-native.*.node"
+  },
+  "napi": {
+    "binaryName": "brainstorm-native",
+    "targets": [
+      "aarch64-apple-darwin",
+      "x86_64-apple-darwin",
+      "aarch64-pc-windows-msvc",
+      "x86_64-pc-windows-msvc",
+      "x86_64-unknown-linux-gnu",
+      "aarch64-unknown-linux-gnu"
+    ]
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "native.mjs",
+    "loader.cjs",
+    "packaged-resolver.cjs",
+    "brainstorm-native.*.node"
+  ],
+  "scripts": {
+    "build": "napi build --platform --release",
+    "build:debug": "napi build --platform",
+    "build:host": "napi build --platform --release",
+    "build:darwin-x64": "napi build --platform --release --target x86_64-apple-darwin",
+    "build:darwin-arm64": "napi build --platform --release --target aarch64-apple-darwin",
+    "build:windows-x64": "napi build --platform --release --target x86_64-pc-windows-msvc",
+    "build:windows-arm64": "napi build --platform --release --target aarch64-pc-windows-msvc",
+    "build:linux-x64": "napi build --platform --release --target x86_64-unknown-linux-gnu",
+    "build:linux-arm64": "napi build --platform --release --target aarch64-unknown-linux-gnu",
+    "_build:all_doc": "Documentation only — most contributors run the host build; real cross-compile happens per-runner in the CI matrix (13.1c). Local invocation requires the matching cross toolchain (cargo-zigbuild / cargo-xwin / @napi-rs/cross-toolchain) per the napi-rs CLI's --cross-compile flag.",
+    "build:all": "bun run build:darwin-x64 && bun run build:darwin-arm64 && bun run build:windows-x64 && bun run build:windows-arm64 && bun run build:linux-x64 && bun run build:linux-arm64",
+    "test": "bun run build:debug && bun --bun vitest run --config vitest.config.ts"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^3.0.0",
+    "@noble/ciphers": "^2.2.0",
+    "@noble/curves": "^2.2.0",
+    "@noble/hashes": "^2.2.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

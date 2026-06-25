@@ -1,0 +1,172 @@
+/* Feedback-3 v2 — editorial release page. Used by both the popover
+ * (`whats-new-popover.tsx`) and Settings → What's new
+ * (`whats-new-section.tsx`). Chrome (backdrop / panel / close affordance)
+ * comes from the shared <Popover> / Settings shell; this file styles
+ * only the editorial body. */
+
+.whats-new-release {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-5);
+}
+
+/* ── Hero ────────────────────────────────────────────────────────── */
+
+.whats-new-release__hero {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+	gap: var(--space-2);
+	padding-bottom: var(--space-4);
+	border-bottom: var(--border-width) solid var(--color-border-subtle);
+}
+
+.whats-new-release__icon {
+	/* The emoji glyph is used as an icon here, but the rendering pipeline
+	 * is font-size driven; size to the largest text token (`--text-size-display`)
+	 * so the hero stays token-compliant per `feedback_font_sizes_use_tokens`. */
+	font-size: var(--text-size-display);
+	line-height: 1;
+	margin-bottom: var(--space-2);
+	/* Pin emoji glyphs onto the platform emoji font so the hero never
+	 * falls back to a `.notdef` box — same trap that bit the entity-icon
+	 * helper. */
+	font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji",
+		"Twemoji Mozilla", sans-serif;
+}
+
+.whats-new-release__title {
+	margin: 0;
+	font-size: var(--text-size-2xl);
+	font-weight: var(--text-weight-medium);
+	color: var(--color-text-primary);
+	letter-spacing: -0.01em;
+}
+
+.whats-new-release__meta {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+}
+
+.whats-new-release__version {
+	font-family: var(--font-mono, monospace);
+	padding: var(--space-0_5);
+	background: var(--color-surface-overlay, var(--hover));
+	border-radius: var(--radius-sm);
+	color: var(--color-text-primary);
+}
+
+.whats-new-release__dot {
+	opacity: 0.6;
+}
+
+.whats-new-release__summary {
+	margin: var(--space-2) 0 0;
+	max-width: 56ch;
+	font-size: var(--text-size-md);
+	line-height: 20px;
+	color: var(--color-text-secondary);
+}
+
+/* ── Body ────────────────────────────────────────────────────────── */
+
+.whats-new-release__body {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	font-size: var(--text-size-md);
+	color: var(--color-text-primary);
+	line-height: 22px;
+}
+
+/* h1: a section break inside a release. Bigger top gap and a hairline
+ * accent on the left so it scans without dominating the page. */
+.whats-new-release__h1 {
+	margin: var(--space-4) 0 var(--space-1);
+	font-size: var(--text-size-lg);
+	font-weight: var(--text-weight-medium);
+	color: var(--color-text-primary);
+	letter-spacing: -0.005em;
+}
+
+.whats-new-release__h2 {
+	margin: var(--space-3) 0 0;
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium);
+	color: var(--color-text-primary);
+}
+
+.whats-new-release__h3 {
+	margin: var(--space-2) 0 0;
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium);
+	color: var(--color-text-secondary);
+	text-transform: none;
+	letter-spacing: 0;
+}
+
+.whats-new-release__p {
+	margin: 0;
+}
+
+.whats-new-release__list {
+	margin: var(--space-1) 0 0;
+	padding: 0 0 0 var(--space-4);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.whats-new-release__bullet {
+	padding-inline-start: var(--space-1);
+}
+
+/* Tinted attention block prefixed by an icon. Sits separated from the
+ * surrounding flow but reads as part of the editorial body. */
+.whats-new-release__callout {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: var(--space-3);
+	align-items: start;
+	margin: var(--space-3) 0 0;
+	padding: var(--space-3);
+	background: var(--color-surface-overlay, var(--hover));
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+}
+
+.whats-new-release__callout-icon {
+	/* Emoji-as-icon sized via the `xl` text token (was raw 20px) — keeps the
+	 * stylesheet token-compliant per `feedback_font_sizes_use_tokens`. */
+	font-size: var(--text-size-xl);
+	line-height: 1.4;
+	font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji",
+		"Twemoji Mozilla", sans-serif;
+}
+
+.whats-new-release__callout-text {
+	min-width: 0;
+}
+
+/* ── Inline marks ────────────────────────────────────────────────── */
+
+.whats-new-release__strong {
+	font-weight: var(--text-weight-medium);
+	color: var(--color-text-primary);
+}
+
+.whats-new-release__highlight {
+	font-family: var(--font-mono, monospace);
+	font-size: 0.92em;
+	padding: 1px;
+	background: var(--color-surface-overlay, var(--hover));
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-sm);
+	white-space: nowrap;
+	color: var(--color-text-primary);
+}

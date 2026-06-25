@@ -1,0 +1,1140 @@
+/* Brainstorm — Bookmarks first-party app (9.18.1.5 preview drop).
+ *
+ * Shell-theme aliasing per [[apps-inherit-shell-theme]]; font sizes via
+ * tokens per [[font-sizes-use-tokens]].
+ */
+/* Theming is the shell's job, not the app's. The shell preload injects
+ * the active theme tokens AND the alias layer (--accent / --bg / --text /
+ * …) + base type + component styles via a single stylesheet —
+ * packages/shell/src/preload/app-theme.ts, the single source of truth.
+ * This app declares ZERO theme values. Don't reintroduce a :root alias
+ * block or root font/colour here. */
+:root {
+	color-scheme: light dark;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	overflow: hidden;
+}
+
+button {
+	font: inherit;
+	color: inherit;
+}
+
+/* Header chrome (flex skeleton, left/right groups, drag region, skin, title
+ * face) is the shared `.app-header` / `.app-header__title` pair in
+ * `@brainstorm/sdk/app-theme.css`. */
+
+/* Header action button — the icon-only "Open original" affordance when a
+ * bookmark is open (an anchor styled as a button so it keeps the shell's
+ * external-link handling). Square, sized to sit on the 44px header baseline. */
+.bookmarks__header-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text-dim);
+	text-decoration: none;
+	transition:
+		background 0.12s ease,
+		color 0.12s ease;
+}
+
+.bookmarks__header-btn:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.bookmarks__header-btn:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}
+
+/* The "Group by" header control is a text button (the active axis name), so
+   it overrides the icon-button's fixed square with auto width + horizontal
+   padding while keeping the shared resting/hover treatment. */
+.bookmarks__group-by {
+	width: auto;
+	height: 28px;
+	padding: 0 var(--space-2);
+	gap: var(--space-1);
+	font-size: var(--text-size-sm);
+	font-weight: var(--text-weight-medium);
+	white-space: nowrap;
+}
+
+/* The header object-menu ⋯ uses the shared `.bs-object-menu__more` button
+   (3 dots) but sits among the header actions, so it reads as a header button:
+   dim-resting like the other glyphs, full + tinted on hover. */
+.bookmarks__header-more {
+	opacity: 0.7;
+	color: var(--text-dim);
+}
+.bookmarks__header-more:hover {
+	opacity: 1;
+	background: var(--hover);
+	color: var(--text);
+}
+.bookmarks__header-more:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}
+
+.bookmarks {
+	position: relative;
+	height: calc(100vh - var(--app-header-height, 44px));
+	display: grid;
+	grid-template-columns: var(--bookmarks-sidebar-width, 248px) 1fr;
+	transition: grid-template-columns var(--motion-duration-normal, 180ms) ease;
+	overflow: hidden;
+}
+
+/* The grid-track transition above is the TOGGLE-button animation; the shell's
+   app-theme zeroes transition-duration globally under `body.is-resizing` so a
+   mouse-resize drag stays synced to the cursor. */
+
+/* Closed: animate the grid track to 0 so the content column smoothly fills
+   the freed space, and slide the panel (which sits in absolute layout at a
+   stable width) off-screen on a GPU transform — mirrors Notes/Tasks per
+   [[animate-transform-not-width]]. */
+.bookmarks[data-nav-open="false"] {
+	grid-template-columns: 0 minmax(0, 1fr);
+}
+
+.bookmarks[data-nav-open="false"] .bookmarks__sidebar {
+	transform: translateX(-100%);
+	border-inline-end-color: transparent;
+}
+
+.bookmarks[data-nav-open="false"] .bookmarks__resize {
+	display: none;
+}
+
+/* Drag handle straddling the sidebar/content boundary. Lives outside the
+ * sidebar so the bookmarks app's full re-render (`replaceChildren`) doesn't
+ * wipe its listeners. */
+.bookmarks__resize {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	inset-inline-start: var(--bookmarks-sidebar-width, 248px);
+	width: 6px;
+	margin-inline-start: -3px;
+	cursor: col-resize;
+	z-index: 5;
+	background: transparent;
+	transition: background var(--motion-duration-fast, 120ms) ease;
+	touch-action: none;
+}
+
+.bookmarks__resize:hover,
+.bookmarks__resize:focus-visible,
+body.is-resizing .bookmarks__resize {
+	background: var(--color-accent-subtle, rgba(255, 255, 255, 0.1));
+	outline: none;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────────── */
+
+.bookmarks__sidebar {
+	position: absolute;
+	top: 0;
+	inset-inline-start: 0;
+	bottom: 0;
+	width: var(--bookmarks-sidebar-width, 248px);
+	display: flex;
+	flex-direction: column;
+	border-inline-end: var(--border-width) solid var(--color-glass-border);
+	/* One scrollbar for the whole panel: the nav/collections/tags scroll together
+	 * here (the tag list is still virtualized, but its rows mount in-flow below,
+	 * so there's no nested scroll region). */
+	overflow-y: auto;
+	overflow-x: hidden;
+	z-index: 90;
+	transition: transform var(--motion-duration-normal, 180ms) ease;
+	will-change: transform;
+}
+
+.bookmarks__nav {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+	padding: var(--space-3) var(--space-2);
+}
+
+.bookmarks__nav-btn,
+.bookmarks__tag-list-btn {
+	display: grid;
+	grid-template-columns: 18px 1fr auto;
+	align-items: center;
+	gap: var(--space-2);
+	background: transparent;
+	border: var(--border-width) solid transparent;
+	color: var(--text);
+	padding: var(--space-1) var(--space-2);
+	border-radius: var(--radius-md);
+	cursor: pointer;
+	text-align: start;
+	width: 100%;
+	transition: background 0.12s ease, color 0.12s ease;
+}
+
+.bookmarks__nav-btn:hover,
+.bookmarks__tag-list-btn:hover {
+	background: var(--hover);
+}
+
+/* Tag rows are windowed: each `<li>` is sized to `TAG_ROW_HEIGHT` (app.tsx) by
+ * the virtual list. Fill that slot exactly (so the hover/selected background
+ * never overflows into the neighbouring row) and keep the row compact — tight
+ * line-height + small vertical padding so a 14px label fits a 28px row. */
+.bookmarks__tag-list-btn {
+	height: 100%;
+	padding-block: var(--space-1);
+	line-height: var(--text-line-height-tight);
+}
+
+.bookmarks__nav-btn[aria-selected="true"],
+.bookmarks__tag-list-btn[aria-selected="true"] {
+	background: var(--accent-soft);
+	color: var(--text);
+	border-color: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.bookmarks__nav-glyph {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	color: var(--accent);
+	font-size: var(--text-size-sm);
+	flex: 0 0 auto;
+}
+
+.bookmarks__nav-label,
+.bookmarks__tag-list-label {
+	min-width: 0;
+	font-weight: var(--text-weight-medium);
+	font-size: var(--text-size-md);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* The trailing count pills (surface nav, collections, tag list) are the
+ * shared `.bs-count-badge` from `@brainstorm/sdk/count-badge` — no per-app
+ * pill CSS. */
+
+/* Section labels (COLLECTIONS / TAGS) align their text + trailing button with
+ * the row glyph / row-end content below them: the rows inset their content by
+ * container(space-2) + button(space-2) = space-4, so the section uses space-4
+ * too. Keeps the sidebar's left/right rhythm on one grid. */
+.bookmarks__sidebar-section {
+	margin: 0;
+	padding: var(--space-3) var(--space-4) var(--space-2);
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	font-weight: var(--text-weight-semibold);
+}
+
+.bookmarks__sidebar-section:not(:first-child) {
+	border-top: var(--border-width) solid var(--border);
+}
+
+/* Collections section (9.18.10): a header with a save-view button, then a plain
+ * list of collection rows (a remove ✕ revealed on hover). */
+.bookmarks__collections-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-2);
+}
+
+/* Buttons are never bold — the semibold here is the section *label's*
+ * face leaking in via `font: inherit` (F-221). */
+.bookmarks__collection-save {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--control-height-sm, 24px);
+	height: var(--control-height-sm, 24px);
+	font-weight: var(--text-weight-medium);
+	color: var(--text-dim);
+	background: transparent;
+	border: none;
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+}
+
+.bookmarks__collection-save:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.bookmarks__collections-empty {
+	display: block;
+	padding: 0 var(--space-4) var(--space-2);
+	font-size: var(--text-size-xs);
+	color: var(--text-faint);
+}
+
+.bookmarks__collection-list {
+	list-style: none;
+	margin: 0;
+	padding: 0 var(--space-2) var(--space-1);
+}
+
+.bookmarks__collection-item {
+	display: flex;
+	align-items: center;
+}
+
+.bookmarks__collection-item:hover .bookmarks__collection-remove {
+	opacity: 1;
+}
+
+.bookmarks__collection-btn {
+	display: grid;
+	grid-template-columns: 18px 1fr auto;
+	align-items: center;
+	gap: var(--space-2);
+	flex: 1 1 auto;
+	min-width: 0;
+	background: transparent;
+	border: var(--border-width) solid transparent;
+	color: var(--text);
+	padding: var(--space-2) var(--space-2);
+	border-radius: var(--radius-md);
+	cursor: pointer;
+	text-align: start;
+}
+
+.bookmarks__collection-btn:hover {
+	background: var(--hover);
+}
+
+.bookmarks__collection-btn[aria-selected="true"] {
+	background: var(--accent-soft);
+	border-color: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.bookmarks__collection-label {
+	min-width: 0;
+	font-weight: var(--text-weight-medium);
+	font-size: var(--text-size-md);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.bookmarks__collection-remove {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	flex: 0 0 auto;
+	color: var(--text-faint);
+	background: transparent;
+	border: none;
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+	opacity: 0;
+	transition: opacity 0.12s ease;
+}
+
+.bookmarks__collection-remove:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+/* The virtualized tag list mounts here, in-flow at the bottom of the (single)
+ * sidebar scroll viewport. Its rows are absolutely positioned over the SDK
+ * `.bs-vlist__spacer`, so this host is the positioning context (relative) and
+ * sizes itself to the spacer — it never scrolls on its own. */
+.bookmarks__tag-list {
+	position: relative;
+	padding: 0 0 var(--space-3);
+}
+
+/* Rows are virtualized: each `<li>` is `position: absolute; left: 0; width: 100%`
+ * over the spacer, so the LIST container's side padding doesn't inset them — the
+ * inset has to live on the row itself. Side `--space-2` matches the nav rows'
+ * inset (so the hover/selected highlight is inset off the sidebar edge, not
+ * edge-to-edge); the 1px bottom keeps the familiar 1px gap between rows (the
+ * button fills the rest of the 28px slot). */
+.bookmarks__tag-list-item {
+	list-style: none;
+	padding: 0 var(--space-2) 1px;
+}
+
+/* ── Main pane ───────────────────────────────────────────────────────── */
+
+.bookmarks__main {
+	grid-column: 2;
+	/* `min-width: 0` is load-bearing: CSS grid items default to
+	 * `min-width: auto`, so a wide child (the Tags-view's horizontal
+	 * lanes row) would push this track past its `1fr` allocation and
+	 * clip against the window edge. With this set, the `1fr` track holds
+	 * its width and the inner `.bookmarks__tag-boards` (overflow-x: auto)
+	 * shows its own horizontal scrollbar. */
+	min-width: 0;
+	overflow-y: auto;
+	/* Vertical padding only on the scroll viewport so the scrollbar sits at
+	 * the window edge (not floated inward). Horizontal padding lives on the
+	 * content children below (explicit per child — a blanket `> *` rule loses
+	 * to any child that sets the `padding` shorthand, e.g. the card list). */
+	padding: var(--space-5) 0;
+}
+
+/* Flat (virtualized) card list: the pane is a non-scrolling flex column whose
+ * single `.bookmarks__card-scroll` child scrolls. The pane title + dedup banner
+ * live INSIDE that scroll viewport (rendered as the card list's `header`/`banner`
+ * slots) so they scroll away with the cards rather than staying pinned. */
+.bookmarks__main--list {
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	padding: 0;
+}
+
+.bookmarks__card-scroll {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	position: relative;
+	padding: var(--space-5) var(--space-6);
+}
+
+/* The flat list reads as a centered reading column (consistent with the Notes
+ * doc + this app's own detail sheet), not a full-bleed sweep that strands the
+ * row content on the left of a wide window. The header, banner and card list
+ * share the SAME 72ch column AND the same inline inset so the title aligns with
+ * the rows. The column width matches `.bm-detail__sheet` (72ch) so list ↔ detail
+ * align. */
+.bookmarks__card-scroll .bookmarks__main-header,
+.bookmarks__card-scroll .bookmarks__dedup-banner,
+.bookmarks__card-scroll .bookmarks__cards {
+	box-sizing: border-box;
+	max-width: 72ch;
+	margin-inline: auto;
+	padding-inline: var(--space-6);
+}
+
+.bookmarks__card-scroll .bookmarks__dedup-banner {
+	margin-block: 0 var(--space-3);
+}
+
+/* Row wrapper carries the inter-card gap inside its measured box (virtual
+ * rows pack tight; `measureElement` ignores margins). */
+.bookmarks__card-row {
+	padding-bottom: var(--space-2);
+}
+
+.bookmarks__main-header {
+	display: flex;
+	align-items: baseline;
+	gap: var(--space-3);
+	margin-bottom: var(--space-4);
+	padding-inline: var(--space-6);
+}
+
+.bookmarks__main-title {
+	font-size: var(--text-size-2xl);
+	font-weight: var(--text-weight-semibold, 600);
+	color: var(--text);
+}
+
+.bookmarks__main-subtitle {
+	color: var(--text-faint);
+	font-size: var(--text-size-sm);
+}
+
+.bookmarks__empty {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-3);
+	color: var(--text-faint);
+	padding: var(--space-6);
+}
+
+.bookmarks__empty p {
+	margin: 0;
+}
+
+/* ── Cards ───────────────────────────────────────────────────────────── */
+
+.bookmarks__cards {
+	list-style: none;
+	margin: 0;
+	padding: 0 var(--space-6);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.bookmarks__card {
+	position: relative;
+	display: flex;
+	gap: var(--space-3);
+	padding: var(--space-2);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-md);
+	background: var(--bg);
+	transition: border-color 0.12s ease, background 0.12s ease;
+}
+
+.bookmarks__card:hover {
+	border-color: var(--border-strong);
+	background: var(--hover);
+}
+
+/* Thumbnail = the cover with the favicon/icon badged into its corner —
+   one cohesive mark. The cover fills the box; the badge floats over its
+   bottom-right with a card-coloured ring so it punches cleanly off the
+   cover edge. */
+.bookmarks__card-thumb {
+	position: relative;
+	flex: 0 0 96px;
+	width: 96px;
+	height: 64px;
+	align-self: flex-start;
+}
+
+/* No own cover → a quiet neutral tile with just the favicon / a globe glyph,
+ * never the id-seeded gradient (a list of coloured blocks reads as noise). */
+.bookmarks__card-thumb--bare {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--radius-md);
+	background: var(--bg-elev);
+	border: var(--border-width) solid var(--border);
+	color: var(--text-faint);
+}
+
+.bookmarks__card-thumb-mark :is(img, svg) {
+	width: 24px;
+	height: 24px;
+	border-radius: var(--radius-xs);
+	object-fit: cover;
+	display: block;
+}
+
+.bookmarks__card-thumb-glyph {
+	color: var(--text-faint);
+}
+
+.bookmarks__card-swatch {
+	width: 100%;
+	height: 100%;
+	border-radius: var(--radius-md);
+	display: block;
+}
+
+.bookmarks__card-favicon-badge {
+	position: absolute;
+	right: -4px;
+	bottom: -4px;
+	width: 18px;
+	height: 18px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--radius-sm);
+	background: var(--bg);
+	box-shadow: 0 0 0 2px var(--bg);
+	overflow: hidden;
+}
+
+.bookmarks__card-favicon-badge :is(img, svg) {
+	width: 16px;
+	height: 16px;
+	border-radius: var(--radius-xs);
+}
+
+.bookmarks__card-body {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.bookmarks__card-title-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	min-width: 0;
+}
+
+.bookmarks__card-favicon {
+	width: 16px;
+	height: 16px;
+	border-radius: var(--radius-xs);
+	object-fit: cover;
+}
+
+/* Title is a <button> that opens the detail view — reset the button chrome
+ * and present it as inline text. */
+.bookmarks__card-title {
+	appearance: none;
+	background: none;
+	border: 0;
+	padding: 0;
+	margin: 0;
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium, 500);
+	color: var(--text);
+	text-align: left;
+	cursor: pointer;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	flex: 1;
+	min-width: 0;
+}
+
+.bookmarks__card-title:hover {
+	color: var(--accent);
+	text-decoration: underline;
+}
+
+.bookmarks__card-title:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 2px;
+	border-radius: var(--radius-xs);
+}
+
+/* Duplicate-links banner (9.18.11). A quiet accent-tinted bar under the
+ * main header with a one-click Merge. */
+.bookmarks__dedup-banner {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	margin: 0 var(--space-4) var(--space-3);
+	padding: var(--space-2) var(--space-2);
+	color: var(--text-dim);
+	background: var(--color-accent-subtle, var(--bg-elev));
+	border-radius: var(--radius-sm);
+}
+
+.bookmarks__dedup-label {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.bookmarks__dedup-merge {
+	flex: 0 0 auto;
+	padding: var(--space-0_5);
+	font: inherit;
+	font-weight: var(--text-weight-medium, 500);
+	color: var(--color-accent-strong, var(--text));
+	background: transparent;
+	border: var(--border-width) solid var(--accent, currentColor);
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+}
+
+.bookmarks__dedup-merge:hover {
+	background: var(--color-accent-subtle, var(--bg-elev));
+}
+
+.bookmarks__card-meta {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	min-width: 0;
+}
+
+.bookmarks__card-domain {
+	font-size: var(--text-size-xs);
+	color: var(--text-faint);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* Content-kind badge (9.18.14) — a small uppercase chip telling article from
+ * video from book at a glance. Tinted by the accent so it reads as metadata,
+ * not a tag. */
+.bookmarks__card-kind {
+	flex: 0 0 auto;
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium, 500);
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--color-accent-strong, var(--text-dim));
+	background: var(--color-accent-subtle, var(--bg-elev));
+	padding: 1px;
+	border-radius: var(--radius-xs);
+}
+
+.bookmarks__card-desc {
+	margin: var(--space-0_5) 0 0;
+	font-size: var(--text-size-sm);
+	color: var(--text-dim);
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.bookmarks__card-tags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-1);
+	margin-top: var(--space-1);
+}
+
+.bookmarks__card-tag {
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	background: var(--bg-elev);
+	padding: 0 var(--space-1);
+	border-radius: var(--radius-full);
+}
+
+/* The card's only trailing affordance is the ⋯ object menu (every action
+ * lives inside it). It floats over the card's top-right corner — absolutely
+ * positioned so it costs no layout width (the title/description span the full
+ * card) — and is revealed on hover / keyboard focus, hidden otherwise so the
+ * row stays quiet. The ⋯ itself (`.bs-object-menu__more`) is the shared 28px
+ * trigger. */
+.bookmarks__card-actions {
+	position: absolute;
+	top: var(--space-2);
+	inset-inline-end: var(--space-2);
+	display: flex;
+	gap: var(--space-0_5);
+	opacity: 0;
+	transition: opacity 0.12s ease;
+}
+
+.bookmarks__card:hover .bookmarks__card-actions,
+.bookmarks__card:focus-within .bookmarks__card-actions {
+	opacity: 1;
+}
+
+.bookmarks__surface-tag {
+	font-size: var(--text-size-xs);
+	padding: var(--space-0_5);
+	border-radius: var(--radius-full);
+	border: var(--border-width) solid var(--border-strong);
+	color: var(--text-faint);
+	flex: 0 0 auto;
+}
+
+.bookmarks__surface-tag--read {
+	border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+	color: var(--accent);
+}
+
+.bookmarks__surface-tag--archive {
+	border-color: var(--border-strong);
+	color: var(--text-dim);
+}
+
+/* ── Tag boards ──────────────────────────────────────────────────────── */
+
+/* Database-style horizontal Kanban board (9.18.3): one lane per tag,
+   side by side, each lane independently scrollable. The board scrolls
+   horizontally when the lanes overflow. */
+.bookmarks__tag-boards {
+	display: flex;
+	flex-direction: row;
+	align-items: flex-start;
+	gap: var(--space-4);
+	overflow-x: auto;
+	overflow-y: hidden;
+	height: 100%;
+	padding: 0 var(--space-6) var(--space-2);
+}
+
+.bookmarks__tag-board {
+	flex: 0 0 280px;
+	width: 280px;
+	box-sizing: border-box;
+	/* Load-bearing: flex items default to `min-width: auto`, so a long
+	   unbreakable tag name / URL in a card would let a lane grow past its
+	   280px basis — that's the uneven-column-width bug. Pin it to 0 so
+	   every lane is exactly 280px and the inner content truncates. */
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	max-height: 100%;
+	min-height: 0;
+	background: var(--bg-elev, var(--bg));
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-lg);
+	padding: var(--space-2);
+	transition: border-color 0.12s ease, background 0.12s ease;
+}
+
+/* Card-move drop target: the lane a dragged card is hovering over. */
+.bookmarks__tag-board--drop-target {
+	border-color: var(--accent, var(--border-strong));
+	background: var(--color-accent-subtle, var(--hover));
+}
+
+/* Column-reorder insertion hint: a thick accent edge on the lane the
+   dragged column will land before. */
+.bookmarks__tag-board--reorder-target {
+	box-shadow: inset 3px 0 0 0 var(--accent, var(--border-strong));
+}
+
+.bookmarks__card--dragging {
+	opacity: 0.4;
+}
+
+.bookmarks__tag-board .bookmarks__cards {
+	overflow-y: auto;
+	min-height: 0;
+	flex: 1 1 auto;
+	/* The lane already pads; don't double-pad with the main list's inset. */
+	padding-inline: 0;
+}
+
+/* Narrow lanes (280px) can't afford the in-flow read/archive/⋯ cluster +
+   status pill both stealing the title's width — titles were collapsing to
+   "cr…". In the board only: float the actions into the card's top-right
+   corner, revealed on hover / keyboard focus, and fade the status pill out
+   as they appear so the two never stack. At rest the title gets the lane's
+   full width; the status pill reads cleanly. */
+.bookmarks__tag-board .bookmarks__card {
+	position: relative;
+}
+
+.bookmarks__tag-board .bookmarks__card-actions {
+	position: absolute;
+	top: var(--space-2);
+	right: var(--space-2);
+	padding: var(--space-0_5);
+	border-radius: var(--radius-md);
+	background: var(--bg-elev, var(--bg));
+	box-shadow: var(--shadow-md);
+	opacity: 0;
+	pointer-events: none;
+}
+
+.bookmarks__tag-board .bookmarks__card:hover .bookmarks__card-actions,
+.bookmarks__tag-board .bookmarks__card:focus-within .bookmarks__card-actions {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.bookmarks__tag-board .bookmarks__surface-tag {
+	transition: opacity 0.12s ease;
+}
+
+.bookmarks__tag-board .bookmarks__card:hover .bookmarks__surface-tag,
+.bookmarks__tag-board .bookmarks__card:focus-within .bookmarks__surface-tag {
+	opacity: 0;
+}
+
+.bookmarks__tag-board-head {
+	position: sticky;
+	top: 0;
+	display: flex;
+	align-items: baseline;
+	gap: var(--space-2);
+	min-width: 0;
+	margin: 0 0 var(--space-2);
+	padding: var(--space-1) var(--space-1) var(--space-2);
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-semibold, 600);
+	color: var(--text);
+	border-bottom: var(--border-width) solid var(--color-border-subtle, var(--border));
+	background: var(--bg-elev, var(--bg));
+}
+
+/* The tag-named lanes are drag-handles for column reorder; the trailing
+   Untagged lane is pinned last and stays a plain header. */
+.bookmarks__tag-board-head--draggable {
+	cursor: grab;
+}
+
+.bookmarks__tag-board-head--draggable:active {
+	cursor: grabbing;
+}
+
+.bookmarks__tag-board-label::before {
+	content: "#";
+	color: var(--text-faint);
+}
+
+.bookmarks__tag-board-label {
+	color: var(--text);
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.bookmarks__tag-board-count {
+	flex: 0 0 auto;
+	font-size: var(--text-size-xs);
+	color: var(--text-faint);
+	font-weight: var(--text-weight-medium, 500);
+}
+
+/* ── Card actions: keep keyboard-reachable ───────────────────────────── */
+
+/* The ⋯ object-menu trigger lives in .bookmarks__card-actions, which is
+   opacity:0 until hover — that hides it from keyboard users. Reveal on
+   focus-within so Tab into the row exposes ⋯ + read/archive. */
+.bookmarks__card:focus-within .bookmarks__card-actions {
+	opacity: 1;
+}
+
+/* ── Compose / edit-tags form (inside the shared SDK popover) ─────────── */
+
+.bookmarks__form {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+}
+
+.bookmarks__form-row {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.bookmarks__form-label {
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	font-weight: var(--text-weight-medium, 500);
+}
+
+.bookmarks__form-input {
+	font: inherit;
+	font-size: var(--text-size-md);
+	color: var(--text);
+	background: var(--bg-elev);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-sm);
+	height: var(--control-height-md, 32px);
+	padding: 0 var(--space-2);
+}
+
+textarea.bookmarks__form-input {
+	height: auto;
+	min-height: 64px;
+	padding: var(--space-1);
+	resize: vertical;
+}
+
+.bookmarks__form-input:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+	border-color: transparent;
+}
+
+.bookmarks__form-error {
+	margin: 0;
+	font-size: var(--text-size-xs);
+	color: var(--danger);
+}
+
+/* The "Download page content" checkbox is the shared `@brainstorm/sdk/checkbox`
+ * (`.checkbox` chrome from app-theme.css) — no app-local checkbox styling. */
+
+.bookmarks__form-footer {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--space-2);
+}
+
+/* Compose / empty-state buttons use the shared `.bs-btn` primitive
+ * (secondary · data-bs-primary). */
+
+/* ── Bookmark detail view (Notes-like: cover · icon · title · editor) ─── */
+
+.bookmarks__card {
+	cursor: pointer;
+}
+
+/* The detail surface is its own scroll container; the cover is full-bleed so
+ * it overrides the list view's vertical padding. */
+.bookmarks__detail-island {
+	padding: 0;
+}
+
+.bm-detail {
+	min-height: 100%;
+}
+
+/* The cover is a button (opens the cover picker) — strip the native chrome
+ * so it reads as the banner, with a subtle hover/focus affordance. */
+.bm-detail__cover {
+	display: block;
+	width: 100%;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: none;
+	cursor: pointer;
+	position: relative;
+}
+
+.bm-detail__cover > span {
+	display: block;
+	width: 100%;
+}
+
+.bm-detail__cover:hover {
+	filter: brightness(1.03);
+}
+
+.bm-detail__cover:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -2px;
+}
+
+.bm-detail__cover-img {
+	display: block;
+	width: 100%;
+}
+
+/* Reading sheet — centered column. The properties inspector is the shared
+ * `@brainstorm/sdk/properties-panel` (`.bs-props`): a fixed glass overlay that
+ * slides in over this content, so the sheet stays full-width underneath. */
+.bm-detail__sheet {
+	max-width: 72ch;
+	margin: 0 auto;
+	padding: 0 var(--space-6) var(--space-8);
+}
+
+.bm-detail__titlerow {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	margin-top: var(--space-4);
+}
+
+.bm-detail__icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	flex: 0 0 40px;
+	color: var(--text-dim);
+}
+
+.bm-detail__favicon {
+	width: 40px;
+	height: 40px;
+	border-radius: var(--radius-md);
+	object-fit: cover;
+}
+
+.bm-detail__title {
+	margin: 0;
+	font-size: var(--text-size-2xl);
+	font-weight: var(--text-weight-semibold, 600);
+	color: var(--text);
+	line-height: 1.25;
+}
+
+.bm-detail__title-link {
+	color: inherit;
+	text-decoration: none;
+}
+
+.bm-detail__title-link:hover {
+	text-decoration: underline;
+}
+
+.bm-detail__source {
+	display: inline-block;
+	margin: var(--space-1) 0 var(--space-4);
+	font-size: var(--text-size-sm);
+	color: var(--text-faint);
+	text-decoration: none;
+}
+
+.bm-detail__source:hover {
+	color: var(--text-dim);
+	text-decoration: underline;
+}
+
+/* Capture-state feedback (9.18.12): a quiet "Capturing…" status + an error
+ * banner with a retry button. */
+.bm-detail__capturing {
+	margin: 0 0 var(--space-2);
+	font-size: var(--text-size-sm);
+	color: var(--text-dim);
+}
+
+.bm-detail__capture-error {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	margin: 0 0 var(--space-2);
+	padding: var(--space-2) var(--space-2);
+	color: var(--danger, var(--text-dim));
+	background: var(--danger-bg, var(--bg-elev));
+	border-radius: var(--radius-sm);
+}
+
+.bm-detail__capture-retry {
+	flex: 0 0 auto;
+	margin-left: auto;
+	padding: var(--space-0_5);
+	font: inherit;
+	color: var(--color-accent-strong, var(--text));
+	background: transparent;
+	border: var(--border-width) solid var(--border, currentColor);
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+}
+
+.bm-detail__capture-retry:hover {
+	background: var(--bg-elev);
+}
+
+/* Large-page caution + machine-extraction provenance (9.18.13). The caution
+ * is a warning-tinted note; the provenance is a quiet caption. */
+.bm-detail__truncation {
+	margin: 0 0 var(--space-2);
+	padding: var(--space-2) var(--space-2);
+	line-height: 1.5;
+	color: var(--warn, var(--text-dim));
+	background: var(--warn-bg, var(--bg-elev));
+	border-radius: var(--radius-sm);
+}
+
+.bm-detail__provenance {
+	margin: 0 0 var(--space-3);
+	font-size: var(--text-size-xs);
+	color: var(--text-faint);
+}
+
+.bm-detail__body {
+	font-size: var(--text-size-md);
+	line-height: 1.65;
+	color: var(--text);
+}
+
+.bm-detail__placeholder {
+	color: var(--text-faint);
+}

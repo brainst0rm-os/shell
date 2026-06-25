@@ -1,0 +1,126 @@
+/**
+ * 11b.11 — the builder's trigger model. A workflow is bound to its own
+ * `Trigger/v1` entity (one trigger can fire many workflows); the builder
+ * authors a minimal trigger for the engine-wired kinds (Time / EntityEvent
+ * / Manual — `ENGINE_TRIGGER_KINDS`). The richer time recurrence + entity
+ * filters stay the template / future-iteration surface; v1 offers a
+ * sensible default per kind so an authored workflow actually fires once the
+ * scheduler is live.
+ */
+
+import {
+	ENGINE_TRIGGER_KINDS,
+	EntityEventVerb,
+	type Recurrence,
+	RecurrenceKind,
+	type TriggerDef,
+	TriggerKind,
+	Weekday,
+	isEntityEventVerb,
+	isTriggerKind,
+} from "@brainstorm/sdk-types";
+
+/** The trigger kinds the v1 builder palette offers — the engine-wired set. */
+export const BUILDER_TRIGGER_KINDS = ENGINE_TRIGGER_KINDS;
+
+/** A daily recurrence preset for a `Time` trigger (the safe default). */
+export enum TimePreset {
+	Daily = "daily",
+	Weekdays = "weekdays",
+	Weekly = "weekly",
+	Monthly = "monthly",
+}
+
+export const TIME_PRESETS = Object.freeze([
+	TimePreset.Daily,
+	TimePreset.Weekdays,
+	TimePreset.Weekly,
+	TimePreset.Monthly,
+]) as readonly TimePreset[];
+
+/** The editable trigger half of builder state — kind plus the few fields
+ *  the v1 builder exposes per kind. */
+export type BuilderTrigger = {
+	kind: TriggerKind;
+	/** `Time`: the recurrence preset. */
+	timePreset: TimePreset;
+	/** `EntityEvent`: the watched type + lifecycle verb. */
+	entityType: string;
+	verb: EntityEventVerb;
+};
+
+export function emptyBuilderTrigger(): BuilderTrigger {
+	return {
+		kind: TriggerKind.Manual,
+		timePreset: TimePreset.Daily,
+		entityType: "",
+		verb: EntityEventVerb.Create,
+	};
+}
+
+const WEEKDAYS: readonly Weekday[] = [
+	Weekday.Mon,
+	Weekday.Tue,
+	Weekday.Wed,
+	Weekday.Thu,
+	Weekday.Fri,
+];
+
+function recurrenceForPreset(preset: TimePreset): Recurrence {
+	switch (preset) {
+		case TimePreset.Weekdays:
+			return { kind: RecurrenceKind.Weekly, every: 1, days: [...WEEKDAYS] };
+		case TimePreset.Weekly:
+			return { kind: RecurrenceKind.Weekly, every: 1, days: [Weekday.Mon] };
+		case TimePreset.Monthly:
+			return { kind: RecurrenceKind.Monthly, every: 1 };
+		default:
+			return { kind: RecurrenceKind.Daily, every: 1 };
+	}
+}
+
+/** Freeze the builder trigger into a `Trigger/v1` def the scheduler reads. */
+export function builderTriggerToDef(trigger: BuilderTrigger): TriggerDef {
+	switch (trigger.kind) {
+		case TriggerKind.Time:
+			return {
+				kind: TriggerKind.Time,
+				config: { recurrence: recurrenceForPreset(trigger.timePreset) },
+				enabled: true,
+			};
+		case TriggerKind.EntityEvent:
+			return {
+				kind: TriggerKind.EntityEvent,
+				config: { entityType: trigger.entityType.trim(), verb: trigger.verb },
+				enabled: true,
+			};
+		default:
+			return { kind: TriggerKind.Manual, config: {}, enabled: true };
+	}
+}
+
+/** Recover an editable builder trigger from a persisted `Trigger/v1` def —
+ *  best-effort, defaulting unknown / missing fields (Edit flow). */
+export function builderTriggerFromDef(def: TriggerDef): BuilderTrigger {
+	const base = emptyBuilderTrigger();
+	if (isTriggerKind(def.kind)) base.kind = def.kind;
+	const config = def.config ?? {};
+	if (def.kind === TriggerKind.EntityEvent) {
+		if (typeof config.entityType === "string") base.entityType = config.entityType;
+		if (isEntityEventVerb(config.verb)) base.verb = config.verb;
+	}
+	if (def.kind === TriggerKind.Time) {
+		const recurrence = config.recurrence as Recurrence | undefined;
+		base.timePreset = presetFromRecurrence(recurrence);
+	}
+	return base;
+}
+
+function presetFromRecurrence(recurrence: Recurrence | undefined): TimePreset {
+	if (!recurrence) return TimePreset.Daily;
+	if (recurrence.kind === RecurrenceKind.Monthly) return TimePreset.Monthly;
+	if (recurrence.kind === RecurrenceKind.Weekly) {
+		return recurrence.days && recurrence.days.length > 1 ? TimePreset.Weekdays : TimePreset.Weekly;
+	}
+	return TimePreset.Daily;
+}

@@ -1,0 +1,59 @@
+/* The native widget surface paints ONLY the body — the shell renderer strip
+ * draws the title / open / drag / options chrome above this view.
+ *
+ * A size container so widget content can respond to the tile's ACTUAL pixel
+ * footprint (drag-resizable, so this stays correct after a resize — a static
+ * launch-size attribute would go stale). `--widget-pad` below scales off it.
+ *
+ * Sized off the frame's viewport (`100dvw`/`100dvh`), NOT `100%`: `container-type:
+ * size` applies size containment, so this element no longer grows to fit its
+ * content. A percentage height only resolves when every ancestor up the chain has
+ * a definite height, but the app's `#root` mount div is auto-height — so `height:
+ * 100%` would collapse to ZERO and the body would render blank. The widget always
+ * owns its whole frame, so the viewport is the correct, chain-independent size. */
+.bs-widget {
+	display: flex;
+	flex-direction: column;
+	width: 100dvw;
+	height: 100dvh;
+	min-height: 0;
+	box-sizing: border-box;
+	overflow: hidden;
+	background: var(--bg-elev);
+	color: var(--text);
+	container-type: size;
+	container-name: bswidget;
+}
+
+/* Full-bleed by default: glance widgets are mostly edge-to-edge lists whose
+ * rows carry their own padding (and a hover highlight that should reach the
+ * card edges). A widget that wants inset content pads its own root — stacking a
+ * body inset on top of that just over-indents every row (the recent-notes list
+ * was triple-padded: body + list + row).
+ *
+ * `--widget-pad` is the breathing-room a size-aware widget should consume for
+ * its own root padding / gaps instead of a hardcoded `--space-1`. Defaults to
+ * the compact small/medium value; the container query below bumps it (plus the
+ * inherited base type) on a large/tall tile. */
+.bs-widget__body {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	--widget-pad: var(--space-1);
+}
+
+/* A large/tall tile (the 320×320 footprint leaves ~290px of body under the 30px
+ * chrome strip; medium is ~130px). Past this threshold the glance content has
+ * room to breathe — roomier inset + a slightly larger base type. */
+@container bswidget (min-height: 240px) {
+	.bs-widget__body {
+		--widget-pad: var(--space-2);
+		font-size: var(--text-size-md);
+	}
+}
+
+.bs-widget__missing {
+	padding: var(--space-2);
+	color: var(--text-dim);
+	font-size: var(--text-size-sm);
+}

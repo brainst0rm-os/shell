@@ -1,0 +1,82 @@
+/* The composer context rail — chips for documents / people / media the user
+   attached to the next turn. Tokens only (see the no-phantom-CSS-tokens rule);
+   mirrors the agent tool/citation chip treatment so the composer reads as one
+   surface. */
+
+.bs-composer-context {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-1);
+	padding: var(--space-2) var(--space-2) 0;
+}
+
+.bs-composer-context__chip {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	max-width: 16rem;
+	font-size: var(--text-size-xs);
+	color: var(--color-text-secondary);
+	background: var(--color-surface-default);
+	border: 1px solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+	padding: 2px var(--space-1) 2px var(--space-2);
+}
+
+.bs-composer-context__chip[data-kind="entity"],
+.bs-composer-context__chip[data-kind="person"] {
+	color: var(--color-accent);
+	background: var(--color-accent-subtle);
+}
+
+.bs-composer-context__chip-label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.bs-composer-context__chip-remove {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 2px;
+	border: none;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: inherit;
+	cursor: pointer;
+	opacity: 0.7;
+}
+
+.bs-composer-context__chip-remove:hover {
+	opacity: 1;
+	background: var(--hover);
+}
+
+/* The "+" attach button — a quiet icon button sized to sit inline with a
+   composer's send control. The host positions it within its composer row. */
+.bs-composer-context__attach {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	border: none;
+	border-radius: var(--radius-md);
+	background: transparent;
+	color: var(--color-text-secondary);
+	cursor: pointer;
+	transition: background var(--motion-duration-fast) var(--motion-easing-standard);
+}
+
+.bs-composer-context__attach:hover:not(:disabled) {
+	background: var(--hover);
+	color: var(--color-text-primary);
+}
+
+.bs-composer-context__attach:disabled {
+	opacity: 0.4;
+	cursor: default;
+}

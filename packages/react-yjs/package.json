@@ -1,0 +1,33 @@
+{
+  "name": "@brainstorm/react-yjs",
+  "version": "0.0.1",
+  "private": true,
+  "description": "React hooks bridging Yjs CRDT state into React components.",
+  "license": "UNLICENSED",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@brainstorm/sdk-types": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "yjs": "^13.6.30"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "yjs": "^13.6.30"
+  }
+}

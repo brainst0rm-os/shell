@@ -1,0 +1,390 @@
+/* IconPicker — modal-style picker. Mirrors the shell's picker visually but
+ * uses Notes' local design tokens (declared in styles.css). When the shell
+ * pushes its theme tokens into apps (Stage 13) this stylesheet swaps to
+ * the shared variables and the class names stay the same. */
+
+.icon-picker {
+	position: fixed;
+	inset: 0;
+	z-index: 1000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	pointer-events: none;
+}
+
+.icon-picker__backdrop {
+	position: absolute;
+	inset: 0;
+	/* Modal scrim — dark across themes by convention (the rest of the
+	 * UI is dimmed; a theme-bound tint would invert in light mode and
+	 * stop reading as "everything else is suppressed"). */
+	background: rgba(0, 0, 0, 0.4);
+	pointer-events: auto;
+	border: 0;
+}
+
+.icon-picker__panel {
+	position: relative;
+	width: min(520px, 92vw);
+	height: min(560px, 80vh);
+	display: flex;
+	flex-direction: column;
+	border-radius: var(--radius-lg);
+	border: var(--border-width) solid var(--border-strong);
+	background: var(--bg);
+	box-shadow: var(--shadow-lg, 0 10px 30px rgba(0, 0, 0, 0.25)),
+		var(--shadow-sm, 0 2px 6px rgba(0, 0, 0, 0.12));
+	pointer-events: auto;
+	overflow: hidden;
+}
+
+.icon-picker__tabs {
+	display: flex;
+	align-items: center;
+	gap: var(--space-0_5);
+	height: var(--app-header-height, 44px);
+	box-sizing: border-box;
+	padding: 0 var(--space-2);
+	border-bottom: var(--border-width) solid var(--border);
+}
+
+.icon-picker__tab {
+	display: inline-flex;
+	align-items: center;
+	height: 28px;
+	font: inherit;
+	font-size: var(--text-size-md);
+	color: var(--text-dim);
+	background: transparent;
+	border: 0;
+	padding: 0 var(--space-2);
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+}
+
+.icon-picker__tab:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.icon-picker__tab--active {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.icon-picker__tabs-spacer {
+	flex: 1;
+}
+
+.icon-picker__action {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	background: transparent;
+	border: 0;
+	color: var(--text-dim);
+	padding: 0;
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+}
+
+.icon-picker__action:hover {
+	background: var(--danger-bg);
+	color: var(--danger);
+}
+
+.icon-picker__action:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 2px;
+}
+
+.icon-picker__search-row {
+	padding: var(--space-3) var(--space-2);
+	border-bottom: var(--border-width) solid var(--border);
+}
+
+.icon-picker__search {
+	width: 100%;
+	background: var(--bg-elev);
+	border: var(--border-width) solid var(--border-strong);
+	border-radius: var(--radius-sm);
+	color: var(--text);
+	font: inherit;
+	font-size: var(--text-size-md);
+	padding: var(--space-2) var(--space-2);
+	outline: none;
+}
+
+.icon-picker__search:focus {
+	border-color: var(--accent);
+}
+
+.icon-picker__body {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.icon-picker__scroll {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	padding: var(--space-2) var(--space-2);
+	contain: strict;
+}
+
+.icon-picker__virtual-inner {
+	position: relative;
+	width: 100%;
+}
+
+.icon-picker__virtual-item {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+}
+
+.icon-picker__virtual-row {
+	display: flex;
+	flex-wrap: nowrap;
+	gap: var(--space-0_5);
+	align-items: center;
+}
+
+.icon-picker__cell-placeholder {
+	width: 20px;
+	height: 20px;
+	border-radius: var(--radius-sm);
+	background: var(--hover);
+}
+
+.icon-picker__categories {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+}
+
+.icon-picker__category-label {
+	font-size: var(--text-size-xs);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--text-faint);
+	margin-bottom: var(--space-2);
+}
+
+.icon-picker__grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+	gap: var(--space-0_5);
+}
+
+.icon-picker__grid--large {
+	grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+	gap: var(--space-2);
+}
+
+.icon-picker__cell {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	background: transparent;
+	border: 0;
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+	padding: 0;
+	color: var(--text);
+}
+
+.icon-picker__cell:hover {
+	background: var(--hover);
+}
+
+.icon-picker__cell:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 2px;
+}
+
+/* KBN-S-pickers: the virtual grid is one Tab stop — the scroll container
+ * holds DOM focus and `aria-selected` marks the arrow-key cursor cell.
+ * The ring shows only while the grid itself is focused, so a pointer
+ * session isn't haunted by a stale cursor. */
+.icon-picker__scroll:focus {
+	outline: none;
+}
+
+.icon-picker__scroll:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -2px;
+}
+
+.icon-picker__scroll:focus .icon-picker__cell[aria-selected="true"],
+.icon-picker__scroll:focus-visible .icon-picker__cell[aria-selected="true"] {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -2px;
+	background: var(--color-accent-subtle);
+}
+
+.icon-picker__cell--image {
+	width: 56px;
+	height: 56px;
+	overflow: hidden;
+}
+
+.icon-picker__cell--image img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	border-radius: var(--radius-sm);
+}
+
+.icon-picker__empty {
+	padding: var(--space-5);
+	color: var(--text-faint);
+	font-size: var(--text-size-sm);
+	text-align: center;
+}
+
+.icon-picker__pending {
+	padding: var(--space-6) var(--space-5);
+	color: var(--text-dim);
+	font-size: var(--text-size-md);
+	line-height: 20px;
+	text-align: center;
+}
+
+.icon-picker__footer {
+	border-top: var(--border-width) solid var(--border);
+	padding: var(--space-2) var(--space-2);
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	min-height: var(--app-header-height);
+}
+
+.icon-picker__skin-row,
+.icon-picker__tint-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+}
+
+.icon-picker__skin {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	border: var(--border-width) solid transparent;
+	background: transparent;
+	cursor: pointer;
+	padding: 0;
+}
+
+.icon-picker__skin:hover {
+	background: var(--hover);
+}
+
+.icon-picker__skin--active {
+	border-color: var(--accent);
+}
+
+.icon-picker__swatch {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	border-radius: 50%;
+	border: 0;
+	background: transparent;
+	cursor: pointer;
+	padding: 0;
+}
+
+.icon-picker__swatch--active {
+	box-shadow: 0 0 0 2px var(--accent);
+}
+
+.icon-picker__swatch-fill {
+	display: block;
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	border: var(--border-width) solid var(--border-strong);
+}
+
+.icon-picker__swatch--custom {
+	width: 24px;
+	height: 24px;
+	background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red);
+	border-radius: 50%;
+	overflow: hidden;
+}
+
+.icon-picker__color-input {
+	opacity: 0;
+	width: 100%;
+	height: 100%;
+	cursor: pointer;
+}
+
+/* Upload + Library tabs (B11.14 custom emoji). */
+.icon-picker__upload {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-3);
+	min-height: 160px;
+	padding: var(--space-5);
+	text-align: center;
+}
+
+.icon-picker__upload-input {
+	display: none;
+}
+
+.icon-picker__upload-error {
+	color: var(--danger, #dc2626);
+	font-size: var(--text-size-xs);
+	max-width: 260px;
+}
+
+.icon-picker__library {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, 40px);
+	gap: var(--space-2);
+	padding: var(--space-2);
+	overflow-y: auto;
+	align-content: start;
+}
+
+.icon-picker__library-cell {
+	width: 40px;
+	height: 40px;
+	padding: var(--space-1);
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	cursor: pointer;
+}
+
+.icon-picker__library-cell:hover {
+	background: var(--color-accent-subtle, rgba(0, 0, 0, 0.06));
+	border-color: var(--color-border-subtle, rgba(0, 0, 0, 0.1));
+}
+
+.icon-picker__library-img {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}

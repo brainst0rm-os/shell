@@ -1,0 +1,115 @@
+/* Popovers sit ABOVE modals (Settings, etc.) — `--z-popover` (50) vs
+ * `--z-modal` (40). A confirm dialog opened from inside Settings is the
+ * canonical case: it must paint and hit-test above the modal beneath it. */
+.popover {
+	position: fixed;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: var(--z-popover);
+}
+
+.popover__backdrop {
+	position: absolute;
+	inset: 0;
+	background: var(--color-dimmer);
+	border: 0;
+	cursor: default;
+}
+
+/* Panel is a "glass" surface — translucent + blurred so the wallpaper /
+ * dashboard behind shows through. Density comes from .glass / .glass--strong
+ * in styles.css; the panel here only owns size + chrome. */
+.popover__panel {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	color: var(--color-text-primary);
+	border: var(--border-width) solid var(--color-glass-border);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-xl);
+	overflow: hidden;
+}
+
+.popover__panel--small {
+	width: 320px;
+	min-height: 220px;
+	max-height: min(80vh, 480px);
+}
+
+.popover__panel--medium {
+	width: 420px;
+	min-height: 340px;
+	max-height: min(80vh, 600px);
+}
+
+.popover__panel--large {
+	width: 640px;
+	min-height: 480px;
+	max-height: min(80vh, 760px);
+}
+
+/* Content-fit: drop the variant's `min-height` so a short body (a confirm
+ * message, a single credential field) sizes the panel to its content instead
+ * of holding a fixed minimum that leaves a dead gap above the footer. The
+ * variant's `max-height` still caps it, so long bodies scroll unchanged. */
+.popover__panel--fit {
+	min-height: 0;
+}
+
+/* Panel header — follows project rule "panel headers share a fixed height"
+ * (44px + 1px subtle bottom-border). Right padding optical-compensated for
+ * the 28×28 close button with a 20px icon: 16 − (28 − 20)/2 = 12. */
+.popover__header {
+	height: var(--app-header-height);
+	box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+	padding: 0 var(--space-2) 0 var(--space-4);
+	border-bottom: var(--border-width) solid var(--color-glass-border);
+	flex-shrink: 0;
+}
+
+.popover__title {
+	margin: 0;
+	font-size: var(--text-size-lg);
+	font-weight: var(--text-weight-semibold);
+	color: var(--color-text-primary);
+}
+
+.popover__body {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow-y: auto;
+}
+
+.popover__body--compact {
+	padding: var(--space-2);
+}
+
+.popover__body--comfortable {
+	padding: var(--space-4);
+}
+
+.popover__footer {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: var(--space-2);
+	padding: var(--space-3);
+	border-top: var(--border-width) solid var(--color-glass-border);
+	flex-shrink: 0;
+}
+
+/* A leading action (a destructive Delete / Remove / Clear) floats to the far
+ * left of the footer while the Cancel ↔ Confirm pair stays right-aligned —
+ * the one standard footer layout every dialog shares. */
+.popover__footer-lead {
+	margin-inline-end: auto;
+}

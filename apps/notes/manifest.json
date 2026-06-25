@@ -1,0 +1,60 @@
+{
+  "id": "io.brainstorm.notes",
+  "name": "Notes",
+  "version": "0.1.0",
+  "sdk": "1",
+  "description": "Plain-text notes — the first-party reference app demonstrating the full Brainstorm stack (manifest, install, launch, SDK, storage, intents).",
+  "icon": "icon.svg",
+  "entry": "dist/index.html",
+  "capabilities": [
+    "storage.kv",
+    "editor.spellcheck.read",
+    "editor.spellcheck.write",
+    "properties.read",
+    "properties.write",
+    "entities.read:io.brainstorm.notes/Note/v1",
+    "entities.write:io.brainstorm.notes/Note/v1",
+    "entities.read:*",
+    "entities.write:*",
+    "intents.dispatch:open",
+    "files.write",
+    "sharing.share"
+  ],
+  "registrations": {
+    "entityTypes": [
+      {
+        "id": "io.brainstorm.notes/Note/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/notes/note/v1.json",
+        "schema": {
+          "type": "object",
+          "required": ["id", "title", "body", "createdAt", "updatedAt"],
+          "properties": {
+            "id": { "type": "string" },
+            "title": { "type": "string" },
+            "body": { "type": "string" },
+            "createdAt": { "type": "number" },
+            "updatedAt": { "type": "number" }
+          }
+        }
+      }
+    ],
+    "openers": [
+      { "kind": "primary", "entityType": "io.brainstorm.notes/Note/v1" },
+      { "kind": "secondary", "mime": "text/plain" },
+      { "kind": "secondary", "mime": "text/markdown" }
+    ],
+    "intents": [
+      {
+        "verb": "open",
+        "entityType": "io.brainstorm.notes/Note/v1",
+        "priority": "primary"
+      },
+      {
+        "verb": "compose",
+        "entityType": "io.brainstorm.notes/Note/v1",
+        "priority": "primary"
+      }
+    ],
+    "widgets": [{ "id": "recent-notes", "name": "Recent Notes", "size": "medium" }]
+  }
+}

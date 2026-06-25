@@ -1,0 +1,171 @@
+:root {
+	color-scheme: dark;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	height: 100%;
+	overflow: hidden;
+	/* Match the window paint (BaseWindow `setBackgroundColor` uses
+	 * `color.background.primary`) so the strip and the traffic-light gutter to
+	 * its left read as ONE continuous title bar — no vertical seam where the
+	 * strip view starts. */
+	background: var(--color-background-primary, #0f0f0f);
+	color: var(--color-text-primary, #e7e7e7);
+	font-family: var(--font-family-sans, system-ui, sans-serif);
+	font-size: var(--text-size-sm);
+	user-select: none;
+}
+
+.strip {
+	display: flex;
+	align-items: center;
+	height: 100%;
+	/* The whole strip is a drag handle for the OS window… */
+	-webkit-app-region: drag;
+	/* Wear the SAME glass skin the app `.app-header` does, so the title bar and
+	 * the header below it read as one continuous chrome surface instead of a
+	 * dark title bar seamed against a lighter glass header. The body paints
+	 * `--color-background-primary` underneath (matching the traffic-light gutter
+	 * paint), so this veil composites to the identical tone as the header's
+	 * `--color-glass-background-subtle` over the app body. */
+	background: var(--color-glass-background-subtle, rgba(50, 50, 50, 0.38));
+	padding: var(--space-2);
+	gap: var(--space-1);
+}
+
+.strip__tabs {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	/* Size to content so the new-tab button trails the last tab (Chrome model)
+	 * instead of being shoved to the far window edge; the leftover strip stays
+	 * an empty OS drag region. `1` lets the row shrink + ellipsize when full. */
+	flex: 0 1 auto;
+	min-width: 0;
+	overflow: hidden;
+}
+
+/* …but the interactive controls are not, so they receive clicks. */
+.tab,
+.strip__new,
+.tab__close {
+	-webkit-app-region: no-drag;
+}
+
+.tab {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	height: 28px;
+	max-width: 220px;
+	min-width: 0;
+	flex: 0 1 auto;
+	padding: 0 var(--space-2) 0 10px;
+	border-radius: var(--radius-md);
+	cursor: default;
+	color: var(--color-text-secondary, #b4b4b4);
+	/* Every tab gets a quiet contained surface — a resting tab must read as a
+	 * tab, not as a stray text label floating in the title bar. The alpha
+	 * `surface` tones are the same family the header's glass controls use, so a
+	 * resting tab matches a resting header button on the shared glass. */
+	background: var(--color-surface-default, rgba(255, 255, 255, 0.05));
+	transition: background 120ms ease, color 120ms ease, box-shadow 120ms ease;
+}
+
+.tab:hover {
+	background: var(--color-surface-overlay, rgba(255, 255, 255, 0.1));
+	color: var(--color-text-primary, #f2f2f2);
+}
+
+/* The active tab is the elevated foreground surface: brighter fill, a hairline
+ * inset highlight instead of a hard chip border, and a soft drop. */
+.tab--active,
+.tab--active:hover {
+	background: var(--color-surface-overlay, rgba(255, 255, 255, 0.1));
+	color: var(--color-text-primary, #f2f2f2);
+	box-shadow:
+		inset 0 0 0 1px var(--color-glass-border, rgba(255, 255, 255, 0.14)),
+		0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.tab__icon {
+	flex: 0 0 auto;
+	width: 15px;
+	height: 15px;
+	object-fit: cover;
+	border-radius: var(--radius-xs);
+	pointer-events: none;
+}
+
+.tab__title {
+	flex: 1 1 auto;
+	min-width: 24px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-weight: 450;
+}
+
+.tab--active .tab__title {
+	font-weight: 500;
+}
+
+.tab__close {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	padding: 0;
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: inherit;
+	font-size: 14px;
+	line-height: 1;
+	cursor: default;
+	/* Chrome model: the close affordance stays hidden until the tab is hovered
+	 * or active, so a quiet row of background tabs reads as plain titles. It
+	 * keeps its layout slot either way — the label never shifts on hover. */
+	opacity: 0;
+	transition: opacity 100ms ease, background 100ms ease;
+}
+
+.tab:hover .tab__close,
+.tab--active .tab__close {
+	opacity: 0.55;
+}
+
+.tab .tab__close:hover {
+	opacity: 1;
+	background: var(--color-surface-overlay, rgba(255, 255, 255, 0.12));
+}
+
+.strip__new {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border: 0;
+	border-radius: var(--radius-md);
+	background: transparent;
+	color: var(--color-text-secondary, #b4b4b4);
+	font-size: 17px;
+	line-height: 1;
+	cursor: default;
+	transition: background 120ms ease, color 120ms ease;
+}
+
+.strip__new:hover {
+	background: var(--color-surface-default, rgba(255, 255, 255, 0.06));
+	color: var(--color-text-primary, #f2f2f2);
+}

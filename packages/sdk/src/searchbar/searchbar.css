@@ -1,0 +1,93 @@
+/*
+ * `.bs-searchbar` chrome for both `attachSearchbar` (DOM) and `<Searchbar>`
+ * (React). Loaded from two places so both first-party apps (via
+ * `@brainstorm/sdk/app-theme.css`) AND the shell-privileged dashboard (via
+ * an explicit import in `packages/shell/src/renderer/main.tsx`) get
+ * identical chrome — the prior project-wide rule that "the SDK component
+ * library is for apps; the shell has its own" leaves `<Searchbar>` adopters
+ * inside the shell renderer (marketplace / settings → data) unstyled.
+ *
+ * Rules use SEMANTIC tokens (`--color-text-primary`, …) directly, not the
+ * app-side `--text` / `--accent` aliases — the shell renderer doesn't
+ * declare those short aliases, so referencing them would silently fall
+ * through to inherited / browser defaults.
+ */
+
+:root .bs-searchbar {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	min-width: 0;
+	height: var(--control-height-sm, 28px);
+	padding: 0 var(--space-2);
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--color-text-primary);
+	transition:
+		background-color var(--motion-duration-fast, 120ms) ease,
+		border-color var(--motion-duration-fast, 120ms) ease;
+}
+/* On focus, show the standard purple focus ring the rest of the design system
+   uses — not a filled surface + border, which reads as the field abruptly
+   changing shape when you click into it. */
+:root .bs-searchbar:focus-within {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 1px;
+}
+:root .bs-searchbar__icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+	color: var(--color-text-tertiary);
+}
+:root .bs-searchbar__input {
+	flex: 1 1 auto;
+	min-width: 0;
+	height: 100%;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--color-text-primary);
+	font: inherit;
+	font-size: var(--text-size-md);
+	outline: none;
+}
+:root .bs-searchbar__input::placeholder {
+	color: var(--color-text-tertiary);
+}
+/* type="search" paints a native WebKit cancel ✕ when the field has text;
+   we render our own .bs-searchbar__clear, so suppress the built-in to
+   avoid two stacked clear affordances. */
+:root .bs-searchbar__input::-webkit-search-cancel-button {
+	display: none;
+}
+:root .bs-searchbar__clear {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+	width: 20px;
+	height: 20px;
+	padding: 0;
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--color-text-tertiary);
+	cursor: pointer;
+}
+:root .bs-searchbar__clear:hover {
+	background: var(--color-interactive-hover);
+	color: var(--color-text-primary);
+}
+:root .bs-searchbar__clear:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}
+/* The DOM API toggles the ✕ via the `hidden` attribute. UA `hidden`
+   applies display:none at user-agent specificity, which the rule above
+   overrides — re-assert it at author specificity. */
+:root .bs-searchbar__clear[hidden] {
+	display: none;
+}

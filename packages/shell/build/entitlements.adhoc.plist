@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Empty entitlements for the UNSIGNED / ad-hoc macOS build.
+
+  electron-builder otherwise injects its default hardened-runtime entitlements
+  (`com.apple.security.cs.allow-jit` + `allow-unsigned-executable-memory`).
+  On an ad-hoc-signed app (no Developer ID), AMFI treats those entitlements as
+  a hardened-runtime posture and restricts the process — which blocks loading
+  the unsigned native `.node` addons and OS Keychain access under a GUI
+  (LaunchServices) launch. The symptom is "No OS keystore is available".
+
+  With `hardenedRuntime: false` the JIT entitlement is unnecessary (the JIT
+  restriction only applies under the hardened runtime), so an empty dict is
+  correct here. Restore build/entitlements.mac.plist once the app is signed
+  with a real Developer ID + notarized (13.1c / 13.2).
+-->
+<plist version="1.0">
+<dict/>
+</plist>

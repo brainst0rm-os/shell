@@ -1,0 +1,405 @@
+/* Shared comments panel (CommentsPanel — B11.9). Consistent across every
+ * editor app; the host mounts it in its right inspector / panel surface.
+ * Colors/sizes ride the app-theme alias tokens (--text/--bg-elev/--accent…)
+ * — the previous draft used token names that don't exist, so every value
+ * fell back to hardcoded light-theme rgba() and went muddy on dark. */
+
+.bs-comments {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3, var(--space-3));
+	padding: var(--space-3, var(--space-3));
+	overflow-y: auto;
+	font-size: var(--text-size-md);
+}
+
+.bs-comments__composer,
+.bs-comments__reply {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2, var(--space-2));
+}
+
+/* Comment-on-selection: the pending block's quote above the composer + a
+ * cancel affordance so the user can back out of the selection-anchored draft. */
+.bs-comments__pending {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: var(--space-2, var(--space-2));
+}
+
+.bs-comments__pending .bs-comments__quote {
+	flex: 1 1 auto;
+	margin: 0;
+}
+
+.bs-comments__pending-cancel {
+	flex: 0 0 auto;
+	height: 24px;
+	padding: 0 var(--space-2, var(--space-2));
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text-dim, inherit);
+	font: inherit;
+	font-size: var(--text-size-sm);
+	cursor: pointer;
+}
+
+.bs-comments__pending-cancel:hover {
+	background: var(--hover, rgba(127, 127, 127, 0.12));
+	color: var(--text, inherit);
+}
+
+/* Mirrors the shared cell-popover input: elevated fill, focus ring via
+ * outline (no layout shift), no resize grip. */
+.bs-comments__input {
+	width: 100%;
+	min-height: 30px;
+	resize: none;
+	padding: 5px;
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-md);
+	background: var(--bg-elev, rgba(127, 127, 127, 0.1));
+	color: var(--text, inherit);
+	font: inherit;
+	font-size: var(--text-size-md);
+	outline: none;
+}
+
+.bs-comments__input:focus {
+	outline: 2px solid color-mix(in srgb, var(--color-focus-ring, #4c8dff) 55%, transparent);
+	outline-offset: -1px;
+	background: var(--bg, transparent);
+}
+
+/* The rich variant wraps a CompactEditor: the chrome lives on the wrapper, the
+ * caret/text on the inner contenteditable, so the focus ring reacts to
+ * focus-within (not :focus, which never lands on the wrapper). */
+.bs-comments__input--rich {
+	display: grid;
+	cursor: text;
+}
+
+.bs-comments__input--rich .bs-compact-editor__content {
+	min-height: 20px;
+}
+
+.bs-comments__input--rich:focus-within {
+	outline: 2px solid color-mix(in srgb, var(--color-focus-ring, #4c8dff) 55%, transparent);
+	outline-offset: -1px;
+	background: var(--bg, transparent);
+}
+
+/* Send is the composer's one primary action — accent fill, right-aligned
+ * like a chat send. */
+.bs-comments__submit {
+	align-self: flex-end;
+	height: 26px;
+	padding: 0 10px;
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: var(--accent, #4c8dff);
+	color: var(--accent-fg, #fff);
+	font: inherit;
+	font-size: var(--text-size-sm);
+	font-weight: var(--text-weight-medium, 500);
+	cursor: pointer;
+}
+
+.bs-comments__submit:not(:disabled):hover {
+	background: var(--accent-strong, var(--accent, #4c8dff));
+}
+
+.bs-comments__submit:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+
+.bs-comments__empty {
+	margin: 0;
+	padding: var(--space-4, var(--space-4)) 0;
+	color: var(--text-faint, rgba(127, 127, 127, 0.8));
+	font-size: var(--text-size-sm);
+	text-align: center;
+}
+
+.bs-comments__threads {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2, var(--space-2));
+}
+
+.bs-comments__thread {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2, var(--space-2));
+	padding: var(--space-3, var(--space-3));
+	border: var(--border-width) solid var(--border, rgba(127, 127, 127, 0.18));
+	border-radius: var(--radius-md);
+	background: var(--bg-subtle, rgba(127, 127, 127, 0.06));
+}
+
+.bs-comments__thread[data-resolved="true"] {
+	opacity: 0.65;
+}
+
+/* Click-to-thread: the focused thread flashes so the eye lands on it after
+ * the scroll. Driven by a transient `data-pulse` the panel clears itself. */
+.bs-comments__thread[data-pulse="true"] {
+	animation: bs-comments-pulse 1.6s ease-out;
+}
+
+@keyframes bs-comments-pulse {
+	0%,
+	40% {
+		border-color: var(--accent, #4c8dff);
+		background: var(--accent-soft, rgba(76, 141, 255, 0.12));
+	}
+	100% {
+		border-color: var(--border, rgba(127, 127, 127, 0.18));
+		background: var(--bg-subtle, rgba(127, 127, 127, 0.06));
+	}
+}
+
+/* Right-panel tab strip — the Properties | Comments switcher every editor
+ * app's inspector renders (CommentsRightPanel). */
+.bs-panel-tabs {
+	flex: 0 0 auto;
+	display: flex;
+	gap: var(--space-1, var(--space-1));
+	padding: var(--space-1, var(--space-1)) var(--space-2, var(--space-2));
+	border-bottom: var(--border-width) solid var(--border, rgba(127, 127, 127, 0.18));
+}
+
+.bs-panel-tab {
+	flex: 1 1 0;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-1, var(--space-1));
+	height: var(--control-height-sm, 24px);
+	padding: 0 var(--space-2, var(--space-2));
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text-dim, inherit);
+	font: inherit;
+	font-size: var(--text-size-sm);
+	cursor: pointer;
+}
+
+.bs-panel-tab:hover {
+	background: var(--hover, rgba(127, 127, 127, 0.12));
+}
+
+/* Buttons never go bold — the active tab reads from the accent surface,
+ * the weight stays on the control scale (medium). */
+.bs-panel-tab[data-active="true"] {
+	background: var(--accent-soft, rgba(76, 141, 255, 0.12));
+	color: var(--text, inherit);
+	font-weight: var(--text-weight-medium, 500);
+}
+
+.bs-panel-tab:focus-visible {
+	outline: 2px solid var(--color-focus-ring, #4c8dff);
+	outline-offset: -2px;
+}
+
+.bs-panel-tab-badge {
+	min-width: 18px;
+	padding: 0 var(--space-1, var(--space-1));
+	border-radius: var(--radius-full);
+	background: var(--accent, #4c8dff);
+	color: var(--accent-fg, #fff);
+	font-size: var(--text-size-xs);
+	line-height: 18px;
+	text-align: center;
+}
+
+/* ── Commented-block highlight (CommentHighlightPlugin) ────────────────
+ * The tint is an ::after overlay, not styling on the block box itself: the
+ * block hugs its glyphs, so a background on it sticks to the text. The
+ * overlay bleeds a few px past the block on every side with zero layout
+ * shift. `z-index: 0` makes the block its own stacking context so the
+ * negative-z overlay still paints above ancestor backgrounds. ::after, not
+ * ::before — Notes' empty-paragraph hint owns ::before on blocks. */
+[data-bs-comment] {
+	position: relative;
+	z-index: 0;
+}
+
+[data-bs-comment]::after {
+	content: "";
+	position: absolute;
+	inset: -3px -10px;
+	z-index: -1;
+	border-radius: var(--radius-md);
+	background: color-mix(in srgb, var(--accent, #4c8dff) 8%, transparent);
+	box-shadow: inset 2px 0 0 var(--accent, #4c8dff);
+	pointer-events: none;
+}
+
+/* Click-to-thread hover chip — floats at a commented block's top-right (the
+ * code-block-toolbar positioning pattern); a distinct affordance so a plain
+ * click inside the block never hijacks to the panel. */
+.bs-comment-chip {
+	position: fixed;
+	z-index: 30;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	border: var(--border-width) solid var(--border, rgba(127, 127, 127, 0.18));
+	border-radius: var(--radius-sm);
+	background: var(--bg-elev, #fff);
+	color: var(--accent, #4c8dff);
+	cursor: pointer;
+}
+
+.bs-comment-chip:hover {
+	background: var(--accent-soft, rgba(76, 141, 255, 0.12));
+}
+
+.bs-comments__quote {
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	overflow: hidden;
+	margin: 0;
+	padding: 1px 0 1px 10px;
+	border-left: var(--border-width-thick) solid var(--accent, #4c8dff);
+	color: var(--text-dim, rgba(127, 127, 127, 0.9));
+	font-size: var(--text-size-sm);
+	font-style: italic;
+}
+
+.bs-comments__comment--reply {
+	margin-left: var(--space-2, var(--space-2));
+	padding-left: var(--space-2, var(--space-2));
+	border-left: var(--border-width-thick) solid var(--border, rgba(127, 127, 127, 0.18));
+}
+
+.bs-comments__meta {
+	display: flex;
+	align-items: baseline;
+	gap: var(--space-2, var(--space-2));
+}
+
+.bs-comments__author {
+	font-weight: var(--text-weight-semibold, 600);
+	font-size: var(--text-size-sm);
+}
+
+.bs-comments__time {
+	color: var(--text-faint, rgba(127, 127, 127, 0.8));
+	font-size: var(--text-size-xs);
+}
+
+.bs-comments__tag {
+	font-size: var(--text-size-xs);
+	padding: 0 var(--space-1, var(--space-1));
+	border-radius: var(--radius-sm);
+	background: var(--accent-soft, rgba(76, 141, 255, 0.12));
+	color: var(--accent, #4c8dff);
+}
+
+.bs-comments__tag--resolved {
+	background: color-mix(in srgb, var(--ok, #2ea043) 14%, transparent);
+	color: var(--ok, #2ea043);
+}
+
+.bs-comments__text {
+	margin: 0;
+	white-space: pre-wrap;
+	word-break: break-word;
+	font-size: var(--text-size-sm);
+	line-height: 1.5;
+}
+
+/* Rendered rich comment body (renderEditorState) — tight paragraphs + inline
+   code, so a comment reads compactly. */
+.bs-comments__text--rich .bs-editor__paragraph {
+	margin: 0;
+}
+
+.bs-comments__text--rich .bs-editor__paragraph + .bs-editor__paragraph {
+	margin-top: var(--space-2);
+}
+
+.bs-comments__text--rich code {
+	font-family: var(--text-family-code, ui-monospace, monospace);
+	font-size: 0.92em;
+	background: color-mix(in srgb, currentColor 10%, transparent);
+	padding: 0.08em 0.32em;
+	border-radius: var(--radius-sm);
+}
+
+.bs-comments__suggestion {
+	margin: 0;
+	font-family: var(--text-family-code, monospace);
+	font-size: var(--text-size-sm);
+	color: var(--accent, #4c8dff);
+}
+
+/* Thread actions are quiet ghost buttons — the card's content is the
+ * subject, not its verbs. Delete only turns red on hover. */
+.bs-comments__actions {
+	display: flex;
+	gap: var(--space-1, var(--space-1));
+}
+
+.bs-comments__action {
+	height: 24px;
+	padding: 0 var(--space-2, var(--space-2));
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text-dim, inherit);
+	font: inherit;
+	font-size: var(--text-size-sm);
+	cursor: pointer;
+}
+
+.bs-comments__action:hover {
+	background: var(--hover, rgba(127, 127, 127, 0.12));
+	color: var(--text, inherit);
+}
+
+.bs-comments__action--danger:hover {
+	background: var(--danger-bg, rgba(192, 57, 43, 0.14));
+	color: var(--danger, #c0392b);
+}
+
+/* Suggestion mode — Apply is the thread's primary action. */
+.bs-comments__action--apply {
+	background: var(--accent-soft, rgba(76, 141, 255, 0.12));
+	color: var(--accent, #4c8dff);
+	font-weight: var(--text-weight-medium, 500);
+}
+
+.bs-comments__action--apply:hover {
+	background: color-mix(in srgb, var(--accent, #4c8dff) 24%, transparent);
+	color: var(--accent, #4c8dff);
+}
+
+.bs-comments__suggest-toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1, var(--space-1));
+	font-size: var(--text-size-sm);
+	color: var(--text-dim, rgba(127, 127, 127, 0.9));
+	cursor: pointer;
+}
+
+.bs-comments__apply-failed {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--danger, #c0392b);
+}

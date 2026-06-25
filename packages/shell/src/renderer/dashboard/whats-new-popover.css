@@ -1,0 +1,31 @@
+/* Feedback-3 v2 — popover footer styling. The body comes from the
+ * shared <WhatsNewRelease> + <Popover> chrome; this file only tunes the
+ * pager and action layout. */
+
+.whats-new-popover__actions {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+	width: 100%;
+}
+
+.whats-new-popover__pager {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+
+.whats-new-popover__pager-indicator {
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+	font-variant-numeric: tabular-nums;
+	min-width: 60px;
+	text-align: center;
+}
+
+.whats-new-popover__primary {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+}

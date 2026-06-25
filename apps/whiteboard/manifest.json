@@ -1,0 +1,102 @@
+{
+  "id": "io.brainstorm.whiteboard",
+  "name": "Whiteboard",
+  "version": "0.1.0",
+  "sdk": "1",
+  "description": "Free-canvas authoring with react-flow-style nodes + arrows between handles. Distinct from Graph: whiteboard arrows are visual connectors, not typed semantic links. Nodes can embed any entity via the Block Protocol — the board is a heterogeneous composition surface.",
+  "icon": "icon.svg",
+  "entry": "dist/index.html",
+  "capabilities": [
+    "storage.kv",
+    "editor.spellcheck.read",
+    "editor.spellcheck.write",
+    "entities.read:brainstorm/Whiteboard/v1",
+    "entities.write:brainstorm/Whiteboard/v1",
+    "entities.read:brainstorm/WhiteboardEdge/v1",
+    "entities.write:brainstorm/WhiteboardEdge/v1",
+    "entities.read:*",
+    "intents.dispatch:open",
+    "intents.dispatch:compose",
+    "intents.dispatch:export",
+    "blocks.provide:io.brainstorm.whiteboard/embedded-whiteboard",
+    "properties.read",
+    "properties.write",
+    "files.read",
+    "files.write"
+  ],
+  "registrations": {
+    "entityTypes": [
+      {
+        "id": "brainstorm/Whiteboard/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/whiteboard/whiteboard/v1.json",
+        "schema": {
+          "type": "object",
+          "required": ["id", "name", "nodes", "createdAt", "updatedAt"],
+          "properties": {
+            "id": { "type": "string" },
+            "name": { "type": "string" },
+            "description": { "type": "string" },
+            "icon": { "type": ["object", "null"] },
+            "nodes": { "type": "array" },
+            "createdAt": { "type": "number" },
+            "updatedAt": { "type": "number" }
+          }
+        }
+      },
+      {
+        "id": "brainstorm/WhiteboardEdge/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/whiteboard/whiteboard-edge/v1.json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "id",
+            "whiteboardId",
+            "sourceNodeId",
+            "sourceHandle",
+            "destNodeId",
+            "destHandle",
+            "pathKind",
+            "arrowHead",
+            "createdAt",
+            "updatedAt"
+          ],
+          "properties": {
+            "id": { "type": "string" },
+            "whiteboardId": { "type": "string" },
+            "sourceNodeId": { "type": "string" },
+            "sourceHandle": {
+              "type": "string",
+              "enum": ["top", "right", "bottom", "left"]
+            },
+            "destNodeId": { "type": "string" },
+            "destHandle": {
+              "type": "string",
+              "enum": ["top", "right", "bottom", "left"]
+            },
+            "pathKind": {
+              "type": "string",
+              "enum": ["bezier", "step", "straight"]
+            },
+            "arrowHead": {
+              "type": "string",
+              "enum": ["none", "arrow", "dot", "box", "diamond"]
+            },
+            "label": { "type": ["string", "null"] },
+            "colorHint": { "type": ["string", "null"] },
+            "createdAt": { "type": "number" },
+            "updatedAt": { "type": "number" }
+          }
+        }
+      }
+    ],
+    "openers": [{ "kind": "primary", "entityType": "brainstorm/Whiteboard/v1" }],
+    "blocks": [
+      { "id": "io.brainstorm.whiteboard/embedded-whiteboard", "name": "Embedded whiteboard" }
+    ],
+    "intents": [
+      { "verb": "open", "entityType": "brainstorm/Whiteboard/v1", "priority": "primary" },
+      { "verb": "compose", "entityType": "brainstorm/Whiteboard/v1", "priority": "primary" },
+      { "verb": "export", "entityType": "brainstorm/Whiteboard/v1", "priority": "primary" }
+    ]
+  }
+}

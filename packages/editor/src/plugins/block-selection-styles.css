@@ -1,0 +1,37 @@
+/* Block selection visuals + SR-only live region for the shared
+ * BlockSelectionPlugin. Class names use the `bs-editor__` prefix so
+ * apps that previously styled `.notes__block--selected` keep working
+ * by retargeting the new class name (Notes does so directly).
+ */
+
+/* A selected block reads as a soft, fully-rounded accent wash rather than
+ * a hairline-tight tint with a hard left rule. Because `.bs-editor__block`
+ * carries `content-visibility: auto` (→ paint containment), the highlight
+ * cannot bleed outside the block box — the breathing room around the text
+ * comes from the host app widening the block box itself (Notes pads each
+ * plain block and pulls it back into the doc gutter with a negative margin),
+ * so this fill lands with air on every side instead of hugging the glyphs. */
+.bs-editor__block--selected {
+	position: relative;
+	background: color-mix(in srgb, var(--accent) 13%, transparent);
+	border-radius: var(--radius-md);
+}
+
+hr.bs-editor__block--selected {
+	background: var(--accent);
+	border-radius: var(--radius-sm);
+}
+
+/* Screen-reader-only — the BlockSelectionLiveRegion announces selection
+ * changes via an aria-live polite region. Visible to AT only. */
+.bs-editor__sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}

@@ -1,0 +1,212 @@
+/**
+ * Shared object-menu chrome — promoted from the Database app's private
+ * `.db-ctx-menu` rules so every app's object menu looks identical. Glass
+ * panel (the app-theme `glass--strong` supplies the surface; this owns
+ * only the menu's own box + item layout), token-driven, no hardcoded px
+ * font sizes. The ⋯ overflow trigger is drawn from three dots so the
+ * affordance needs no SVG glyph.
+ */
+
+.bs-object-menu {
+	position: fixed;
+	z-index: 102;
+	min-width: 168px;
+	padding: var(--space-1);
+	border: var(--border-width) solid var(--color-glass-border, var(--border));
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-xl, 0 12px 28px rgba(0, 0, 0, 0.4));
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+}
+
+.bs-object-menu__item {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	text-align: left;
+	padding: var(--space-2) var(--space-2);
+	background: transparent;
+	border: 0;
+	border-radius: var(--radius-sm);
+	color: var(--text);
+	font: inherit;
+	font-size: var(--text-size-md);
+	cursor: pointer;
+}
+
+/* Non-interactive section heading (the no-host fallback twin of the
+ * fancy-menus RowKind.Section row). */
+.bs-object-menu__section {
+	padding: var(--space-2) var(--space-2) var(--space-1);
+	color: var(--text-faint);
+	font-size: var(--text-size-sm);
+	font-weight: var(--text-weight-semibold, 600);
+}
+
+.bs-object-menu__glyph {
+	flex: 0 0 auto;
+	opacity: 0.8;
+}
+
+.bs-object-menu__label {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* Trailing accelerator hint — muted, right-aligned after the label (the
+ * no-host fallback twin of the fancy-menus `.fm-row__caption` slot). */
+.bs-object-menu__shortcut {
+	flex: 0 0 auto;
+	margin-inline-start: var(--space-4);
+	color: var(--text-faint);
+	font-size: var(--text-size-sm);
+	font-variant-numeric: tabular-nums;
+}
+
+/* Horizontal rule fencing logical groups (e.g. the destructive action off
+ * from the safe ones). Mirrors the fancy-menus `.fm-divider`. */
+.bs-object-menu__divider {
+	height: 1px;
+	margin: var(--space-1) var(--space-2);
+	background: var(--color-border-subtle);
+}
+
+.bs-object-menu__item:hover:not(:disabled):not([aria-disabled="true"]) {
+	background: var(--hover);
+}
+
+.bs-object-menu__item:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -2px;
+}
+
+.bs-object-menu__item:disabled,
+.bs-object-menu__item[aria-disabled="true"] {
+	color: var(--text-faint);
+	cursor: not-allowed;
+}
+
+.bs-object-menu__item[data-destructive="true"]:not(:disabled) {
+	color: var(--color-state-error);
+}
+
+.bs-object-menu__item[data-destructive="true"]:hover:not(:disabled) {
+	background: color-mix(in srgb, var(--color-state-error) 14%, transparent);
+}
+
+/* ── The visible ⋯ overflow trigger ──────────────────────────────────── */
+
+.bs-object-menu__host {
+	position: relative;
+}
+
+/* The ⋯ overflow button. Single source of truth for the hit target across
+ * every app (sidebar rows, file rows, header title menus, card actions, …).
+ * Square 28×28 chip — sized for the touch target, not for the three 3×3
+ * dots inside it — so the affordance never shrinks to ~15px regardless of
+ * how small the glyph is. Dim-visible (0.55) by default rather than fully
+ * hidden, per the minimalist-chrome convention: discoverable without
+ * cluttering the rest. Hover / aria-expanded bring it up to full opacity
+ * and tint the background through the shared --hover token. Apps add
+ * zero CSS for this button. */
+.bs-object-menu__more {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-0_5);
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	background: transparent;
+	border: 0;
+	border-radius: var(--radius-sm);
+	color: var(--text-dim, var(--text));
+	cursor: pointer;
+	opacity: 0.55;
+	transition: opacity var(--motion-duration-fast, 120ms) ease,
+		background var(--motion-duration-fast, 120ms) ease,
+		color var(--motion-duration-fast, 120ms) ease;
+}
+
+/* The explicit display above beats the UA's `[hidden] { display: none }`,
+ * so consumers toggling the trigger with `hidden` (Graph's standalone
+ * vault view has no bound object) would show a dead ⋯ — restore it. */
+.bs-object-menu__more[hidden] {
+	display: none;
+}
+
+.bs-object-menu__more:hover:not(:disabled):not([aria-disabled="true"]),
+.bs-object-menu__more[aria-expanded="true"] {
+	background: var(--hover);
+	opacity: 1;
+}
+
+.bs-object-menu__more:disabled,
+.bs-object-menu__more[aria-disabled="true"] {
+	opacity: 0.35;
+	cursor: not-allowed;
+}
+
+/* Keyboard-only ring, inset so it sits on the button's own edge and
+ * cannot bleed onto adjacent row content (the canonical contained-ring
+ * pattern). Mouse / right-click opening the menu never shows it. */
+.bs-object-menu__more:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+	opacity: 1;
+}
+
+.bs-object-menu__more-dot {
+	width: 3px;
+	height: 3px;
+	border-radius: 50%;
+	background: currentColor;
+}
+
+/* ── List-row variant ────────────────────────────────────────────────
+ *
+ * Opt-in modifier for hosts that are list rows (sidebar items, file
+ * rows, table rows, …) — every cross-app list adopts it so the
+ * affordance is identical.
+ *
+ * The host is the row's own flex line. The ⋯ rides at its trailing edge
+ * as a REAL layout child (not an overlay) and is `display: none` until
+ * the row is hovered / keyboard-focused / the menu is open — so at rest
+ * it reserves ZERO width and the content uses the full line. Revealing it
+ * costs ~30px that the content flex-shrinks to give back; the content,
+ * not the ⋯, is what yields. Consumers therefore reserve NO trailing
+ * padding for the ⋯ — drop any such gutter.
+ *
+ * An active-but-idle row stays uncluttered: the ⋯ only appears when the
+ * user expresses interest (hover, keyboard focus, or by having opened the
+ * menu).
+ *
+ * Inline non-row triggers (header titles, card actions) keep the default
+ * dim-visible affordance — don't add this class there. */
+.bs-object-menu__host--row {
+	display: flex;
+	align-items: center;
+	min-width: 0;
+}
+
+/* The row's content owns the line and is what shrinks when the ⋯ reveals
+ * — never the ⋯ itself. The consumer makes its content the flexible
+ * child (`flex: 1; min-width: 0`); we only guarantee the ⋯ stays fixed
+ * at the trailing edge. (Not a blanket `> :first-child` rule — a host
+ * that IS the row, e.g. a task row whose first child is a checkbox,
+ * must keep its own per-cell flex.) */
+.bs-object-menu__host--row > .bs-object-menu__more {
+	display: none;
+	flex: 0 0 auto;
+	margin-inline: var(--space-0_5) var(--space-2);
+}
+
+.bs-object-menu__host--row:hover > .bs-object-menu__more,
+.bs-object-menu__host--row:focus-within > .bs-object-menu__more,
+.bs-object-menu__host--row > .bs-object-menu__more[aria-expanded="true"] {
+	display: inline-flex;
+}

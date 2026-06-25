@@ -1,0 +1,136 @@
+{
+  "id": "io.brainstorm.database",
+  "name": "Database",
+  "version": "0.1.0",
+  "sdk": "1",
+  "description": "Lists over your entities — grid, list, gallery, board, calendar, and timeline views with criteria-driven and manually-curated membership in one shape.",
+  "icon": "icon.svg",
+  "entry": "dist/index.html",
+  "capabilities": [
+    "storage.kv",
+    "editor.spellcheck.read",
+    "editor.spellcheck.write",
+    "entities.read:brainstorm/List/v1",
+    "entities.write:brainstorm/List/v1",
+    "entities.read:brainstorm/ListView/v1",
+    "entities.write:brainstorm/ListView/v1",
+    "entities.read:brainstorm/Template/v1",
+    "entities.write:brainstorm/Template/v1",
+    "entities.read:*",
+    "entities.write:*",
+    "intents.dispatch:open",
+    "intents.dispatch:share",
+    "intents.dispatch:export",
+    "intents.dispatch:quick-look",
+    "blocks.provide:io.brainstorm.database/embedded-list",
+    "files.read",
+    "properties.read",
+    "properties.write"
+  ],
+  "registrations": {
+    "entityTypes": [
+      {
+        "id": "brainstorm/List/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/database/list/v1.json",
+        "schema": {
+          "type": "object",
+          "required": ["id", "name", "members", "views", "createdAt", "updatedAt"],
+          "properties": {
+            "id": { "type": "string" },
+            "name": { "type": "string" },
+            "icon": { "type": ["object", "null"] },
+            "description": { "type": "string" },
+            "source": { "type": ["object", "null"] },
+            "members": {
+              "type": "object",
+              "required": ["include", "exclude"],
+              "properties": {
+                "include": { "type": "array" },
+                "exclude": { "type": "array" }
+              }
+            },
+            "views": { "type": "array", "items": { "type": "string" } },
+            "defaultViewId": { "type": ["string", "null"] },
+            "defaultTemplate": { "type": ["string", "null"] },
+            "createdAt": { "type": "number" },
+            "updatedAt": { "type": "number" }
+          }
+        }
+      },
+      {
+        "id": "brainstorm/Object/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/object/v1.json",
+        "schema": {
+          "type": "object",
+          "required": ["name"],
+          "properties": {
+            "name": { "type": "string" },
+            "createdAt": { "type": "number" },
+            "updatedAt": { "type": "number" }
+          }
+        }
+      },
+      {
+        "id": "brainstorm/ListView/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/database/list-view/v1.json",
+        "schema": {
+          "type": "object",
+          "required": ["id", "listId", "name", "kind"],
+          "properties": {
+            "id": { "type": "string" },
+            "listId": { "type": "string" },
+            "name": { "type": "string" },
+            "icon": { "type": ["object", "null"] },
+            "kind": {
+              "type": "string",
+              "enum": ["grid", "list", "gallery", "board", "calendar", "timeline"]
+            },
+            "filters": { "type": ["array", "object", "null"] },
+            "sorts": { "type": "array" },
+            "groupBy": { "type": ["object", "null"] },
+            "coverProperty": { "type": ["string", "null"] },
+            "cardSubtitleProperty": { "type": ["string", "null"] },
+            "columns": { "type": "array" },
+            "defaultTypeUrl": { "type": ["string", "null"] },
+            "defaultTemplate": { "type": ["string", "null"] },
+            "pageSize": { "type": "number" },
+            "layoutOptions": { "type": "object" }
+          }
+        }
+      },
+      {
+        "id": "brainstorm/Template/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/template/v1.json",
+        "schema": {
+          "type": "object",
+          "required": ["templateKind"],
+          "properties": {
+            "templateKind": { "type": "string", "enum": ["object", "block-snippet"] },
+            "targetType": { "type": ["string", "null"] },
+            "name": { "type": "string" },
+            "icon": { "type": ["object", "null"] },
+            "cover": { "type": ["object", "null"] },
+            "prototype": { "type": "object" },
+            "createdAt": { "type": "number" },
+            "updatedAt": { "type": "number" }
+          }
+        }
+      }
+    ],
+    "openers": [
+      { "kind": "primary", "entityType": "brainstorm/List/v1" },
+      { "kind": "primary", "entityType": "brainstorm/ListView/v1" }
+    ],
+    "blocks": [
+      {
+        "id": "io.brainstorm.database/embedded-list",
+        "name": "Embedded list",
+        "entityTypes": ["brainstorm/List/v1"]
+      }
+    ],
+    "intents": [
+      { "verb": "open", "entityType": "brainstorm/List/v1", "priority": "primary" },
+      { "verb": "open", "entityType": "brainstorm/ListView/v1", "priority": "primary" }
+    ]
+  }
+}

@@ -1,0 +1,200 @@
+/**
+ * 11.8 — per-call AI provenance log (doc 22 §Provenance + budgets).
+ *
+ * Every model-calling AI broker verb (`generate` / `transform` / `extract`)
+ * lands one JSON-lines record: which app called, which verb, which
+ * provider/model answered, the token usage, and the outcome. This is the
+ * aggregable substrate for the Settings → AI panel's per-app usage view and
+ * for budget enforcement (14.8) — the shell records it; nothing app-facing
+ * reads it (the raw log never crosses IPC; a per-app summary will).
+ *
+ * Metadata only — never the prompt, never the completion. Reuses the network
+ * audit's generic file sink (append + size rotation) so there's one JSONL
+ * machine, not two. `cost` is NOT recorded: it's a pre-send estimate, not a
+ * model call.
+ */
+
+import { readFile } from "node:fs/promises";
+import { rotatedPathFor } from "../network/audit-log";
+
+export enum AiUsageOutcome {
+	/** The provider returned a completion. */
+	Ok = "ok",
+	/** The verb failed (no provider, provider threw, invalid output). */
+	Error = "error",
+}
+
+export type AiUsageRecord = {
+	/** Wall-clock ms since epoch when the record was written. */
+	readonly ts: number;
+	/** Calling app's stable id (the broker envelope's `app`). */
+	readonly appId: string;
+	/** AI verb: `generate` | `transform` | `extract`. */
+	readonly verb: string;
+	/** Resolved provider id, or `""` when the call failed before/at resolve. */
+	readonly provider: string;
+	/** Resolved model id, or `""` when unknown (failure / provider omitted it). */
+	readonly model: string;
+	/** Prompt (input) tokens the provider reported, `0` when unknown. */
+	readonly promptTokens: number;
+	/** Completion (output) tokens the provider reported, `0` when unknown. */
+	readonly completionTokens: number;
+	/** Total tokens (prompt + completion), `0` when unknown. */
+	readonly totalTokens: number;
+	/** Whether the call succeeded. */
+	readonly outcome: AiUsageOutcome;
+	/** Wall-clock ms from verb entry to outcome. */
+	readonly durationMs: number;
+};
+
+/** Append-only sink shape — a JSONL line writer. The production path uses the
+ *  network audit's `makeFileAuditSink` (append + rotate); tests inject a buffer. */
+export type AiUsageSink = (line: string) => Promise<void> | void;
+
+/**
+ * Write one usage record. Best-effort: a sink throw is logged + swallowed so a
+ * full disk never breaks an AI call (the user gets the completion; the gap is
+ * visible as a missing row).
+ */
+export async function recordAiUsage(sink: AiUsageSink, record: AiUsageRecord): Promise<void> {
+	try {
+		await sink(JSON.stringify(record));
+	} catch (error) {
+		console.warn(`[ai/usage] sink failed: ${(error as Error).message}`);
+	}
+}
+
+/** Read the usage log + its rotated sibling, newest-first. Fail-soft: missing
+ *  files → [], malformed lines skipped, any read error → []. Off the hot path
+ *  (Settings panel open / budget check), so it reads both files into memory. */
+export async function readAiUsage(usagePath: string): Promise<readonly AiUsageRecord[]> {
+	const [current, archive] = await Promise.all([
+		readUsageFile(usagePath),
+		readUsageFile(rotatedPathFor(usagePath)),
+	]);
+	return [...archive, ...current].sort((a, b) => b.ts - a.ts);
+}
+
+export type PerAppAiProviderUsage = {
+	readonly provider: string;
+	readonly calls: number;
+	readonly totalTokens: number;
+};
+
+export type PerAppAiUsage = {
+	readonly appId: string;
+	readonly calls: number;
+	readonly errors: number;
+	readonly promptTokens: number;
+	readonly completionTokens: number;
+	readonly totalTokens: number;
+	readonly lastSeenMs: number;
+	readonly byProvider: readonly PerAppAiProviderUsage[];
+};
+
+/** Aggregate a flat record list into one row per app — calls, errors, token
+ *  totals, last-seen, and a per-provider breakdown. Pure; the consumer
+ *  (AI panel / budget check) pre-filters by time window. */
+export function aggregateAiUsageByApp(records: readonly AiUsageRecord[]): readonly PerAppAiUsage[] {
+	const byApp = new Map<
+		string,
+		{
+			calls: number;
+			errors: number;
+			promptTokens: number;
+			completionTokens: number;
+			totalTokens: number;
+			lastSeenMs: number;
+			providers: Map<string, { calls: number; totalTokens: number }>;
+		}
+	>();
+	for (const rec of records) {
+		let bucket = byApp.get(rec.appId);
+		if (!bucket) {
+			bucket = {
+				calls: 0,
+				errors: 0,
+				promptTokens: 0,
+				completionTokens: 0,
+				totalTokens: 0,
+				lastSeenMs: 0,
+				providers: new Map(),
+			};
+			byApp.set(rec.appId, bucket);
+		}
+		bucket.calls += 1;
+		if (rec.outcome === AiUsageOutcome.Error) bucket.errors += 1;
+		bucket.promptTokens += rec.promptTokens;
+		bucket.completionTokens += rec.completionTokens;
+		bucket.totalTokens += rec.totalTokens;
+		bucket.lastSeenMs = Math.max(bucket.lastSeenMs, rec.ts);
+		if (rec.provider.length > 0) {
+			const p = bucket.providers.get(rec.provider) ?? { calls: 0, totalTokens: 0 };
+			p.calls += 1;
+			p.totalTokens += rec.totalTokens;
+			bucket.providers.set(rec.provider, p);
+		}
+	}
+	const out: PerAppAiUsage[] = [];
+	for (const [appId, bucket] of byApp) {
+		const byProvider = Array.from(bucket.providers.entries())
+			.map(([provider, v]) => ({ provider, calls: v.calls, totalTokens: v.totalTokens }))
+			.sort((a, b) => {
+				if (b.totalTokens !== a.totalTokens) return b.totalTokens - a.totalTokens;
+				return a.provider.localeCompare(b.provider);
+			});
+		out.push({
+			appId,
+			calls: bucket.calls,
+			errors: bucket.errors,
+			promptTokens: bucket.promptTokens,
+			completionTokens: bucket.completionTokens,
+			totalTokens: bucket.totalTokens,
+			lastSeenMs: bucket.lastSeenMs,
+			byProvider,
+		});
+	}
+	out.sort((a, b) => b.lastSeenMs - a.lastSeenMs);
+	return out;
+}
+
+function isValidUsageRecord(input: unknown): input is AiUsageRecord {
+	if (!input || typeof input !== "object") return false;
+	const raw = input as Record<string, unknown>;
+	if (typeof raw.ts !== "number" || !Number.isFinite(raw.ts)) return false;
+	if (typeof raw.appId !== "string") return false;
+	if (typeof raw.verb !== "string") return false;
+	if (typeof raw.provider !== "string") return false;
+	if (typeof raw.model !== "string") return false;
+	if (typeof raw.promptTokens !== "number") return false;
+	if (typeof raw.completionTokens !== "number") return false;
+	if (typeof raw.totalTokens !== "number") return false;
+	if (typeof raw.outcome !== "string") return false;
+	if (typeof raw.durationMs !== "number") return false;
+	return true;
+}
+
+async function readUsageFile(path: string): Promise<readonly AiUsageRecord[]> {
+	let text: string;
+	try {
+		text = await readFile(path, "utf8");
+	} catch (error) {
+		const code = (error as NodeJS.ErrnoException).code;
+		if (code === "ENOENT") return [];
+		console.warn(`[ai/usage] read failed for ${path}: ${(error as Error).message}`);
+		return [];
+	}
+	if (text.length === 0) return [];
+	const out: AiUsageRecord[] = [];
+	for (const line of text.split("\n")) {
+		if (line.length === 0) continue;
+		let parsed: unknown;
+		try {
+			parsed = JSON.parse(line);
+		} catch {
+			continue;
+		}
+		if (isValidUsageRecord(parsed)) out.push(parsed);
+	}
+	return out;
+}

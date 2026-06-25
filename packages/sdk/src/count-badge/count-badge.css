@@ -1,0 +1,44 @@
+/**
+ * `.bs-count-badge` — the ONE count pill every app uses for the small
+ * numeric badge that trails a sidebar row, a list filter, a board lane, a
+ * tab, or any "N of these" affordance. Before this, each app hand-rolled
+ * its own `__count` pill (different size / radius / colour per app); this
+ * is the shared face so they read as siblings.
+ *
+ * Tokens are app-theme aliases (`--hover`, `--text-dim`, …) so the pill
+ * follows the active theme. Consumers load it via
+ * `@brainstorm/sdk/count-badge.css`.
+ */
+.bs-count-badge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+	min-width: 22px;
+	height: 20px;
+	padding: 0 var(--space-1);
+	border-radius: var(--radius-full);
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+	font-variant-numeric: tabular-nums;
+	line-height: 1;
+	color: var(--text-dim);
+	background: var(--hover);
+	transition:
+		background 0.12s ease,
+		color 0.12s ease,
+		opacity 80ms ease;
+}
+
+/* Emphasis variant — the badge on an active/selected row, tinted to the
+ * accent so the count reads as "live" rather than incidental. */
+.bs-count-badge--accent {
+	color: var(--accent-strong, var(--accent));
+	background: var(--accent-soft);
+}
+
+/* A zero count is real information (an empty bucket), but quieter than a
+ * populated one. */
+.bs-count-badge[data-count="0"] {
+	opacity: 0.55;
+}

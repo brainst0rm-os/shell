@@ -1,0 +1,112 @@
+/**
+ * `@brainstorm/sdk/color-picker` — chrome for the custom-body colour picker
+ * mounted inside a fancy-menus surface. The menu shell paints the glass
+ * panel; these rules style the picker's own controls. All colours are theme
+ * tokens (with literal fallbacks for the static gradients that have no token
+ * equivalent — the spectrum is colour, not chrome).
+ */
+
+.bs-color-picker {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3, var(--space-3));
+	padding: var(--space-3, var(--space-3));
+}
+
+/* Inline `background-color` carries the live hue (`hsl(H 100% 50%)`); these
+ * static gradients layer the white→saturation and black→value falloff on top
+ * via `background-image`, which is a separate property so the two never
+ * clobber each other. */
+.bs-color-picker__area {
+	position: relative;
+	width: 100%;
+	height: 148px;
+	border-radius: var(--radius-sm);
+	border: var(--border-width) solid var(--color-border-subtle, var(--border));
+	cursor: crosshair;
+	touch-action: none;
+	background-image: linear-gradient(to top, #000, transparent),
+		linear-gradient(to right, #fff, transparent);
+}
+
+.bs-color-picker__hue {
+	position: relative;
+	width: 100%;
+	height: 12px;
+	border-radius: var(--radius-full);
+	border: var(--border-width) solid var(--color-border-subtle, var(--border));
+	cursor: pointer;
+	touch-action: none;
+	background-image: linear-gradient(
+		to right,
+		hsl(0 100% 50%),
+		hsl(60 100% 50%),
+		hsl(120 100% 50%),
+		hsl(180 100% 50%),
+		hsl(240 100% 50%),
+		hsl(300 100% 50%),
+		hsl(360 100% 50%)
+	);
+}
+
+.bs-color-picker__area-thumb,
+.bs-color-picker__hue-thumb {
+	position: absolute;
+	box-sizing: border-box;
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	border: var(--border-width-thick) solid #fff;
+	box-shadow: 0 0 0 1px rgb(0 0 0 / 0.35);
+	transform: translate(-50%, -50%);
+	pointer-events: none;
+}
+
+.bs-color-picker__hue-thumb {
+	top: 50%;
+	background: currentcolor;
+}
+
+.bs-color-picker__row,
+.bs-color-picker__actions {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2, var(--space-2));
+}
+
+.bs-color-picker__actions {
+	justify-content: flex-end;
+}
+
+.bs-color-picker__preview {
+	width: 28px;
+	height: 28px;
+	flex-shrink: 0;
+	border-radius: var(--radius-sm);
+	border: var(--border-width) solid var(--color-border-subtle, var(--border));
+}
+
+.bs-color-picker__hex {
+	flex: 1 1 auto;
+	min-width: 0;
+	height: var(--control-height-sm, 28px);
+	padding: 0 var(--space-2, var(--space-2));
+	border: var(--border-width) solid var(--color-border-default, var(--border));
+	border-radius: var(--radius-sm);
+	background: var(--color-surface-default, var(--bg));
+	color: var(--color-text-primary, var(--text));
+	font-family: var(--text-family-code, monospace);
+	font-size: var(--text-size-xs);
+	text-transform: uppercase;
+}
+
+/* Action buttons (Cancel / Apply) use the shared `.bs-btn` primitive from
+ * @brainstorm/sdk/app-theme.css; Apply's glossy primary face comes from the
+ * `data-bs-primary` hook there. No bespoke button box lives here. */
+
+.bs-color-picker__area:focus-visible,
+.bs-color-picker__hue:focus-visible,
+.bs-color-picker__hex:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 2px;
+}

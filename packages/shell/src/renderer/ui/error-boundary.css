@@ -1,0 +1,74 @@
+/* Error boundary fallback — must remain legible even if the theme tokens
+ * disappear (the failure mode we're recovering from might have torn them
+ * down). Every value here has a concrete fallback before the var(). */
+
+.error-boundary {
+	position: fixed;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-3);
+	padding: var(--space-5);
+	background: #161616;
+	background: var(--color-background-primary, #161616);
+	color: #f7f7f7;
+	color: var(--color-text-primary, #f7f7f7);
+	text-align: center;
+	z-index: 9999;
+}
+
+.error-boundary__inner {
+	width: min(560px, 92vw);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	padding: var(--space-5);
+	background: rgba(255, 255, 255, 0.06);
+	border: var(--border-width) solid rgba(255, 255, 255, 0.14);
+	border-radius: var(--radius-lg);
+	border-radius: var(--radius-lg);
+}
+
+.error-boundary__title {
+	margin: 0;
+	font-size: var(--text-size-xl);
+	font-size: var(--text-size-xl);
+	font-weight: var(--text-weight-semibold);
+	color: inherit;
+}
+
+.error-boundary__message {
+	margin: 0;
+	font-size: var(--text-size-md);
+	font-size: var(--text-size-md);
+	color: rgba(247, 247, 247, 0.78);
+	white-space: pre-wrap;
+	word-break: break-word;
+	user-select: text;
+}
+
+.error-boundary__trace {
+	margin: 0;
+	max-height: 220px;
+	overflow: auto;
+	padding: 10px var(--space-2);
+	text-align: left;
+	font-family: var(--font-family-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+	font-size: var(--text-size-xs);
+	line-height: 1.5;
+	white-space: pre-wrap;
+	word-break: break-word;
+	color: rgba(247, 247, 247, 0.72);
+	background: rgba(0, 0, 0, 0.28);
+	border: var(--border-width) solid rgba(255, 255, 255, 0.12);
+	border-radius: var(--radius-md);
+	user-select: text;
+}
+
+.error-boundary__actions {
+	display: flex;
+	gap: var(--space-2);
+	justify-content: center;
+}

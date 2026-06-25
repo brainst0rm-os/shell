@@ -1,0 +1,250 @@
+/*
+ * Shared properties inspector — ONE content definition for every app
+ * (`.bs-props__inner` + the rows), plus a default glass-overlay CONTAINER
+ * (`.bs-props`). The content is container-agnostic so apps with their own
+ * container (Notes' resizable grid `.notes__props`) wrap the same content;
+ * apps without one use `.bs-props`. 44px header, scrolling body, `104px 1fr`
+ * grid rows. Imported via `app-theme.css`; `:root`-prefixed per convention.
+ *
+ * The glass face comes from the shared `.glass--strong` class (app-theme).
+ */
+
+/* Default container: a fixed glass panel pinned to the right edge below the
+ * app header, sliding in/out over the content (Bookmarks). */
+:root .bs-props {
+	/* Width knob — a host overrides by re-declaring it on its own .bs-props
+	 * rule (no host does yet; this default makes the var real). */
+	--bs-props-width: 320px;
+	position: fixed;
+	top: var(--app-header-height, 44px);
+	bottom: 0;
+	inset-inline-end: 0;
+	width: var(--bs-props-width);
+	max-width: 100vw;
+	border-inline-start: var(--border-width) solid var(--color-glass-border, var(--border));
+	box-shadow: var(--shadow-xl, 0 12px 32px -8px rgba(0, 0, 0, 0.4));
+	overflow: hidden;
+	z-index: 50;
+	transform: translateX(100%);
+	transition: transform var(--motion-duration-normal, 180ms) ease;
+	will-change: transform;
+	/* Column so an optional Properties|Comments tab strip (the shared
+	 * `@brainstorm/editor` CommentsRightPanel) sits above a filling panel —
+	 * mirrors `.notes__props` / `.preview__inspector`. */
+	display: flex;
+	flex-direction: column;
+}
+
+/* The active panel (Properties or Comments) fills below the tab strip. */
+:root .bs-props > :not(.bs-panel-tabs) {
+	flex: 1 1 0;
+	min-height: 0;
+}
+
+:root .bs-props--open {
+	transform: none;
+}
+
+:root .bs-props:not(.bs-props--open) {
+	box-shadow: none;
+	border-color: transparent;
+}
+
+/* The content fills whatever container hosts it. */
+:root .bs-props__inner {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-height: 0;
+}
+
+:root .bs-props__head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	height: 44px;
+	flex: 0 0 44px;
+	padding: 0 var(--space-2, var(--space-2)) 0 var(--space-4, var(--space-4));
+	border-bottom: var(--border-width) solid var(--color-border-subtle, var(--border));
+}
+
+:root .bs-props__title {
+	margin: 0;
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-semibold, 600);
+	letter-spacing: 0.01em;
+	color: var(--text);
+}
+
+:root .bs-props__close {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text-dim);
+	cursor: pointer;
+}
+
+:root .bs-props__close:hover {
+	background: var(--bg-hover, var(--hover));
+	color: var(--text);
+}
+
+:root .bs-props__body {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow-y: auto;
+	padding: var(--space-4, var(--space-4));
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2, var(--space-2));
+}
+
+:root .bs-props__status {
+	margin: var(--space-1) 0;
+	color: var(--text-dim);
+	font-size: var(--text-size-sm);
+}
+
+:root .bs-props__list {
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+}
+
+:root .bs-props__row {
+	display: grid;
+	grid-template-columns: 104px 1fr;
+	align-items: start;
+	gap: var(--space-2, var(--space-2));
+	padding: var(--space-2) var(--space-2) var(--space-2) var(--space-2);
+	border-radius: var(--radius-md);
+}
+
+:root .bs-props__row:hover {
+	background: var(--bg-hover, var(--hover));
+}
+
+:root .bs-props__row-label {
+	margin: 0;
+	padding-top: var(--space-1);
+	color: var(--text-dim);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+:root .bs-props__row-value {
+	margin: 0;
+	display: flex;
+	align-items: center;
+	gap: var(--space-1, var(--space-1));
+	min-width: 0;
+	color: var(--text);
+	font-size: var(--text-size-md);
+}
+
+:root .bs-props__row-value > :first-child {
+	flex: 1 1 auto;
+	min-width: 0;
+	/* Long single-line values (emails, URLs) truncate cleanly instead of
+	   breaking mid-word across lines in a narrow inspector. */
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+:root .bs-props__row-remove {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text-faint);
+	cursor: pointer;
+	opacity: 0;
+	transition:
+		opacity 120ms ease,
+		color 120ms ease,
+		background 120ms ease;
+}
+
+:root .bs-props__row:hover .bs-props__row-remove,
+:root .bs-props__row-remove:focus-visible {
+	opacity: 1;
+}
+
+:root .bs-props__row-remove:hover {
+	background: var(--bg-hover, var(--hover));
+	color: var(--color-state-error, #e5484d);
+}
+
+:root .bs-props__add {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2, var(--space-2));
+	align-self: flex-start;
+	margin-top: var(--space-1);
+	height: var(--control-height-md, 32px);
+	padding: 0 var(--space-2) 0 var(--space-2);
+	border: var(--border-width) solid var(--border-strong);
+	border-radius: var(--radius-md);
+	background: transparent;
+	color: var(--text-dim);
+	font: inherit;
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium, 500);
+	cursor: pointer;
+	transition:
+		background 120ms ease,
+		color 120ms ease,
+		border-color 120ms ease;
+}
+
+:root .bs-props__add:hover {
+	background: var(--bg-hover, var(--hover));
+	color: var(--text);
+	border-color: var(--text-faint);
+}
+
+:root .bs-props__add-glyph {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+:root .bs-props__meta {
+	margin: var(--space-2) 0 0;
+	padding-top: var(--space-3);
+	border-top: var(--border-width) solid var(--border);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+:root .bs-props__meta-row {
+	display: grid;
+	grid-template-columns: 104px 1fr;
+	gap: var(--space-2, var(--space-2));
+	font-size: var(--text-size-xs);
+}
+
+:root .bs-props__meta-row dt {
+	margin: 0;
+	color: var(--text-faint);
+}
+
+:root .bs-props__meta-row dd {
+	margin: 0;
+	color: var(--text-dim);
+}

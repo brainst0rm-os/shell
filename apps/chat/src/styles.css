@@ -1,0 +1,585 @@
+/* Structural rules only. Colours, the `.app-header` chrome, glass, and the
+   `.bs-btn` primitive come from the shell-injected @brainstorm/sdk app-theme.
+   Every `var(--…)` here names a real app-theme alias (packages/sdk/src/app-theme.css)
+   or flattened token — no phantoms (tools/check-css-tokens.mjs is zero-baseline). */
+:root {
+	color-scheme: light dark;
+}
+
+/* Base resets EVERY app needs — do not remove. `box-sizing: border-box` keeps
+   the 1px `.app-header` border INSIDE the shell's 44px height; the `body` reset
+   kills the default 8px margin. The shell owns header HEIGHT + traffic-light
+   PADDING — never re-declare `.app-header { height / padding }` here. */
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	overflow: hidden;
+}
+
+.app {
+	display: flex;
+	flex-direction: column;
+	height: 100vh;
+	overflow: hidden;
+	color: var(--text);
+	background: var(--bg);
+}
+
+/* ── header crumb ─────────────────────────────────────────────── */
+.chat__crumb {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 6px;
+	font-size: 13px;
+	color: var(--text-dim);
+	min-width: 0;
+}
+
+.chat__crumb-hash {
+	color: var(--text-faint);
+}
+
+.chat__crumb-topic {
+	color: var(--text-faint);
+	font-size: 12px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 40vw;
+	border-left: 1px solid var(--border-subtle);
+	padding-left: 8px;
+}
+
+.chat__icon-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border: none;
+	border-radius: 7px;
+	background: transparent;
+	color: var(--text-dim);
+	cursor: pointer;
+	transition:
+		background 120ms ease,
+		color 120ms ease;
+}
+
+.chat__icon-btn:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.chat__icon-btn[aria-pressed="true"] {
+	background: var(--selected);
+	color: var(--text);
+}
+
+/* ── three-column body ────────────────────────────────────────── */
+/* Grid tracks reserve space for the absolutely-positioned side panels; the
+ * tracks animate (reflowing the transcript) while each panel slides on a GPU
+ * transform — the canonical files/notes panel-transition pattern. */
+.chat__body {
+	--chat-side-width: 220px;
+	--chat-left-track: var(--chat-side-width);
+	--chat-right-track: 0px;
+	position: relative;
+	flex: 1;
+	display: grid;
+	grid-template-columns: var(--chat-left-track) minmax(0, 1fr) var(--chat-right-track);
+	min-height: 0;
+	overflow: hidden;
+	transition: grid-template-columns var(--motion-duration-normal, 180ms) ease;
+}
+
+.chat[data-sidebar-open="false"] .chat__body {
+	--chat-left-track: 0px;
+}
+
+.chat[data-members-open="true"] .chat__body {
+	--chat-right-track: var(--chat-side-width);
+}
+
+/* ── channel sidebar ──────────────────────────────────────────── */
+.chat__sidebar {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	inset-inline-start: 0;
+	width: var(--chat-side-width);
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	border-right: 1px solid var(--border-subtle);
+	background: var(--bg-subtle);
+	z-index: 2;
+	transition: transform var(--motion-duration-normal, 180ms) ease;
+	will-change: transform;
+}
+
+.chat[data-sidebar-open="false"] .chat__sidebar {
+	transform: translateX(-100%);
+}
+
+.chat__sidebar-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	height: 44px;
+	flex-shrink: 0;
+	padding: 0 8px 0 14px;
+	border-bottom: 1px solid var(--border-subtle);
+}
+
+.chat__sidebar-title {
+	font-size: 12px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--text-faint);
+}
+
+.chat__sidebar-empty {
+	margin: 12px 14px;
+	font-size: 13px;
+	color: var(--text-faint);
+}
+
+.chat__channel-list {
+	list-style: none;
+	margin: 0;
+	padding: 6px;
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	overflow-y: auto;
+}
+
+.chat__channel {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	width: 100%;
+	padding: 6px 8px;
+	border: none;
+	border-radius: 7px;
+	background: transparent;
+	color: var(--text-dim);
+	font-size: 14px;
+	text-align: left;
+	cursor: pointer;
+	transition:
+		background 120ms ease,
+		color 120ms ease;
+}
+
+.chat__channel:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.chat__channel--active {
+	background: var(--selected);
+	color: var(--text);
+	font-weight: 500;
+}
+
+.chat__channel-hash {
+	color: var(--text-faint);
+}
+
+.chat__channel-name {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* ── main column ──────────────────────────────────────────────── */
+.chat__main {
+	grid-column: 2;
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	min-height: 0;
+}
+
+.chat__messages {
+	flex: 1;
+	overflow-y: auto;
+	padding: 16px 0;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.chat__messages--empty {
+	justify-content: center;
+	align-items: center;
+}
+
+/* Both center empties render through `@brainstorm/sdk/empty-state` (Hero);
+ * the placeholder div is just the fill host (the transcript empty centers via
+ * `.chat__messages--empty`). */
+.chat__placeholder {
+	flex: 1;
+	display: flex;
+}
+
+/* ── day divider ──────────────────────────────────────────────── */
+.chat__day {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin: 10px 18px 4px;
+	color: var(--text-faint);
+	font-size: 12px;
+}
+
+.chat__day::before,
+.chat__day::after {
+	content: "";
+	flex: 1;
+	height: 1px;
+	background: var(--border-subtle);
+}
+
+/* ── message group ────────────────────────────────────────────── */
+/* A run of one author's messages reads as a single rounded hover card with
+   side margins, so the hover lands as a deliberate surface (not full-bleed)
+   and the content column aligns with the 18px day-divider inset. */
+.chat__group {
+	display: flex;
+	gap: 10px;
+	padding: 6px 12px;
+	margin: 0 6px;
+	border-radius: 8px;
+	transition: background 120ms ease;
+}
+
+.chat__group:hover {
+	background: var(--bg-hover);
+}
+
+.chat__avatar {
+	flex: 0 0 34px;
+	width: 34px;
+	height: 34px;
+	border-radius: var(--radius-full);
+	overflow: hidden;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 12px;
+	font-weight: 600;
+	color: #fff;
+	user-select: none;
+}
+
+.chat__avatar--icon {
+	background: var(--bg-elev);
+	border: 1px solid var(--edge);
+}
+
+.chat__group-body {
+	min-width: 0;
+	flex: 1;
+}
+
+.chat__group-head {
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
+}
+
+.chat__author {
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.chat__time {
+	font-size: 11px;
+	color: var(--text-faint);
+}
+
+.chat__line {
+	margin: 1px 0;
+	font-size: 14px;
+	line-height: 1.45;
+	color: var(--text);
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
+/* Rendered rich message body (renderEditorState). Tight paragraph rhythm so a
+   message reads as a line, not a document. */
+.chat__line--rich .bs-editor__paragraph {
+	margin: 0;
+}
+
+.chat__line--rich .bs-editor__paragraph + .bs-editor__paragraph {
+	margin-top: 4px;
+}
+
+.chat__line--rich code {
+	font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+	font-size: 0.92em;
+	background: color-mix(in srgb, currentColor 10%, transparent);
+	padding: 0.08em 0.32em;
+	border-radius: 4px;
+}
+
+.chat__line--rich a {
+	color: var(--accent);
+}
+
+/* Attachment chips shown under a message line (documents / people / media the
+   author attached). Static — chat holds no `intents.dispatch:open`. */
+.chat__line-wrap {
+	margin: 1px 0;
+}
+
+.chat__attachments {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-1);
+	margin: var(--space-1) 0 2px;
+}
+
+.chat__attachment {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	max-width: 18rem;
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	background: var(--bg-subtle);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-md);
+	padding: 2px var(--space-2);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.chat__attachment[data-kind="entity"],
+.chat__attachment[data-kind="person"] {
+	color: var(--accent);
+}
+
+/* ── composer ─────────────────────────────────────────────────── */
+.chat__composer-wrap {
+	flex-shrink: 0;
+}
+
+/* DND-4: object drop highlight — a drag carrying an object is over the composer. */
+.chat__composer-wrap--drop {
+	outline: 2px dashed var(--accent);
+	outline-offset: -2px;
+	border-radius: 8px;
+	background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.chat__composer {
+	flex-shrink: 0;
+	display: flex;
+	gap: 8px;
+	align-items: flex-end;
+	padding: 12px 18px 16px;
+	border-top: 1px solid var(--border-subtle);
+}
+
+/* Match the attach "+" to the 40px input/send so all three sit on one row. */
+.chat__composer .bs-composer-context__attach {
+	width: 40px;
+	height: 40px;
+}
+
+/* The input is a CompactEditor (contenteditable), not a textarea: chrome lives
+   on the wrapper, the caret/text on the inner content. */
+.chat__composer-input {
+	flex: 1;
+	max-height: 160px;
+	overflow-y: auto;
+	/* 9px block padding + 19.6px line + 2px border = 40px single-line height,
+	   so the input lines up with the 40px send button on the shared bottom row. */
+	min-height: 40px;
+	padding: 9px;
+	border: 1px solid var(--border);
+	border-radius: 10px;
+	background: var(--bg-elev);
+	color: var(--text);
+	font: inherit;
+	font-size: 14px;
+	line-height: 1.4;
+	cursor: text;
+}
+
+.chat__composer-input:focus-within {
+	outline: none;
+	border-color: var(--accent);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.chat__send {
+	flex: 0 0 auto;
+	width: 40px;
+	height: 40px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border: none;
+	border-radius: 10px;
+	background: var(--accent);
+	color: var(--accent-fg);
+	cursor: pointer;
+	transition:
+		filter 120ms ease,
+		opacity 120ms ease;
+}
+
+.chat__send:not(:disabled):hover {
+	filter: brightness(1.08);
+}
+
+.chat__send:not(:disabled):active {
+	filter: brightness(0.96);
+}
+
+.chat__send:disabled {
+	opacity: 0.4;
+	cursor: default;
+}
+
+/* ── members panel ────────────────────────────────────────────── */
+.chat__members {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	inset-inline-end: 0;
+	width: var(--chat-side-width);
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	border-left: 1px solid var(--border-subtle);
+	background: var(--bg-subtle);
+	z-index: 2;
+	transform: translateX(100%);
+	transition: transform var(--motion-duration-normal, 180ms) ease;
+	will-change: transform;
+}
+
+.chat[data-members-open="true"] .chat__members {
+	transform: translateX(0);
+}
+
+.chat__members-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	height: 44px;
+	flex-shrink: 0;
+	padding: 0 14px;
+	border-bottom: 1px solid var(--border-subtle);
+}
+
+.chat__members-title {
+	font-size: 12px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--text-faint);
+}
+
+.chat__members-count {
+	font-size: 12px;
+	color: var(--text-faint);
+}
+
+.chat__members-list {
+	list-style: none;
+	margin: 0;
+	padding: 8px;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	overflow-y: auto;
+}
+
+.chat__member {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 4px 6px;
+	border-radius: 7px;
+	font-size: 13px;
+	color: var(--text);
+	transition: background 120ms ease;
+}
+
+.chat__member:hover {
+	background: var(--hover);
+}
+
+.chat__member .chat__avatar {
+	flex-basis: 26px;
+	width: 26px;
+	height: 26px;
+	border-radius: var(--radius-full);
+	font-size: 10px;
+}
+
+.chat__member-name {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.chat__member-you {
+	margin-left: auto;
+	border: none;
+	background: var(--selected);
+	color: var(--text-dim);
+	border-radius: 5px;
+	padding: 1px;
+	font-size: 11px;
+	cursor: pointer;
+}
+
+.chat__member-you:hover {
+	color: var(--text);
+}
+
+/* ── popover fields ───────────────────────────────────────────── */
+.chat__field {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+	margin-bottom: 12px;
+}
+
+.chat__field-label {
+	font-size: 12px;
+	font-weight: 500;
+	color: var(--text-dim);
+}
+
+.chat__field-input {
+	padding: 8px;
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	background: var(--bg-elev);
+	color: var(--text);
+	font: inherit;
+	font-size: 14px;
+}
+
+.chat__field-input:focus {
+	outline: none;
+	border-color: var(--accent);
+}

@@ -1,0 +1,139 @@
+{
+  "$schema": "../src/main/help/changelog-schema.json",
+  "format": "brainstorm/changelog/v2",
+  "releases": [
+    {
+      "version": "0.0.1",
+      "date": "2026-05-23",
+      "icon": "🎉",
+      "title": "Pre-alpha development build",
+      "summary": "The very first cut of Brainstorm — a desktop knowledge OS with first-party apps for notes, tasks, files, code, journaling, whiteboards, bookmarks and more. Sandboxed, local-first, end-to-end encrypted at rest.",
+      "body": [
+        { "kind": "h1", "text": "Apps in the box" },
+        {
+          "kind": "p",
+          "text": "Thirteen first-party apps land in this build. Each one runs in its own sandboxed renderer, talks to the shell through the capability broker, and shares a single design system."
+        },
+        {
+          "kind": "li",
+          "text": [
+            { "text": "Notes", "marks": ["bold"] },
+            { "text": " — block editor with cross-app " },
+            { "text": "@mentions", "marks": ["highlight"] },
+            { "text": " and " },
+            { "text": "!@", "marks": ["highlight"] },
+            { "text": " transclusion." }
+          ]
+        },
+        {
+          "kind": "li",
+          "text": [
+            { "text": "Database", "marks": ["bold"] },
+            { "text": " — six view kinds: grid, list, gallery, board, calendar, timeline." }
+          ]
+        },
+        {
+          "kind": "li",
+          "text": [
+            { "text": "Graph", "marks": ["bold"] },
+            { "text": " — multi-subject pattern filters with edge-accurate history animation." }
+          ]
+        },
+        {
+          "kind": "li",
+          "text": [
+            { "text": "Tasks", "marks": ["bold"] },
+            { "text": ", " },
+            { "text": "Calendar", "marks": ["bold"] },
+            { "text": ", " },
+            { "text": "Journal", "marks": ["bold"] },
+            { "text": ", " },
+            { "text": "Whiteboard", "marks": ["bold"] },
+            { "text": ", " },
+            { "text": "Bookmarks", "marks": ["bold"] },
+            { "text": ", " },
+            { "text": "Files", "marks": ["bold"] },
+            { "text": ", " },
+            { "text": "Code editor", "marks": ["bold"] },
+            { "text": ", " },
+            { "text": "Preview", "marks": ["bold"] },
+            { "text": ", " },
+            { "text": "Marketplace", "marks": ["bold"] },
+            { "text": ", and " },
+            { "text": "Bin", "marks": ["bold"] },
+            { "text": "." }
+          ]
+        },
+
+        { "kind": "h1", "text": "Under the hood" },
+        { "kind": "h3", "text": "Block Protocol host conformance v1" },
+        {
+          "kind": "p",
+          "text": [
+            {
+              "text": "BlockEmbed renders sandboxed block frames in an isolated iframe with a typed "
+            },
+            { "text": "postMessage", "marks": ["highlight"] },
+            { "text": " transport so third-party blocks never touch the host directly." }
+          ]
+        },
+        { "kind": "h3", "text": "Files service" },
+        {
+          "kind": "p",
+          "text": [
+            { "text": "Apps can request " },
+            { "text": "open", "marks": ["highlight"] },
+            { "text": " / " },
+            { "text": "save", "marks": ["highlight"] },
+            { "text": " / " },
+            { "text": "read", "marks": ["highlight"] },
+            { "text": " / " },
+            { "text": "write", "marks": ["highlight"] },
+            { "text": " / " },
+            { "text": "watch", "marks": ["highlight"] },
+            { "text": " through a capability-gated service, with chunked uploads for large files." }
+          ]
+        },
+        { "kind": "h3", "text": "Open resolution" },
+        {
+          "kind": "p",
+          "text": [
+            { "text": "Per-scheme and per-extension default pinning under " },
+            { "text": "Settings → Default apps", "marks": ["highlight"] },
+            { "text": ", with an explicit " },
+            { "text": "Open with system default", "marks": ["highlight"] },
+            { "text": " option and a consent prompt for first-time OS handoff." }
+          ]
+        },
+        { "kind": "h3", "text": "Cross-app navigation" },
+        {
+          "kind": "p",
+          "text": [
+            { "text": "Shared back/forward history (" },
+            { "text": "@brainstorm/sdk/nav-history", "marks": ["highlight"] },
+            {
+              "text": "), shared object menu with Pin / Unpin / Open / Remove, and a unified mention typeahead."
+            }
+          ]
+        },
+
+        { "kind": "h1", "text": "Privacy" },
+        {
+          "kind": "p",
+          "text": "At-rest encryption per vault, sync de-risk spike, per-entity data keys generated on create, and an on-disk encryption flip with a startup contract probe. Your data never leaves the device without you knowing."
+        },
+
+        {
+          "kind": "callout",
+          "icon": "⚠️",
+          "text": [
+            { "text": "Heads up — pre-alpha. ", "marks": ["bold"] },
+            {
+              "text": "The vault format may still change before 0.1.0. Keep a backup of anything you put in here."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

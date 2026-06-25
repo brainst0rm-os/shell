@@ -1,0 +1,771 @@
+/**
+ * Mailbox app styles. Structural only — colour / type / spacing come from the
+ * shared design tokens (loaded via `@brainstorm/sdk/app-theme.css`). Layout is
+ * a fixed three-pane grid (folder rail | message list | reading pane) under
+ * the shared 44px `.app-header` baseline.
+ */
+
+/* Base resets every app needs: `border-box` keeps the 1px `.app-header`
+ * border INSIDE the shell's 44px height (content-box renders it 45px); the
+ * `html, body` reset kills the browser-default 8px margin that insets the
+ * header off the window edges. */
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	overflow: hidden;
+}
+
+#root {
+	height: 100vh;
+	overflow: hidden;
+}
+
+/* Per-component focus rings — the global :focus-visible outline was removed
+ * project-wide, so every interactive surface opts in (keyboard/SR visibility). */
+.mb-rail__item:focus-visible,
+.mb-row:focus-visible,
+.mb-iconbtn:focus-visible,
+.mb-list__thread-toggle:focus-visible,
+.mb-body__remote-btn:focus-visible,
+.mb-list__search-input:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -2px;
+}
+
+.mb-app {
+	display: flex;
+	flex-direction: column;
+	height: 100vh;
+	background: var(--bg);
+	color: var(--text);
+}
+
+/* Header chrome — flex skeleton, left/right groups, the `<h1>` title face
+ * (incl. `margin: 0`), height / padding / drag region — is the shared
+ * `.app-header` rule in `@brainstorm/sdk/app-theme.css`. Nothing local. */
+
+.mb-app__panes {
+	flex: 1;
+	min-height: 0;
+	display: grid;
+	grid-template-columns: 248px 340px 1fr;
+	transition: grid-template-columns var(--motion-duration-normal, 180ms) ease;
+}
+
+.mb-app__panes--rail-closed {
+	grid-template-columns: 0px 340px 1fr;
+}
+
+/* Border-box width can never shrink below the element's own padding, so a
+ * 0px grid track alone leaves a padding-wide sliver (the active row's accent
+ * bleeds through). Collapse the inline padding with the track. */
+.mb-app__panes--rail-closed .mb-rail {
+	border-inline-end-color: transparent;
+	padding-inline: 0;
+}
+
+.mb-demo-banner {
+	padding: var(--space-2);
+	color: var(--text-dim, var(--text));
+	background: var(--color-accent-subtle, var(--hover));
+	border-bottom: var(--border-width) solid var(--color-border-subtle, var(--border));
+}
+
+/* ── Folder rail ─────────────────────────────────────────────────────── */
+
+/* House sidebar face (mirrors Files/Notes): same surface as the content —
+ * the panel reads as a track, not an elevated card — with the shared
+ * uppercase faint section headings and accent-soft selected rows. */
+.mb-rail {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+	padding: var(--space-3) var(--space-2);
+	min-width: 0;
+	overflow-y: auto;
+	overflow-x: hidden;
+	border-inline-end: var(--border-width) solid var(--color-border-subtle, var(--border));
+	background: var(--bg);
+	transition: padding-inline var(--motion-duration-normal, 180ms) ease;
+}
+
+.mb-rail__group {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+}
+
+.mb-rail__heading {
+	padding: var(--space-2) var(--space-2) var(--space-1);
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-semibold);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--text-faint, var(--text));
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.mb-rail__item {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	width: 100%;
+	padding: var(--space-2) var(--space-2);
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-md);
+	background: transparent;
+	color: var(--text);
+	text-align: left;
+	cursor: pointer;
+}
+
+.mb-rail__item:hover {
+	background: var(--hover);
+}
+
+.mb-rail__item.is-active {
+	background: var(--accent-soft);
+	color: var(--text);
+	border-color: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.mb-rail__icon {
+	flex: 0 0 auto;
+	width: 16px;
+	height: 16px;
+	opacity: 0.8;
+}
+
+.mb-rail__label {
+	flex: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.mb-rail__badge {
+	flex: 0 0 auto;
+	min-width: 18px;
+	padding: 0 var(--space-2);
+	border-radius: var(--radius-full);
+	background: var(--accent, var(--text));
+	color: var(--accent-fg, var(--bg));
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+	text-align: center;
+}
+
+/* ── Message list ────────────────────────────────────────────────────── */
+
+.mb-list {
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	border-right: var(--border-width) solid var(--color-border-subtle, var(--border));
+}
+
+.mb-list__search {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	height: 44px;
+	padding: 0 var(--space-2);
+	border-bottom: var(--border-width) solid var(--color-border-subtle, var(--border));
+}
+
+.mb-list__search-icon {
+	width: 16px;
+	height: 16px;
+	opacity: 0.6;
+}
+
+.mb-list__search-input {
+	flex: 1;
+	border: none;
+	background: transparent;
+	color: var(--text);
+	outline: none;
+}
+
+.mb-list__items {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+
+.mb-row {
+	display: flex;
+	gap: var(--space-1);
+	width: 100%;
+	padding: var(--space-2);
+	border: none;
+	border-bottom: var(--border-width) solid var(--color-border-subtle, var(--border));
+	background: transparent;
+	color: var(--text);
+	text-align: left;
+	cursor: pointer;
+}
+
+.mb-row:hover {
+	background: var(--hover);
+}
+
+.mb-row.is-active {
+	background: var(--color-accent-subtle, var(--hover));
+}
+
+.mb-row__rail {
+	flex: 0 0 12px;
+	display: flex;
+	justify-content: center;
+	padding-top: var(--space-1);
+}
+
+.mb-row__dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--accent, var(--text));
+}
+
+.mb-row__main {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+}
+
+.mb-row__top {
+	display: flex;
+	align-items: baseline;
+	gap: var(--space-2);
+}
+
+.mb-row__sender {
+	flex: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-weight: var(--text-weight-medium);
+}
+
+.mb-row.is-unread .mb-row__sender,
+.mb-row.is-unread .mb-row__subject {
+	font-weight: var(--text-weight-bold, 700);
+}
+
+.mb-row__date {
+	flex: 0 0 auto;
+	font-size: var(--text-size-xs);
+	color: var(--text-dim, var(--text));
+	opacity: 0.8;
+}
+
+.mb-row__subject {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.mb-row__flag {
+	flex: 0 0 auto;
+	width: 13px;
+	height: 13px;
+	color: var(--accent, var(--text));
+}
+
+.mb-row__snippet {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: var(--text-size-xs);
+	color: var(--text-dim, var(--text));
+	opacity: 0.85;
+}
+
+.mb-row__attach {
+	flex: 0 0 auto;
+	width: 12px;
+	height: 12px;
+}
+
+/* ── Conversation threading ──────────────────────────────────────────── */
+
+.mb-list__thread-toggle {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+	width: var(--control-height-sm);
+	height: var(--control-height-sm);
+	padding: 0;
+	border: none;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text-dim, var(--text));
+	cursor: pointer;
+}
+
+.mb-list__thread-toggle:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.mb-list__thread-toggle.is-on {
+	background: var(--color-accent-subtle, var(--hover));
+	color: var(--accent, var(--text));
+}
+
+.mb-thread {
+	border-bottom: var(--border-width) solid var(--color-border-subtle, var(--border));
+}
+
+.mb-thread .mb-row {
+	border-bottom: none;
+}
+
+.mb-row--thread {
+	align-items: center;
+}
+
+/* The thread message-count pill is the shared `.bs-count-badge`
+ * (`@brainstorm/sdk/count-badge`, accent tone) — no per-app pill CSS. */
+
+.mb-thread__chevron {
+	flex: 0 0 auto;
+	width: 14px;
+	height: 14px;
+	color: var(--text-dim, var(--text));
+	transition: transform 120ms ease;
+}
+
+.mb-thread.is-expanded .mb-thread__chevron {
+	transform: rotate(90deg);
+}
+
+.mb-thread__messages {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	background: var(--color-accent-subtle, var(--hover));
+}
+
+.mb-row--nested {
+	padding-left: var(--space-6);
+	border-bottom: var(--border-width) solid var(--color-border-subtle, var(--border));
+}
+
+.mb-thread__messages li:last-child .mb-row--nested {
+	border-bottom: none;
+}
+
+/* ── Reading pane ────────────────────────────────────────────────────── */
+
+.mb-reading {
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	background: var(--bg);
+}
+
+.mb-reading--empty {
+	align-items: center;
+	justify-content: center;
+}
+
+.mb-reading__placeholder {
+	text-align: center;
+	color: var(--text-dim, var(--text));
+}
+
+.mb-reading__placeholder-icon {
+	width: 40px;
+	height: 40px;
+	margin-bottom: var(--space-2);
+	opacity: 0.4;
+}
+
+.mb-reading__placeholder-title {
+	margin: 0 0 var(--space-1);
+	font-weight: var(--text-weight-medium);
+}
+
+.mb-reading__placeholder-blurb {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	opacity: 0.75;
+}
+
+.mb-reading__toolbar {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	height: 44px;
+	padding: 0 var(--space-2);
+	border-bottom: var(--border-width) solid var(--color-border-subtle, var(--border));
+}
+
+.mb-reading__toolbar-spacer {
+	flex: 1;
+}
+
+.mb-iconbtn {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	height: var(--control-height-md);
+	padding: 0 var(--space-2);
+	border: none;
+	border-radius: var(--radius-md);
+	background: transparent;
+	color: var(--text);
+	cursor: pointer;
+}
+
+.mb-iconbtn:hover {
+	background: var(--hover);
+}
+
+.mb-iconbtn:disabled {
+	opacity: 0.55;
+	cursor: default;
+}
+
+.mb-iconbtn.is-on {
+	color: var(--accent, var(--text));
+	background: var(--color-accent-subtle, var(--hover));
+}
+
+.mb-iconbtn svg {
+	width: 16px;
+	height: 16px;
+}
+
+.mb-reading__head {
+	padding: var(--space-4);
+	border-bottom: var(--border-width) solid var(--color-border-subtle, var(--border));
+}
+
+.mb-reading__subject {
+	margin: 0 0 var(--space-2);
+	font-size: var(--text-size-lg);
+	font-weight: var(--text-weight-bold, 700);
+}
+
+.mb-reading__meta {
+	display: flex;
+	align-items: baseline;
+	gap: var(--space-2);
+}
+
+.mb-reading__sender {
+	flex: 1;
+	font-weight: var(--text-weight-medium);
+}
+
+.mb-reading__date {
+	font-size: var(--text-size-xs);
+	color: var(--text-dim, var(--text));
+}
+
+.mb-reading__recipients {
+	margin-top: var(--space-1);
+	font-size: var(--text-size-sm);
+	color: var(--text-dim, var(--text));
+}
+
+.mb-reading__reclabel {
+	font-weight: var(--text-weight-medium);
+	opacity: 0.8;
+}
+
+/* ── Body ────────────────────────────────────────────────────────────── */
+
+.mb-body {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.mb-body__remote-banner {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	padding: var(--space-2);
+	background: var(--warn-bg, var(--hover));
+	border-bottom: var(--border-width) solid var(--color-border-subtle, var(--border));
+}
+
+.mb-body__remote-btn {
+	margin-left: auto;
+	padding: var(--space-1);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-md);
+	background: var(--bg-elev);
+	color: var(--text);
+	cursor: pointer;
+}
+
+.mb-body__remote-btn:hover {
+	background: var(--hover);
+}
+
+.mb-body__frame {
+	flex: 1;
+	width: 100%;
+	border: none;
+	background: var(--bg);
+}
+
+.mb-body__text {
+	flex: 1;
+	margin: 0;
+	padding: var(--space-4);
+	overflow: auto;
+	white-space: pre-wrap;
+	word-break: break-word;
+	font: var(--text-size-md) / 1.5 var(--text-family-ui, system-ui);
+	color: var(--text);
+}
+
+.mb-body__empty {
+	padding: var(--space-6);
+	text-align: center;
+	color: var(--text-dim, var(--text));
+	font-size: var(--text-size-sm);
+}
+
+/* ── Sync status bar (Mailbox-5) ─────────────────────────────────────── */
+
+.mb-syncbar {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-1);
+	color: var(--text);
+	background: var(--color-accent-subtle, var(--hover));
+	border-bottom: var(--border-width) solid var(--color-border-subtle, var(--border));
+}
+
+.mb-syncbar__text {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* ── Connect-account CTA + dialog (Mailbox-5) ────────────────────────── */
+
+/* Fill host for the no-account empty; the chrome itself is the shared
+ * `@brainstorm/sdk/empty-state` (Hero). */
+.mb-cta {
+	flex: 1;
+	display: flex;
+}
+
+/* The connect / CTA buttons use the shared `.bs-btn` primitive
+ * (secondary · data-bs-primary). */
+
+.mb-connect {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+}
+
+.mb-connect__help {
+	margin: 0;
+	color: var(--text-dim, var(--text));
+	font-size: var(--text-size-sm);
+	line-height: 1.45;
+}
+
+.mb-connect__field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.mb-connect__label {
+	color: var(--text-dim, var(--text));
+	font-size: var(--text-size-sm);
+}
+
+.mb-connect__input {
+	padding: var(--space-2) var(--space-2);
+	border: var(--border-width) solid var(--color-border-subtle, var(--border));
+	border-radius: var(--radius-md);
+	background: transparent;
+	color: var(--text);
+	font: inherit;
+}
+
+.mb-connect__waiting {
+	margin: 0;
+	color: var(--text-dim, var(--text));
+}
+
+.mb-connect__error {
+	margin: 0;
+	color: var(--danger);
+}
+
+.mb-connect__actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--space-2);
+}
+
+.mb-connect__input:focus-visible,
+.mb-syncbar__dismiss:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -2px;
+}
+
+/* ── Composer (Mailbox-4) — shares the connect-dialog form chrome ───────── */
+
+.mb-compose {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+}
+
+.mb-compose__field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.mb-compose__label {
+	color: var(--text-dim, var(--text));
+	font-size: var(--text-size-sm);
+}
+
+.mb-compose__input,
+.mb-compose__body,
+.mb-compose__from {
+	padding: var(--space-2);
+	border: 1px solid var(--color-border-subtle, var(--border));
+	border-radius: var(--radius-md);
+	background: transparent;
+	color: var(--text);
+	font: inherit;
+}
+
+.mb-compose__from {
+	text-align: left;
+	cursor: pointer;
+}
+
+.mb-compose__from:hover {
+	background: var(--hover);
+}
+
+.mb-compose__body {
+	resize: vertical;
+	min-height: 160px;
+	line-height: 1.45;
+}
+
+.mb-compose__error {
+	margin: 0;
+	color: var(--danger);
+}
+
+.mb-compose__actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--space-2);
+}
+
+.mb-compose__input:focus-visible,
+.mb-compose__body:focus-visible,
+.mb-compose__from:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -2px;
+}
+
+.mb-reading__action {
+	padding: var(--space-1);
+	border: 1px solid var(--color-border-subtle, var(--border));
+	border-radius: var(--radius-md);
+	background: transparent;
+	color: var(--text);
+	font: inherit;
+	font-size: var(--text-size-sm);
+	height: var(--control-height-sm);
+	cursor: pointer;
+}
+
+.mb-reading__action:hover {
+	background: var(--hover);
+}
+
+.mb-reading__action:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -2px;
+}
+
+/* ── Connect dialog — Gmail / IMAP mode toggle + host rows ──────────────── */
+
+.mb-connect__modes {
+	display: flex;
+	gap: var(--space-2);
+}
+
+.mb-connect__mode {
+	padding: var(--space-1);
+	border: 1px solid var(--color-border-subtle, var(--border));
+	border-radius: var(--radius-md);
+	background: transparent;
+	color: var(--text);
+	font: inherit;
+	font-size: var(--text-size-sm);
+	height: var(--control-height-sm);
+	cursor: pointer;
+}
+
+.mb-connect__mode:hover {
+	background: var(--hover);
+}
+
+.mb-connect__mode.is-on {
+	background: var(--color-accent-subtle, var(--bg-hover));
+	border-color: var(--color-accent-default, var(--border));
+}
+
+.mb-connect__mode:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -2px;
+}
+
+.mb-connect__hostrow {
+	display: grid;
+	grid-template-columns: 1fr 88px auto;
+	gap: var(--space-2);
+	align-items: end;
+}
+
+.mb-connect__tls {
+	padding-bottom: var(--space-2);
+}

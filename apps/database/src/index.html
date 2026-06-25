@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta
+			http-equiv="Content-Security-Policy"
+			content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: brainstorm:; script-src 'self'"
+		/>
+		<title>Database</title>
+		<link rel="stylesheet" href="./styles.css" />
+	</head>
+	<body class="is-booting">
+		<header class="app-header">
+			<div class="app-header__left">
+				<span class="app-header__object-icon" id="header-list-icon"></span>
+				<span class="app-header__title" id="active-list-name">All tasks</span>
+			</div>
+			<div class="app-header__right">
+				<button
+					type="button"
+					class="header-icon-btn"
+					id="header-btn-search"
+					aria-label="Search"
+					title="Search"
+				></button>
+				<button
+					type="button"
+					class="bs-panel-toggle"
+					id="header-btn-sidebar"
+					aria-pressed="true"
+					aria-label="Toggle source list"
+					title="Toggle source list"
+				></button>
+				<button
+					type="button"
+					class="bs-panel-toggle"
+					id="header-btn-inspector"
+					aria-pressed="false"
+					aria-label="Toggle inspector"
+					title="Toggle inspector"
+				></button>
+			</div>
+		</header>
+
+		<main class="db-main" id="db-main" data-sidebar-open="true" data-inspector-open="false">
+			<aside class="db-sidebar" id="db-sidebar" aria-label="Lists">
+				<section class="db-sidebar__section">
+					<header class="db-sidebar__section-header">
+						<h2 class="db-sidebar__section-title">Lists</h2>
+						<button
+							type="button"
+							class="db-sidebar__new"
+							id="sidebar-new-list"
+							aria-label="New list"
+							title="New list"
+						></button>
+					</header>
+					<nav class="db-sidebar__list" id="list-nav" role="listbox" aria-label="Available lists"></nav>
+				</section>
+			</aside>
+
+			<section class="db-stage" id="db-stage" aria-label="Current view">
+				<header class="db-stage__header" id="stage-header">
+					<div class="db-stage__title-row">
+						<span class="db-stage__icon-host" id="stage-icon"></span>
+						<h1 class="db-stage__title" id="stage-title">All tasks</h1>
+						<span class="db-stage__count" id="stage-count">0</span>
+						<span class="db-stage__mode-badge" id="stage-mode-badge"></span>
+					</div>
+					<p class="db-stage__description" id="stage-description"></p>
+					<div class="db-stage__view-bar">
+						<nav class="db-tabs" id="view-tabs" role="tablist" aria-label="Views"></nav>
+						<div class="db-toolbar">
+							<button
+								type="button"
+								class="bs-btn bs-btn--icon bs-btn--ghost db-toolbar__btn--icon"
+								id="toolbar-filter"
+								aria-label="Filter"
+								title="Filter"
+							>
+								<span class="db-toolbar__icon" id="toolbar-filter-icon" aria-hidden="true"></span>
+							</button>
+							<button
+								type="button"
+								class="bs-btn bs-btn--icon bs-btn--ghost db-toolbar__btn--icon"
+								id="toolbar-sort"
+								aria-label="Sort"
+								title="Sort"
+							>
+								<span class="db-toolbar__icon" id="toolbar-sort-icon" aria-hidden="true"></span>
+							</button>
+							<button
+								type="button"
+								class="bs-btn bs-btn--icon bs-btn--ghost db-toolbar__btn--icon"
+								id="toolbar-settings"
+								aria-label="View settings"
+								title="View settings"
+							>
+								<span class="db-toolbar__icon" id="toolbar-settings-icon" aria-hidden="true"></span>
+							</button>
+							<button type="button" class="bs-btn" data-bs-primary id="toolbar-new">
+								<span class="db-toolbar__icon" id="toolbar-new-icon" aria-hidden="true"></span>
+								<span>New</span>
+							</button>
+						</div>
+					</div>
+					<div class="db-filter-bar" id="filter-bar" aria-label="Active filters and sorts" hidden></div>
+				</header>
+				<div class="db-stage__body" id="stage-body" tabindex="0"></div>
+			</section>
+
+			<aside class="db-inspector glass--strong" id="db-inspector" aria-label="Entity inspector">
+				<div
+					class="db-inspector__resize"
+					id="db-inspector-resize"
+					role="separator"
+					aria-orientation="vertical"
+					aria-label="Resize inspector"
+					tabindex="0"
+				></div>
+				<header class="db-inspector__header">
+					<h2 class="db-inspector__title" id="inspector-title">Details</h2>
+					<button
+						type="button"
+						class="db-inspector__close"
+						id="inspector-close"
+						aria-label="Close inspector"
+					></button>
+				</header>
+				<div class="db-inspector__body" id="inspector-body"></div>
+			</aside>
+			<div
+				class="db-sidebar-resize"
+				id="db-sidebar-resize"
+				role="separator"
+				aria-orientation="vertical"
+				aria-label="Resize sidebar"
+				tabindex="0"
+			></div>
+		</main>
+
+		<script type="module" src="./app.ts"></script>
+	</body>
+</html>

@@ -1,0 +1,127 @@
+/* Calendar "today's agenda" dashboard widget (Stage 7.3a). */
+.calendar-widget {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-height: 0;
+}
+
+/* In-widget header: the "Today" label + the live event count. Sits above the
+ * scrolling list with a subtle divider so it reads as a toolbar. */
+.calendar-widget__toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-2);
+	flex-shrink: 0;
+	padding: var(--space-1);
+	border-bottom: var(--border-width) solid var(--border);
+}
+
+.calendar-widget__label {
+	color: var(--text);
+	font-size: var(--text-size-sm);
+	font-weight: var(--text-weight-medium);
+}
+
+.calendar-widget__count {
+	flex-shrink: 0;
+	color: var(--text-dim);
+	font-size: var(--text-size-xs);
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+.calendar-widget__list {
+	list-style: none;
+	margin: 0;
+	padding: var(--space-1);
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+}
+
+.calendar-widget__row {
+	display: flex;
+	align-items: baseline;
+	gap: var(--space-2);
+	width: 100%;
+	padding: var(--space-1);
+	border: none;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text);
+	font: inherit;
+	font-size: var(--text-size-sm);
+	text-align: start;
+	cursor: pointer;
+}
+
+.calendar-widget__row:hover {
+	background: var(--hover);
+}
+
+.calendar-widget__time {
+	flex-shrink: 0;
+	color: var(--text-dim);
+	font-size: var(--text-size-xs);
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+.calendar-widget__title {
+	flex: 1;
+	min-width: 0;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.calendar-widget__empty {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 1;
+	min-height: 0;
+	margin: 0;
+	color: var(--text-dim);
+	font-size: var(--text-size-sm);
+}
+
+/* "Week ahead" widget (large) — the next 7 days grouped by day. A large tile,
+ * so it leans on `--widget-pad` (the SDK bumps it on a tall footprint) for
+ * roomier insets than the compact glance widgets. */
+.calendar-widget__week {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	padding: var(--widget-pad) 0;
+}
+
+.calendar-widget__day + .calendar-widget__day {
+	margin-top: var(--space-1);
+}
+
+/* Sticky day header so the date stays visible while its events scroll. */
+.calendar-widget__day-label {
+	position: sticky;
+	top: 0;
+	z-index: 1;
+	margin: 0;
+	padding: 4px var(--widget-pad);
+	background: var(--bg-elev);
+	color: var(--text-dim);
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-semibold);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+/* The large week view pads its list inset from `--widget-pad`; the compact
+ * today-agenda keeps its own tighter `--space-1`. */
+.calendar-widget--week .calendar-widget__list {
+	padding: 2px var(--widget-pad);
+}

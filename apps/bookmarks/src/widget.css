@@ -1,0 +1,89 @@
+/* Bookmarks "recent bookmarks" dashboard widget (Stage 7.3). */
+.bookmarks-widget {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-height: 0;
+}
+
+/* In-widget controls: the sort select + the live bookmark count. Sits above
+ * the scrolling list with a subtle divider so it reads as a toolbar. */
+.bookmarks-widget__toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-2);
+	flex-shrink: 0;
+	padding: var(--space-1);
+	border-bottom: var(--border-width) solid var(--border);
+}
+
+.bookmarks-widget__toolbar .bs-select {
+	height: 26px;
+	font-size: var(--text-size-sm);
+}
+
+.bookmarks-widget__count {
+	flex-shrink: 0;
+	color: var(--text-dim);
+	font-size: var(--text-size-xs);
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+.bookmarks-widget__list {
+	list-style: none;
+	margin: 0;
+	padding: var(--space-1);
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+}
+
+.bookmarks-widget__row {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	width: 100%;
+	padding: var(--space-1);
+	border: none;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text);
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+}
+
+.bookmarks-widget__row:hover {
+	background: var(--hover);
+}
+
+.bookmarks-widget__title {
+	font-size: var(--text-size-sm);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.bookmarks-widget__host {
+	color: var(--text-dim);
+	font-size: var(--text-size-xs);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.bookmarks-widget__empty {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 1;
+	min-height: 0;
+	margin: 0;
+	color: var(--text-dim);
+	font-size: var(--text-size-sm);
+}

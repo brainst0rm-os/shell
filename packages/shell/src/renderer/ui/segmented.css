@@ -1,0 +1,50 @@
+.segmented {
+	display: inline-flex;
+	gap: 0;
+	padding: var(--space-1);
+	background: var(--color-surface-2);
+	border-radius: var(--radius-md);
+	align-self: flex-start;
+}
+
+.segmented__item {
+	appearance: none;
+	background: transparent;
+	border: 0;
+	padding: var(--space-1);
+	font-family: inherit;
+	font-size: var(--text-size-md);
+	color: var(--color-text-secondary);
+	cursor: pointer;
+	border-radius: var(--radius-sm);
+}
+
+.segmented__item:hover {
+	color: var(--color-text-primary);
+}
+
+.segmented__item:focus-visible {
+	outline: var(--focus-ring-outline);
+	outline-offset: var(--focus-ring-offset-inset);
+}
+
+.segmented__item--active {
+	background: var(--color-surface);
+	color: var(--color-text-primary);
+	font-weight: var(--text-weight-medium);
+	box-shadow: 0 1px 2px var(--color-shadow-subtle);
+}
+
+/* Variant for surfaces where the segmented control should fill its
+ * parent (Feedback dialog kind/sensitivity rows). Consumer opts in by
+ * wrapping the Segmented in a `.segmented--fill` container or applying
+ * the modifier via `data-variant`. Default stays auto-width to match
+ * the Settings panel pattern. */
+.segmented--fill {
+	display: flex;
+	width: 100%;
+}
+
+.segmented--fill .segmented__item {
+	flex: 1;
+}

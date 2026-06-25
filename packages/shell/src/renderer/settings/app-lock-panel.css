@@ -1,0 +1,70 @@
+/* Settings → Security → App lock (Stage 13.8 surface). Content-only; tokens. */
+
+.app-lock {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+}
+
+.app-lock__status {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+}
+
+/* The set/change form lives inside the shared `<Popover>` body. */
+.app-lock__form {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+}
+
+/* Lets Enter submit from any PIN box; the visible actions are the popover
+ * footer buttons, so this stays out of the layout and the tab order. */
+.app-lock__submit-hidden {
+	position: absolute;
+	width: 0;
+	height: 0;
+	padding: 0;
+	border: 0;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.app-lock__field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	align-items: flex-start;
+}
+
+.app-lock__field-label {
+	font-size: var(--text-size-md);
+	color: var(--color-text-secondary);
+}
+
+/* The PIN boxes left-align under their label (the lock screen centres them). */
+.app-lock__field .pin-input {
+	justify-content: flex-start;
+}
+
+.app-lock__autolock {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+
+/* `.app-lock__select` is the shared `.bs-select` trigger (SDK select-menu);
+ * face/focus chrome comes from the SDK. */
+
+.app-lock__error {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--color-text-danger, var(--color-text-secondary));
+}
+
+.app-lock__actions {
+	display: flex;
+	gap: var(--space-2);
+	align-items: center;
+}

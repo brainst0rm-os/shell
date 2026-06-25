@@ -1,0 +1,23 @@
+import "@brainstorm/sdk/app-theme.css";
+import "@brainstorm/sdk/count-badge.css";
+import "@brainstorm/sdk/empty-state.css";
+import { AppErrorBoundary } from "@brainstorm/sdk/error-boundary";
+import { mountMenuHost } from "@brainstorm/sdk/menus";
+import { createRoot } from "react-dom/client";
+import { MailboxApp } from "./app";
+import "./styles.css";
+
+// One shared fancy-menus host per app — the header ⋯ and composer menus open
+// through openAnchoredMenu, which is a no-op without a mounted host.
+mountMenuHost();
+
+const root = document.getElementById("root");
+if (!root) throw new Error("Mailbox: #root not found in index.html");
+// No <StrictMode>: dev double-mount re-binds @lexical/yjs editors to an
+// already-applied doc and blanks them (see project memory). Mailbox has no
+// editor today, but the convention is followed for consistency.
+createRoot(root).render(
+	<AppErrorBoundary appName="mailbox">
+		<MailboxApp />
+	</AppErrorBoundary>,
+);

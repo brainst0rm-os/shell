@@ -1,0 +1,284 @@
+.dashboard-icons {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	z-index: 1;
+	/* Establish a size-query container so descendants can read the
+	 * surface's CSS pixel dimensions via `cqw` / `cqh` and resolve icon
+	 * positions at paint time. Without this, icon positions would lag
+	 * the container by one React commit during macOS Live Resize, which
+	 * reads visually as "shake". The constants here mirror `grid.ts` —
+	 * keep them in lockstep (the JS values still drive drag math and
+	 * inner-element sizing). */
+	container-type: size;
+	/* Fixed 8px grid (free placement). The stored cell IS the icon's top-left,
+	 * so there's no centring offset. Keep these in lockstep with GRID_UNIT /
+	 * GRID_OUTER_MARGIN / ICON_BUTTON_W / ICON_BUTTON_H in grid.ts. */
+	--grid-unit: 8px;
+	--grid-outer-margin: 16px;
+	--grid-cell-w: var(--grid-unit);
+	--grid-cell-h: var(--grid-unit);
+	--grid-icon-w: 80px;
+	--grid-icon-h: 104px;
+}
+
+/* Each icon button is a centred column: tile + dot + label. Its width
+ * (`--grid-icon-w`) and its `translate(...)` come from the container's
+ * pixel dimensions, NOT from React state — the browser resolves both
+ * at paint time so resizing the window doesn't shake icons. Per-icon
+ * cell index is supplied inline via `--icon-col` / `--icon-row`. The
+ * dragging variant overrides this transform imperatively in
+ * `icons-layer.tsx` (`element.style.transform`); on drag-end a layout
+ * effect clears it so the CSS rule takes back over. */
+.dashboard-icons__icon {
+	position: absolute;
+	top: 0;
+	inset-inline-start: 0;
+	pointer-events: auto;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-1);
+	padding: var(--space-1);
+	border: none;
+	background: transparent;
+	border-radius: var(--radius-lg);
+	cursor: pointer;
+	user-select: none;
+	color: var(--color-text-primary);
+	font: inherit;
+	text-align: center;
+	width: var(--grid-icon-w);
+	/* The cell IS the icon's top-left anchor — position at the cell origin, no
+	 * centring within the cell. */
+	transform: translate(
+		calc(var(--grid-outer-margin) + var(--icon-col, 0) * var(--grid-cell-w)),
+		calc(var(--grid-outer-margin) + var(--icon-row, 0) * var(--grid-cell-h))
+	);
+}
+
+/* Hover gives the tile a gentle lift: a small scale + upward nudge and a
+ * deeper contact shadow (reads as "raised toward you"). The glow lives in the
+ * glyph artwork, so hover only changes depth — no coloured halo. The × overlay
+ * still appears in the corner. No outline on the cell. Keyboard focus uses a
+ * subtle accent ring on the tile itself, not on the cell, so the focused icon
+ * doesn't gain an oversized framed border. */
+.dashboard-icons__icon .app-icon__tile {
+	transition: transform var(--motion-duration-fast) var(--motion-easing-standard), box-shadow
+		var(--motion-duration-fast) var(--motion-easing-standard);
+}
+
+.dashboard-icons__icon:hover .app-icon__tile {
+	transform: scale(1.06) translateY(-2px);
+	box-shadow:
+		inset 0 0 0 1px var(--color-glass-border),
+		0 6px 16px rgba(0, 0, 0, 0.34),
+		0 14px 32px rgba(0, 0, 0, 0.26);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.dashboard-icons__icon:hover .app-icon__tile,
+	.dashboard-icons__icon:active .app-icon__tile {
+		transform: none;
+	}
+}
+
+/* Keyboard focus draws ONE ring on the whole cell — the gated
+ * `:root[data-kbnav]` baseline outline, rounded to the cell's `--radius-lg` and
+ * nudged out 2px — NOT a second ring on the icon tile. A double ring (tile +
+ * cell) read as noisy; the tile keeps only its hover depth. */
+.dashboard-icons__icon:focus-visible {
+	outline-offset: 2px;
+}
+
+.dashboard-icons__icon--dragging {
+	z-index: 2;
+	cursor: grabbing;
+}
+
+.dashboard-icons__icon--dragging .app-icon__tile {
+	transform: scale(1.12);
+	box-shadow:
+		inset 0 0 0 1px var(--color-glass-border),
+		0 8px 20px rgba(0, 0, 0, 0.4),
+		0 22px 52px rgba(0, 0, 0, 0.32);
+}
+
+/* Click affordance: pressing a tile dips it briefly so the user knows the
+ * click landed even before the app window pops in. Pure CSS `:active` —
+ * instant feedback, no React state. The dragging variant wins (already
+ * applies a larger scale + heavier shadow) so a drag never visibly bounces.
+ * Reduced motion users see no transform change here — the global cover in
+ * `styles.css` collapses the transition duration. */
+.dashboard-icons__icon:active:not(.dashboard-icons__icon--dragging) .app-icon__tile {
+	transform: scale(0.94);
+	transition-duration: var(--motion-duration-fast);
+}
+
+/* Pinned-object tile (Stage 7.13): the object's own universal icon with a
+ * small opener-app badge. Sits in the same grid slot as an app tile and
+ * matches its hover/drag lift via the shared `.app-icon__tile` rules where
+ * the object falls back to an AppIcon squircle. The block mirrors
+ * `.app-icon`: a centred column of tile-box + dot-reserve, so the tile
+ * block is the exact same height as an app tile block and the button gap
+ * to the label is pixel-identical for both variants. */
+.dashboard-icons__pin-block {
+	display: inline-flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-1);
+	pointer-events: none;
+}
+
+.dashboard-icons__pin {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+/* Centres the resolved glyph inside the tile-square box. The glyph is
+ * sized smaller than the box (ICON_PIN_GLYPH_RATIO) so an emoji / pack
+ * glyph optically matches a sibling app squircle glyph; the AppIcon
+ * fallback fills the box edge-to-edge and overrides this back to 100%. */
+.dashboard-icons__pin-object {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--radius-lg);
+}
+
+.dashboard-icons__pin-object img {
+	object-fit: cover;
+}
+
+/* Empty spacer matching `.app-icon__dot` (4px dot + 2px margin-top). The
+ * single source of truth for the height is `ICON_DOT_RESERVE_PX` in
+ * `grid.ts`; the dot height + its top margin must stay in lockstep. */
+.dashboard-icons__pin-dot-reserve {
+	width: 4px;
+	height: 4px;
+	margin-top: var(--space-0_5);
+}
+
+.dashboard-icons__pin-badge {
+	position: absolute;
+	right: -2px;
+	bottom: -2px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--radius-md);
+	background: var(--color-background-primary);
+	pointer-events: none;
+}
+
+/* Dangling target: deleted / binned object. Greyed, de-saturated,
+ * still identifiable by its stored label; "Remove pin" is the only way
+ * out (never auto-removed — a Bin restore re-lights it). */
+.dashboard-icons__pin--missing {
+	filter: grayscale(1);
+	opacity: 0.45;
+}
+
+/* Up to two lines, ellipsised on overflow. The slot always reserves two
+ * lines' height (`min-height`) so a one-line and a two-line label keep the
+ * same box — tiles stay on a shared baseline across a row regardless of name
+ * length. The label may extend past the tile into the cell gutter
+ * (macOS-style) so a typical one-word app name ("Whiteboard", "Automations")
+ * fits on one line instead of breaking mid-word with an orphan letter;
+ * `overflow-wrap: break-word` keeps mid-word breaking as a last resort for a
+ * single word wider than the whole cell. */
+.dashboard-icons__label {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-primary);
+	line-height: var(--text-line-height-tight);
+	/* `width: max-content` frees the label from the button's (tile-width)
+	 * content box — without it the max() cap below never engages because a
+	 * centred flex item shrinks to its container. */
+	width: max-content;
+	max-width: max(var(--grid-icon-w), calc(var(--grid-cell-w) - var(--space-2)));
+	min-height: calc(2em * var(--text-line-height-tight));
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	line-clamp: 2;
+	overflow: hidden;
+	overflow-wrap: break-word;
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+/* App-picker — content-only styling; chrome comes from the shared <Popover>. */
+
+.icon-picker__list {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.icon-picker__item {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-2);
+	border-radius: var(--radius-md);
+	background: transparent;
+	border: var(--border-width) solid transparent;
+	color: var(--color-text-primary);
+	text-align: start;
+	cursor: pointer;
+	font: inherit;
+}
+
+.icon-picker__item:hover,
+.icon-picker__item:focus-visible {
+	background: var(--color-interactive-hover);
+	border-color: var(--color-border-subtle);
+	outline: none;
+}
+
+.icon-picker__item-text {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+	min-width: 0;
+	flex: 1;
+}
+
+.icon-picker__item-row {
+	display: inline-flex;
+	align-items: baseline;
+	gap: var(--space-2);
+	min-width: 0;
+}
+
+.icon-picker__item-row > strong {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.icon-picker__version {
+	color: var(--color-text-tertiary);
+	font-size: var(--text-size-xs);
+	flex: 0 0 auto;
+}
+
+.icon-picker__description {
+	color: var(--color-text-tertiary);
+	font-size: var(--text-size-sm);
+	line-height: 1.35;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.icon-picker__empty {
+	color: var(--color-text-tertiary);
+	font-size: var(--text-size-sm);
+}

@@ -1,0 +1,447 @@
+.welcome {
+	position: relative;
+	height: 100%;
+	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	/* Splash-screen wallpaper — shipped runtime asset under the shell's
+	 * `art/` folder (NOT docs/, which is example art only). The gradient
+	 * overlay on top keeps the title + buttons readable on the brighter
+	 * parts of the image without obscuring the artwork. */
+	background: linear-gradient(180deg, rgba(8, 14, 24, 0.55) 0%, rgba(8, 14, 24, 0.35) 100%),
+		url("../../../art/wallpaper/stormy-sea.png") center / cover no-repeat,
+		var(--color-background-primary);
+}
+
+.welcome__title-bar {
+	position: absolute;
+	top: 0;
+	inset-inline: 0;
+	height: 36px;
+	z-index: var(--z-windowControlsOverlay);
+	-webkit-app-region: drag;
+	app-region: drag;
+}
+
+.welcome__content {
+	position: relative;
+	width: 100%;
+	max-width: 400px;
+	padding: var(--space-7);
+	text-align: center;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+/* The create form carries the template gallery, which needs room to lay its
+ * use-case tiles out as a real multi-column grid (at 400px they collapse to a
+ * single scrolling column). Widen only this step — the menu stays compact. */
+.welcome__content--create {
+	max-width: 620px;
+}
+
+/* Brand hero — app icon stacked above the wordmark, centered. */
+.welcome__brand {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-4);
+}
+
+/* drop-shadow (not box-shadow) so the cast follows the icon's squircle
+ * alpha rather than its bounding box; values mirror the `--shadow-lg`
+ * token scale. */
+.welcome__mark {
+	filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.4));
+}
+
+.welcome__title {
+	margin: 0;
+	font-size: var(--text-size-display);
+	font-weight: var(--text-weight-semibold);
+	letter-spacing: -0.03em;
+	line-height: 1;
+	color: var(--color-text-primary);
+	text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+}
+
+.welcome__tagline {
+	font-size: var(--text-size-xl);
+	color: var(--color-text-secondary);
+	margin-top: var(--space-2);
+	margin-bottom: var(--space-6);
+}
+
+/* Full content width so the menu never shrink-wraps its widest child:
+ * without it the stacked CTAs sized to their label when there were no
+ * recent vaults but stretched to the recent-vault rows' width when there
+ * were, making the buttons visibly change width between the two states. */
+.welcome__menu {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	width: 100%;
+}
+
+/* Stacked primary/secondary CTAs span the menu so both are the same width
+ * regardless of recent-vault presence; the shared Button primitive carries
+ * the glossy chrome. */
+.welcome__cta {
+	width: 100%;
+}
+
+/* Secondary CTAs (Open / Join) share a white glossy face so the only
+ * coloured button is the primary "Create" — the two secondaries read as
+ * peers of each other and of "Back", told apart by their leading icon
+ * rather than by hue. Overrides only the gloss-face stops + label ink the
+ * Button primitive already reads (the sanctioned extension point, same as
+ * Destructive). Literals, like the rest of the fixed splash palette. */
+.welcome__cta--alt {
+	--color-gloss-top: #ffffff;
+	--color-gloss-bottom: #e2e6ef;
+	--color-accent-text: #161a24;
+}
+
+/* "Back" — a white glossy face so the de-emphasised action reads as a
+ * peer of, not a sibling of, the coloured primary. Overrides only the
+ * tokens the Button primitive already reads (the sanctioned extension
+ * point, same as Destructive / the cyan --alt above): the two gloss
+ * stops + the label ink, flipped dark for contrast on white. The splash
+ * palette is intentionally fixed (like the wallpaper + brand tints), so
+ * these are literals rather than theme-variable tokens. */
+.welcome__btn-white {
+	--color-gloss-top: #ffffff;
+	--color-gloss-bottom: #e2e6ef;
+	--color-accent-text: #161a24;
+}
+
+.welcome__recent {
+	margin-top: var(--space-5);
+	text-align: start;
+}
+
+.welcome__recent-title {
+	font-size: var(--text-size-sm);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--color-text-tertiary);
+	margin-bottom: var(--space-2);
+}
+
+.welcome__recent-list {
+	list-style: none;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.welcome__recent-item {
+	width: 100%;
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-2) var(--space-2);
+	background: transparent;
+	color: inherit;
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+	font: inherit;
+	text-align: start;
+	transition: background var(--motion-duration-normal) var(--motion-easing-standard), border-color
+		var(--motion-duration-normal) var(--motion-easing-standard);
+	-webkit-app-region: no-drag;
+	app-region: no-drag;
+}
+
+.welcome__recent-item:hover:not(:disabled) {
+	background: rgba(40, 90, 150, 0.32);
+	border-color: rgba(140, 190, 230, 0.32);
+	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
+}
+
+.welcome__recent-item:active:not(:disabled) {
+	background: rgba(60, 120, 180, 0.4);
+}
+
+.welcome__recent-dot {
+	display: inline-block;
+	width: 10px;
+	height: 10px;
+	border-radius: var(--radius-full);
+	flex-shrink: 0;
+}
+
+.welcome__recent-name {
+	font-size: var(--text-size-md);
+	color: var(--color-text-primary);
+}
+
+.welcome__recent-path {
+	font-family: var(--text-family-code);
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+	margin-inline-start: auto;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width: 220px;
+}
+
+.welcome__form {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	width: 100%;
+	text-align: start;
+}
+
+.welcome__field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+/* Step-2 ("Choose a starting point") heading block. */
+.welcome__step-head {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.welcome__step-title {
+	margin: 0;
+	font-size: var(--text-size-lg);
+	font-weight: var(--text-weight-medium);
+	color: var(--color-text-primary);
+}
+
+.welcome__step-title:focus {
+	outline: none;
+}
+
+.welcome__label {
+	font-size: var(--text-size-md);
+	color: var(--color-text-secondary);
+}
+
+/* Height comes from the shared control-height scale (Lg, 40px) so inputs
+ * line up pixel-exact with the Lg Buttons beside/after them (Choose…,
+ * Back, Create vault) — padding governs width only, mirroring the Button
+ * primitive's own sizing contract. */
+.welcome__input {
+	height: var(--control-height-lg);
+	background: var(--color-surface-default);
+	color: var(--color-text-primary);
+	border: var(--border-width) solid var(--color-border-default);
+	border-radius: var(--radius-md);
+	padding: 0 var(--space-2);
+	font: inherit;
+	-webkit-app-region: no-drag;
+	app-region: no-drag;
+}
+
+/* Grow is scoped to the path-row only. `.welcome__field` is a flex
+ * COLUMN, so a global `flex: 1` on the input would make flex-basis: 0%
+ * govern its HEIGHT (main axis) and override `height` — collapsing the
+ * Vault-name field to min-content. In the row, main axis is width, so
+ * grow there fills the space beside "Choose…" without touching height. */
+.welcome__path-row .welcome__input {
+	flex: 1;
+	min-width: 0;
+}
+
+/* Ring SITS on the border position (inset by the 1px border, border made
+ * transparent) so the focused box is the exact same size as the unfocused
+ * one — no "sandwich". Per docs/foundations/35-code-conventions.md. */
+.welcome__input:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+	border-color: transparent;
+}
+
+.welcome__input--error {
+	border-color: var(--color-state-error);
+}
+
+.welcome__input--error:focus-visible {
+	outline-color: var(--color-state-error);
+}
+
+.welcome__field-error {
+	margin-top: var(--space-1);
+	color: var(--color-state-error);
+	font-size: var(--text-size-sm);
+}
+
+.welcome__path-row {
+	display: flex;
+	gap: var(--space-2);
+}
+
+.welcome__hint {
+	font-size: var(--text-size-sm);
+	color: var(--color-text-tertiary);
+}
+
+.welcome__starter {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.welcome__migrate {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+}
+
+.welcome__migrate-subtitle {
+	font-size: var(--text-size-md);
+	color: var(--color-text-secondary);
+}
+
+.welcome__migrate-sources {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	margin: 0;
+	padding-inline-start: var(--space-4);
+	list-style: disc;
+}
+
+.welcome__migrate-source {
+	font-size: var(--text-size-sm);
+	color: var(--color-text-primary);
+}
+
+.welcome__hint--sub {
+	margin-inline-start: calc(var(--space-5) + var(--space-1));
+}
+
+.welcome__cloud-warning {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	padding: var(--space-2) var(--space-2);
+	border-radius: var(--radius-md);
+	background: rgba(251, 191, 36, 0.1);
+	border: var(--border-width) solid rgba(251, 191, 36, 0.32);
+	color: var(--color-text-secondary);
+	font-size: var(--text-size-sm);
+}
+
+.welcome__cloud-warning strong {
+	color: var(--color-state-warning);
+	font-weight: var(--text-weight-semibold);
+}
+
+.welcome__templates {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.welcome__templates-heading {
+	font-size: var(--text-size-sm);
+	font-weight: var(--text-weight-semibold);
+	color: var(--color-text-secondary);
+}
+
+.welcome__templates-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+	gap: var(--space-2);
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.welcome__template-card {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-2);
+	width: 100%;
+	height: 100%;
+	padding: var(--space-3) var(--space-2);
+	text-align: center;
+	background: var(--color-surface-default);
+	border: var(--border-width) solid var(--color-border-default);
+	border-radius: var(--radius-md);
+	color: var(--color-text-primary);
+	cursor: pointer;
+	transition: background var(--motion-duration-normal) var(--motion-easing-standard), border-color
+		var(--motion-duration-normal) var(--motion-easing-standard);
+}
+
+/* Use-case glyph — a rounded chip so the tile reads icon-first; tints to the
+ * accent when the tile is selected (rule below). */
+.welcome__template-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 44px;
+	height: 44px;
+	border-radius: var(--radius-md);
+	background: var(--color-surface-raised);
+	color: var(--color-text-secondary);
+	flex-shrink: 0;
+}
+
+.welcome__template-card:hover:not(:disabled) {
+	border-color: var(--color-border-strong);
+}
+
+.welcome__template-card:focus-visible {
+	outline: var(--border-width) solid var(--color-focus-ring);
+	outline-offset: 2px;
+}
+
+.welcome__template-card--selected {
+	border-color: var(--color-accent-default);
+	background: var(--color-accent-subtle);
+}
+
+.welcome__template-card--selected .welcome__template-icon {
+	background: var(--color-accent-default);
+	color: var(--color-accent-text);
+}
+
+.welcome__template-card:disabled {
+	cursor: default;
+	opacity: 0.6;
+}
+
+.welcome__template-name {
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium);
+}
+
+/* Two-line blurb under the name, clamped so every tile keeps the same height
+ * regardless of description length. */
+.welcome__template-desc {
+	font-size: var(--text-size-sm);
+	color: var(--color-text-tertiary);
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	line-clamp: 2;
+	overflow: hidden;
+}
+
+.welcome__actions {
+	display: flex;
+	gap: var(--space-2);
+	justify-content: flex-end;
+	margin-top: var(--space-2);
+}
+
+.welcome__error {
+	margin-top: var(--space-3);
+	color: var(--color-state-error);
+	font-size: var(--text-size-sm);
+}

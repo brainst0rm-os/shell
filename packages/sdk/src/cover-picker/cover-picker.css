@@ -1,0 +1,320 @@
+/**
+ * Cover-specific bits layered on the shared `.icon-picker` chrome
+ * (panel / backdrop / tabs / action / body / empty). Only the
+ * cover-unique surfaces live here: the live preview band, the upload
+ * drop zone, the row-virtualised library, the focal-point control, the
+ * gradient/colour swatch grid, and the Apply footer.
+ *
+ * Layout contract: the body is a non-scrolling flex column. The
+ * fixed-height bits (preview / drop zone / focal / footer) never shrink;
+ * the scrollable bit (library or swatch grid) takes the remaining space
+ * and owns the only scrollbar — so "Use cover" is always on screen and
+ * the virtualiser has a real scroll element to measure.
+ */
+
+.cover-picker .icon-picker__body {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4, var(--space-4));
+	padding: var(--space-4, var(--space-4));
+}
+
+.cover-picker .icon-picker__tabs {
+	padding: var(--space-2, var(--space-2)) var(--space-3, var(--space-3));
+	gap: var(--space-1, var(--space-1));
+}
+
+/* Live preview of the pending cover — full-bleed, echoes the in-app
+   cover bands. Never shrinks: a flex parent would otherwise collapse the
+   aspect-ratio'd child to a sliver. */
+.cover-picker__preview {
+	flex: 0 0 auto;
+	display: block;
+	width: 100%;
+	border-radius: var(--radius-md);
+	overflow: hidden;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.cover-picker__file {
+	display: none;
+}
+
+/* The Image tab is itself a flex column so the library can flex to fill
+   the leftover height (the drop zone + focal stay their natural size). */
+.cover-picker__image {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3, var(--space-3));
+}
+
+/* Upload drop zone — the click affordance and the drag-and-drop target
+   in one, replacing the old lone button + bare empty sentence. */
+.cover-picker__dropzone {
+	flex: 0 0 auto;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-1, var(--space-1));
+	width: 100%;
+	padding: var(--space-5, var(--space-5)) var(--space-3, var(--space-3));
+	border: var(--border-width) dashed var(--border-strong, rgba(127, 127, 127, 0.45));
+	border-radius: var(--radius-md);
+	background: var(--color-surface-default, rgba(127, 127, 127, 0.08));
+	color: var(--text, inherit);
+	cursor: pointer;
+	transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.cover-picker__dropzone:hover,
+.cover-picker__dropzone--over {
+	border-color: var(--color-accent-default);
+	background: var(--color-accent-subtle);
+}
+
+.cover-picker__dropzone:disabled {
+	opacity: 0.6;
+	cursor: progress;
+}
+
+.cover-picker__dropzone:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+	/* Ring replaces the dashed border (no sandwich) — match the swatch. */
+	border-color: transparent;
+}
+
+.cover-picker__dropzone-title {
+	font-size: var(--text-size-md);
+	font-weight: 500;
+}
+
+.cover-picker__dropzone-hint {
+	font-size: var(--text-size-xs);
+	color: var(--text-dim, rgba(127, 127, 127, 0.9));
+}
+
+/* Slim "replace image" bar once a cover is chosen — keeps the focal
+   control + Apply on screen instead of a tall empty-state target. */
+.cover-picker__dropzone--compact {
+	flex-direction: row;
+	padding: var(--space-2, var(--space-2)) var(--space-3, var(--space-3));
+}
+
+.cover-picker__dropzone--compact .cover-picker__dropzone-title {
+	font-size: var(--text-size-md);
+	font-weight: 500;
+}
+
+/* "Remove cover" is an icon-only button — square, centred glyph, sized
+   to match the surrounding tab buttons' visual weight. Quiet at rest
+   (no resting red border / fill), danger color reveals on hover, so it
+   doesn't shout from the corner of an otherwise calm picker. */
+.cover-picker__remove {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	width: 24px;
+	height: 24px;
+	border: 0;
+	background: transparent;
+	color: var(--text-dim);
+	border-radius: var(--radius-sm);
+}
+
+.cover-picker__remove svg {
+	width: 14px;
+	height: 14px;
+}
+
+.cover-picker__remove:hover {
+	background: var(--danger-bg);
+	color: var(--danger);
+}
+
+.cover-picker__remove:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}
+
+/* Row-virtualised uploaded library: this is the only scroll region in
+   the Image tab. */
+.cover-picker__lib {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+}
+
+.cover-picker__lib-inner {
+	position: relative;
+	width: 100%;
+}
+
+.cover-picker__lib-row {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	display: grid;
+	gap: var(--space-2, var(--space-2));
+	align-content: start;
+}
+
+/* Uploaded thumbnails and palette swatches are the SAME cell — one set
+   of size/shape/selection rules so they never visually diverge. */
+.cover-picker__lib-cell,
+.cover-picker__swatch {
+	padding: 0;
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-md);
+	overflow: hidden;
+	cursor: pointer;
+	aspect-ratio: 16 / 9;
+	/* Grid items default to `min-height: auto`, which lets a cell overflow
+	   its aspect-ratio box and stretch its whole row track — the source of
+	   the uneven swatch heights / lopsided gutters. Pin it to 0 so every
+	   cell honours the 16:9 box and the grid gap stays uniform. */
+	min-width: 0;
+	min-height: 0;
+	background: transparent;
+}
+
+.cover-picker__lib-cell {
+	background: var(--color-surface-default, rgba(127, 127, 127, 0.12));
+}
+
+.cover-picker__lib-cell img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+.cover-picker__lib-cell:hover,
+.cover-picker__swatch:hover {
+	border-color: var(--border-strong, rgba(127, 127, 127, 0.4));
+}
+
+.cover-picker__lib-cell:focus-visible,
+.cover-picker__swatch:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+	border-color: transparent;
+}
+
+.cover-picker__lib-cell--active,
+.cover-picker__swatch--active {
+	border-color: var(--color-accent-default);
+	outline: 2px solid var(--color-accent-default);
+	outline-offset: -1px;
+}
+
+/* KBN-S-pickers: the virtual library is one Tab stop — the scroll container
+ * holds DOM focus and `aria-selected` marks the arrow-key cursor cell. */
+.cover-picker__lib:focus {
+	outline: none;
+}
+
+.cover-picker__lib:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -2px;
+}
+
+.cover-picker__lib:focus [aria-selected="true"],
+.cover-picker__lib:focus-visible [aria-selected="true"] {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+	border-color: transparent;
+}
+
+.cover-picker__focal-wrap {
+	flex: 0 0 auto;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1, var(--space-1));
+}
+
+.cover-picker__focal {
+	position: relative;
+	width: 100%;
+	aspect-ratio: 16 / 9;
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+	border-radius: var(--radius-md);
+	cursor: crosshair;
+	touch-action: none;
+	user-select: none;
+}
+
+.cover-picker__focal-dot {
+	position: absolute;
+	width: 18px;
+	height: 18px;
+	transform: translate(-50%, -50%);
+	border-radius: 50%;
+	border: var(--border-width-thick) solid #fff;
+	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 1px 4px rgba(0, 0, 0, 0.45);
+	pointer-events: none;
+}
+
+.cover-picker__focal-hint {
+	margin: 0;
+	font-size: var(--text-size-xs);
+	color: var(--text-dim, rgba(127, 127, 127, 0.9));
+}
+
+/* Combined gradient + colour palette — plain grid (a small curated set),
+   same cell metrics as the virtualised library so the two never differ.
+   This is the Color tab's own scroll region. */
+.cover-picker__swatch-grid {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(116px, 1fr));
+	gap: var(--space-2);
+	align-content: start;
+}
+
+/* The shared cell rule pins `min-height: 0` for the JS-virtualised Image
+   library (its row height is set by the virtualiser, so the cell must shrink
+   to it). This grid is NOT virtualised — its rows are implicit `auto` tracks,
+   and `min-height: 0` strips the aspect-ratio's automatic minimum, collapsing
+   each row so the 16:9 swatches overflow and overlap the row below. Restore
+   the auto minimum here so every swatch reserves its own row. */
+.cover-picker__swatch-grid .cover-picker__swatch {
+	min-height: auto;
+}
+
+.cover-picker__swatch-fill {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+/* Always-visible commit row. Sits below the scroll region (not inside
+   it) so it never overlaps content and "Use cover" is always reachable.
+   NOT destructive — "Remove cover" keeps the danger styling; this is the
+   accent-driven primary. */
+.cover-picker__footer {
+	flex: 0 0 auto;
+	display: flex;
+	justify-content: flex-end;
+	padding-top: var(--space-3, var(--space-3));
+	border-top: var(--border-width) solid var(--color-border-subtle, rgba(127, 127, 127, 0.18));
+}
+
+/* Face (gloss / colour / radius / padding) comes from the shared
+   `.bs-btn[data-bs-primary]` recipe in app-theme.css — only the picker's
+   own focus offset is layered here. */
+.cover-picker__apply:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 2px;
+}

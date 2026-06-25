@@ -1,0 +1,98 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+# Don't cancel a release run.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }} (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      # Mirror of ci.yml's matrix. Keep the two in sync; if a runner is
+      # added/removed, mirror in both.
+      matrix:
+        include:
+          - os: macos-13
+            arch: x64
+            runner: macos-13
+            rust-target: x86_64-apple-darwin
+            napi-script: build:darwin-x64
+            package-script: package:mac
+          - os: macos-14
+            arch: arm64
+            runner: macos-14
+            rust-target: aarch64-apple-darwin
+            napi-script: build:darwin-arm64
+            package-script: package:mac
+          - os: windows-2022
+            arch: x64
+            runner: windows-2022
+            rust-target: x86_64-pc-windows-msvc
+            napi-script: build:windows-x64
+            package-script: package:win
+          - os: windows-11-arm
+            arch: arm64
+            runner: windows-11-arm
+            rust-target: aarch64-pc-windows-msvc
+            napi-script: build:windows-arm64
+            package-script: package:win
+          - os: ubuntu-22.04
+            arch: x64
+            runner: ubuntu-22.04
+            rust-target: x86_64-unknown-linux-gnu
+            napi-script: build:linux-x64
+            package-script: package:linux
+          - os: ubuntu-22.04-arm
+            arch: arm64
+            runner: ubuntu-22.04-arm
+            rust-target: aarch64-unknown-linux-gnu
+            napi-script: build:linux-arm64
+            package-script: package:linux
+    permissions:
+      contents: write  # to create release drafts
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup-bun-rust
+        with:
+          rust-target: ${{ matrix.rust-target }}
+
+      - name: Build native + apps + shell
+        shell: bash
+        run: |
+          bun run --filter @brainstorm/native ${{ matrix.napi-script }}
+          bun run --filter @brainstorm/shell build
+          bun run build:apps
+
+      - name: Package
+        env:
+          CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bun run --filter @brainstorm/shell ${{ matrix.package-script }} -- --publish always
+
+  release:
+    name: Create release draft
+    needs: build
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ github.ref_name }}" --draft --generate-notes || true

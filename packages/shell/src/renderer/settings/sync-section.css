@@ -1,0 +1,92 @@
+.sync-section__group {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	padding: var(--space-3) 0;
+	border-bottom: var(--border-width) solid var(--color-border-subtle);
+}
+
+.sync-section__group:last-of-type {
+	border-bottom: none;
+}
+
+.sync-section__group-title {
+	margin: 0 0 var(--space-2);
+	font-size: var(--text-size-sm);
+	font-weight: 600;
+	color: var(--color-text-secondary);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.sync-section__row {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: var(--space-3);
+	padding: var(--space-1) 0;
+}
+
+.sync-section__label {
+	color: var(--color-text-secondary);
+	font-size: var(--text-size-md);
+}
+
+.sync-section__value {
+	color: var(--color-text-primary);
+	font-size: var(--text-size-md);
+	text-align: end;
+	font-variant-numeric: tabular-nums;
+	max-width: 380px;
+}
+
+.sync-section__value--clip {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.sync-section__value--syncing {
+	color: var(--color-state-success);
+}
+
+.sync-section__value--stale {
+	color: var(--color-state-warning);
+}
+
+.sync-section__value--offline,
+.sync-section__value--local-only {
+	color: var(--color-text-tertiary);
+}
+
+.sync-section__value--error {
+	color: var(--color-state-error);
+}
+
+.sync-section__tooltip {
+	color: var(--color-text-secondary);
+	font-size: var(--text-size-xs);
+	margin: 0;
+	line-height: 1.45;
+}
+
+.sync-section__tooltip--error {
+	color: var(--color-state-error);
+}
+
+/* Restore action sits content-width, left-aligned, not stretched across the
+ * flex-column group. */
+.sync-section__group > .button {
+	align-self: flex-start;
+}
+
+.sync-section__number {
+	width: 5rem;
+	padding: var(--space-1) var(--space-2);
+	border: 1px solid var(--color-border-subtle);
+	border-radius: var(--radius-sm);
+	background: var(--color-surface-sunken);
+	color: var(--color-text-primary);
+	font-size: var(--text-size-sm);
+	text-align: right;
+}

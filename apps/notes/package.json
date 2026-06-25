@@ -1,0 +1,44 @@
+{
+  "name": "@brainstorm-app/notes",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build --watch"
+  },
+  "dependencies": {
+    "@brainstorm/editor": "workspace:*",
+    "@brainstorm/react-yjs": "workspace:*",
+    "@brainstorm/sdk": "workspace:*",
+    "@brainstorm/sdk-types": "workspace:*",
+    "@lexical/code": "^0.21.0",
+    "@lexical/headless": "^0.21.0",
+    "@lexical/link": "^0.21.0",
+    "@lexical/list": "^0.21.0",
+    "@lexical/markdown": "^0.21.0",
+    "@lexical/react": "^0.21.0",
+    "@lexical/rich-text": "^0.21.0",
+    "@lexical/selection": "^0.21.0",
+    "@lexical/table": "^0.21.0",
+    "@lexical/utils": "^0.21.0",
+    "@lexical/yjs": "^0.21.0",
+    "@phosphor-icons/core": "^2.1.1",
+    "@phosphor-icons/react": "^2.1.10",
+    "@tanstack/react-virtual": "^3.13.24",
+    "katex": "^0.16.11",
+    "lexical": "^0.21.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "unicode-emoji-json": "^0.9.0",
+    "yjs": "^13.6.30"
+  },
+  "devDependencies": {
+    "@types/katex": "^0.16.7",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "typescript": "^5.6.0",
+    "vite": "^5.4.0"
+  }
+}

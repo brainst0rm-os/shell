@@ -1,0 +1,107 @@
+import { resolve } from "node:path";
+import react from "@vitejs/plugin-react";
+import { defineConfig, externalizeDepsPlugin } from "electron-vite";
+
+// Dev keeps bundles unminified for readable main/renderer stacks in the error
+// log; production minifies (sourcemaps stay on, so stacks still resolve to
+// original frames). `size-limit` measures the production artifact, so the
+// budgets in docs/shell/13-frontend-stack.md are scored against minified output.
+export default defineConfig(({ command }) => {
+	const minify = command === "build";
+	return {
+		main: {
+			plugins: [
+				externalizeDepsPlugin({
+					// Workspace packages must be BUNDLED, not externalized, because
+					// the built `out/main/` directory has no node_modules of its own
+					// at runtime (Electron resolves only the shell's package.json
+					// deps, which point at workspace:* — that resolver doesn't run
+					// inside the production main process).
+					exclude: [
+						"@brainstorm/sdk",
+						"@brainstorm/sdk-types",
+						"@brainstorm/tokens",
+						"@brainstorm/editor",
+					],
+				}),
+			],
+			build: {
+				outDir: "out/main",
+				minify,
+				sourcemap: true,
+				rollupOptions: {
+					input: {
+						index: resolve(__dirname, "src/main/index.ts"),
+						"workers/storage": resolve(__dirname, "src/workers/storage/index.ts"),
+						"workers/ydoc": resolve(__dirname, "src/workers/ydoc/index.ts"),
+						"workers/extraction": resolve(__dirname, "src/workers/extraction/index.ts"),
+						"workers/mailbox": resolve(__dirname, "src/workers/mailbox/index.ts"),
+					},
+					output: {
+						entryFileNames: "[name].js",
+					},
+				},
+			},
+		},
+		preload: {
+			// No `externalizeDepsPlugin` for the preload. The sandboxed preload
+			// runtime cannot resolve `require()`; every dependency the preload
+			// (or anything it imports — `@brainstorm/sdk`, `ulid`, etc.) needs
+			// must be inlined into the bundle. Electron + node built-ins are
+			// already considered external by Vite's preload preset.
+			build: {
+				outDir: "out/preload",
+				minify,
+				sourcemap: true,
+				rollupOptions: {
+					input: {
+						index: resolve(__dirname, "src/preload/index.ts"),
+						"app-preload": resolve(__dirname, "src/preload/app-preload.ts"),
+						"chrome-preload": resolve(__dirname, "src/preload/chrome-preload.ts"),
+					},
+					output: {
+						format: "cjs",
+						entryFileNames: "[name].js",
+					},
+				},
+			},
+			resolve: {
+				// The sandboxed preload runs in a Chromium (browser) context, NOT
+				// Node — `require("node:crypto")` is unavailable there, and a
+				// preload that requires it fails to load entirely, taking down
+				// `window.brainstorm` AND the `.app-header` chrome-inset injection
+				// for EVERY app (blank "runtime missing" apps, headers jammed under
+				// the traffic lights). Force the `browser` export condition so
+				// dual-package deps in the preload graph (yjs → lib0's `webcrypto`)
+				// resolve to the Web-Crypto implementation (`globalThis.crypto`,
+				// available in the preload) instead of the `node:` builtin.
+				conditions: ["browser", "module", "import", "default"],
+			},
+		},
+		renderer: {
+			root: "src/renderer",
+			plugins: [react()],
+			server: {
+				port: 5173,
+				strictPort: true,
+			},
+			build: {
+				outDir: "out/renderer",
+				minify,
+				sourcemap: true,
+				rollupOptions: {
+					input: {
+						index: resolve(__dirname, "src/renderer/index.html"),
+						"chrome/tab-strip": resolve(__dirname, "src/renderer/chrome/tab-strip.html"),
+					},
+				},
+			},
+			resolve: {
+				alias: {
+					"@renderer": resolve(__dirname, "src/renderer"),
+					"@brainstorm/tokens": resolve(__dirname, "../tokens/src/index.ts"),
+				},
+			},
+		},
+	};
+});

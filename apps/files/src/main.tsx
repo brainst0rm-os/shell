@@ -1,0 +1,36 @@
+import "@brainstorm/sdk/app-theme.css";
+import "@brainstorm/editor/editor.css";
+import { AppErrorBoundary } from "@brainstorm/sdk/error-boundary";
+import { mountMenuHost } from "@brainstorm/sdk/menus";
+import { applyPersistedPanelWidth } from "@brainstorm/sdk/resizable";
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { FilesApp } from "./app";
+import "./styles.css";
+
+// Apply persisted panel widths BEFORE React renders, so the first paint
+// already matches the post-mount width. See applyPersistedPanelWidth's
+// own docs for the flash-of-default-width that happens without this.
+applyPersistedPanelWidth({
+	storageKey: "files:sidebar-width",
+	cssVar: "--files-sidebar-width",
+	defaultWidth: 248,
+});
+applyPersistedPanelWidth({
+	storageKey: "files:inspector-width",
+	cssVar: "--files-inspector-width",
+	defaultWidth: 320,
+});
+
+const root = document.getElementById("root");
+if (!root) throw new Error("Files: #root not found in index.html");
+// Stand up the fancy-menus runtime so object / context menus open through
+// the shared bridge (Stage 8.8).
+mountMenuHost();
+createRoot(root).render(
+	<StrictMode>
+		<AppErrorBoundary appName="files">
+			<FilesApp />
+		</AppErrorBoundary>
+	</StrictMode>,
+);

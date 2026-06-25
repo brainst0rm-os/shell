@@ -1,0 +1,730 @@
+/**
+ * Theme Editor styles (9.9.2 token grid). Token-driven only — no raw
+ * values: the editor chrome rides the shell's current theme, and the
+ * docked `.te-preview` panel is the live-preview target (the edited theme's
+ * vars are scoped to that element). Replaced pane-by-pane as the remaining
+ * editors land.
+ */
+
+/* Base resets every app needs: `border-box` keeps the 1px `.app-header`
+ * border INSIDE the shell's 44px height (content-box renders it 45px). */
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	overflow: hidden;
+}
+
+/* `body` stays a plain block — NEVER a flex container. The fancy-menus
+ * runtime + `mountMenuHost()` portal their menus straight into `document.body`;
+ * a `display: flex` body coerces those portaled menu nodes into flex items,
+ * which breaks the menu's hit-testing so hover/click never reach the rows (the
+ * dead overflow ⋯ menu). The flex column lives on `#root` (every other app
+ * does the same), with `body` only providing the full-height block. */
+
+/* The React root is the flex column that fills the viewport: the
+ * `app-header` (fixed height, owned by the SDK) on top, the editor body
+ * below filling the rest — so nothing floats over a dead-space void. */
+#root {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-height: 0;
+}
+
+/* Header chrome — flex skeleton, left/right groups, border, drag region, the
+ * title face (`.app-header__title`), and HEIGHT + platform PADDING (preload's
+ * managed style element) — is wholly owned by `@brainstorm/sdk/app-theme.css`
+ * + `app-preload.ts`; the glass surface is the shared default — no modifier.
+ * Never re-declare height/padding here. */
+
+#app-root {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+	flex: 1;
+	min-height: 0;
+	color: var(--color-text-primary);
+	font-family: var(--text-family-ui);
+	overflow: hidden;
+}
+
+/* Editing controls on the left, the docked live preview on the right. The
+ * layout fills the area below the header; the left canvas scrolls internally
+ * while the preview stays pinned. Wraps (preview drops below) when the window
+ * is too narrow for both — that fallback scrolls as one column. */
+.te-layout {
+	display: flex;
+	align-items: stretch;
+	gap: var(--space-5);
+	flex: 1;
+	min-height: 0;
+	flex-wrap: wrap;
+	padding: var(--space-5);
+}
+
+/* The working area floats as a rounded, elevated card over the app
+ * background. It rides the shell's current theme (the edited theme is
+ * scoped to the `.te-preview` panel), so the controls stay legible. */
+.te-canvas {
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 0;
+	min-width: 0;
+	padding: var(--space-5);
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-lg);
+	background: var(--color-background-elevated);
+	box-shadow: var(--shadow-sm);
+	overflow: auto;
+	height: 100%;
+}
+
+/* ── Live preview panel ──────────────────────────────────────────── */
+
+/* The preview takes the right half of the editor — 50% of the width and the
+ * full height of the layout. The header and caption are fixed; the stage in
+ * between scrolls when the mockup is taller than the panel. */
+.te-preview {
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 0;
+	min-width: 0;
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-lg);
+	background: var(--color-background-elevated);
+	box-shadow: var(--shadow-sm);
+	overflow: hidden;
+	height: 100%;
+}
+
+.te-preview__header {
+	display: flex;
+	align-items: center;
+	height: 44px;
+	padding: 0 var(--space-4);
+	border-bottom: var(--border-width) solid var(--color-border-subtle);
+}
+
+.te-preview__title {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	font-weight: var(--text-weight-semibold);
+	color: var(--color-text-primary);
+}
+
+/* The desktop/wallpaper backdrop the mockup sits on. Fills the space between
+ * the header and caption and scrolls when the mockup is taller than the
+ * panel. */
+.te-preview__stage {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+	flex: 1;
+	min-height: 0;
+	padding: var(--space-4);
+	overflow: auto;
+	background: var(--color-background-primary);
+}
+
+.te-preview__window-host {
+	display: flex;
+	flex-direction: column;
+}
+
+.te-preview__caption {
+	margin: 0;
+	padding: var(--space-2) var(--space-4) var(--space-3);
+	color: var(--color-text-tertiary);
+	font-size: var(--text-size-xs);
+}
+
+/* ── Mini dashboard (app tiles) ──────────────────────────────────── */
+
+.te-mini-dash {
+	display: flex;
+	gap: var(--space-3);
+	flex-wrap: wrap;
+}
+
+.te-mini-tile {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-1);
+	width: 52px;
+	padding: 0;
+	border: none;
+	background: none;
+	font: inherit;
+	color: inherit;
+	cursor: pointer;
+}
+
+.te-mini-tile:hover .te-mini-tile__face {
+	border-color: var(--color-border-strong);
+	color: var(--color-text-primary);
+}
+
+.te-mini-tile__face {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	border-radius: var(--radius-md);
+	border: var(--border-width) solid var(--color-border-subtle);
+	background: var(--color-background-elevated);
+	color: var(--color-text-secondary);
+	box-shadow: var(--shadow-sm);
+	transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
+}
+
+.te-mini-tile--active .te-mini-tile__face {
+	border-color: var(--color-accent-default);
+	background: var(--color-accent-subtle);
+	color: var(--color-accent-default);
+}
+
+.te-mini-tile__label {
+	max-width: 100%;
+	overflow: hidden;
+	color: var(--color-text-tertiary);
+	font-size: var(--text-size-xs);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+/* ── Sample app window ───────────────────────────────────────────── */
+
+.te-mini-window {
+	display: flex;
+	flex-direction: column;
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+	background: var(--color-background-elevated);
+	box-shadow: var(--shadow-md);
+	overflow: hidden;
+}
+
+.te-mini-window__header {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	height: 30px;
+	padding: 0 var(--space-2);
+	border-bottom: var(--border-width) solid var(--color-border-subtle);
+	background: var(--color-chrome-background);
+}
+
+.te-mini-window__dots {
+	display: flex;
+	gap: var(--space-1);
+}
+
+.te-mini-window__dots span {
+	width: 8px;
+	height: 8px;
+	border-radius: var(--radius-full);
+	background: var(--color-border-default);
+}
+
+.te-mini-window__titlebar {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	color: var(--color-text-secondary);
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+}
+
+.te-mini-window__body {
+	display: flex;
+	min-height: 132px;
+}
+
+.te-mini-nav {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+	width: 92px;
+	flex-shrink: 0;
+	padding: var(--space-2);
+	border-right: var(--border-width) solid var(--color-border-subtle);
+	background: var(--color-surface-default);
+}
+
+.te-mini-nav__row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	padding: var(--space-1);
+	border-radius: var(--radius-sm);
+	color: var(--color-text-secondary);
+	font-size: var(--text-size-xs);
+	white-space: nowrap;
+	overflow: hidden;
+}
+
+.te-mini-nav__row--active {
+	background: var(--color-accent-subtle);
+	color: var(--color-accent-default);
+	font-weight: var(--text-weight-medium);
+}
+
+.te-mini-doc {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	flex: 1;
+	padding: var(--space-2);
+}
+
+.te-mini-doc__title {
+	margin: 0;
+	color: var(--color-text-primary);
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-semibold);
+}
+
+.te-mini-doc__body {
+	margin: 0;
+	color: var(--color-text-secondary);
+	font-size: var(--text-size-xs);
+	line-height: var(--text-line-height-normal, 1.5);
+}
+
+.te-mini-doc__actions {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	margin-top: auto;
+}
+
+/* `.te-mini-doc__button` is a shared `.bs-btn bs-btn--sm` + data-bs-primary;
+ * no structural delta needed. */
+
+.te-mini-doc__tag {
+	padding: var(--space-0_5);
+	border-radius: var(--radius-full);
+	background: var(--color-accent-subtle);
+	color: var(--color-accent-default);
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+}
+
+/* ── Toolbar ─────────────────────────────────────────────────────── */
+
+.te-toolbar {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	margin-bottom: var(--space-2);
+}
+
+.te-toolbar__name {
+	flex: 1 1 auto;
+	min-width: 0;
+	height: var(--control-height-md);
+	padding: 0 var(--space-2);
+	border: var(--border-width) solid var(--color-border-default);
+	border-radius: var(--radius-md);
+	background: var(--color-surface-default);
+	color: var(--color-text-primary);
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium);
+}
+
+.te-toolbar__status {
+	margin: 0 0 var(--space-4);
+	min-height: var(--text-size-sm);
+	color: var(--color-text-secondary);
+	font-size: var(--text-size-sm);
+	flex-shrink: 0;
+}
+
+/* The theme selector — the shared `<SelectMenu>` (`.bs-select`) supplies the
+ * skin, caret, hover / focus / open-state chrome; only the toolbar width +
+ * label weight are local deltas. */
+.te-toolbar__select {
+	flex: none;
+	min-width: 200px;
+	font-size: var(--text-size-sm);
+	font-weight: var(--text-weight-medium);
+}
+
+/* Shared `.bs-btn` + data-bs-primary; only the toolbar flex placement is local. */
+.te-toolbar__save {
+	flex: none;
+}
+
+/* ── Missing-dependency banner ───────────────────────────────────── */
+
+.te-banner {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	padding: var(--space-2);
+	border: var(--border-width) solid var(--color-state-warning);
+	border-radius: var(--radius-md);
+	background: var(--color-background-elevated);
+}
+
+.te-banner__text {
+	margin: 0;
+	color: var(--color-text-primary);
+	font-size: var(--text-size-sm);
+}
+
+.te-banner__row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+}
+
+.te-banner__slot {
+	color: var(--color-text-secondary);
+	font-size: var(--text-size-sm);
+}
+
+.te-banner__reset {
+	height: var(--control-height-sm);
+	padding: 0 var(--space-2);
+	border: var(--border-width) solid var(--color-border-default);
+	border-radius: var(--radius-sm);
+	background: var(--color-surface-default);
+	color: var(--color-text-link);
+	font-size: var(--text-size-xs);
+	cursor: pointer;
+}
+
+/* ── Tabs ────────────────────────────────────────────────────────── */
+
+.te-tabs {
+	display: flex;
+	gap: var(--space-4);
+	margin-bottom: var(--space-4);
+	border-bottom: var(--border-width) solid var(--color-border-subtle);
+}
+
+.te-tab {
+	height: var(--control-height-md);
+	padding: 0;
+	border: 0;
+	border-bottom: var(--border-width-thick) solid transparent;
+	background: transparent;
+	color: var(--color-text-secondary);
+	font-size: var(--text-size-sm);
+	cursor: pointer;
+}
+
+.te-tab--active {
+	color: var(--color-text-primary);
+	border-bottom-color: var(--color-accent-default);
+}
+
+/* ── Typography editor ───────────────────────────────────────────── */
+
+.te-typo {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	max-width: 560px;
+}
+
+.te-field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.te-field__label {
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+}
+
+.te-typo__name,
+.te-typo__stack {
+	height: var(--control-height-md);
+	padding: 0 var(--space-2);
+	border: var(--border-width) solid var(--color-border-default);
+	border-radius: var(--radius-md);
+	background: var(--color-surface-default);
+	color: var(--color-text-primary);
+	font-family: var(--text-family-ui);
+	font-size: var(--text-size-sm);
+}
+
+/* The density-scale picker is the shared `<SelectMenu>` (`.bs-select`); only
+ * the row's compact font size is a local delta. */
+.te-typo__scale {
+	font-size: var(--text-size-sm);
+}
+
+/* ── Icon-pack picker ────────────────────────────────────────────── */
+
+.te-packs {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	max-width: 560px;
+}
+
+.te-pack {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	height: var(--control-height-lg);
+	padding: 0 var(--space-2);
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+	background: var(--color-surface-default);
+	color: var(--color-text-primary);
+	font-size: var(--text-size-sm);
+	text-align: left;
+	cursor: pointer;
+}
+
+.te-pack--selected {
+	border-color: var(--color-accent-default);
+	background: var(--color-accent-subtle);
+}
+
+.te-pack__name {
+	flex: 1;
+	font-weight: var(--text-weight-medium);
+}
+
+.te-pack__badge {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+}
+
+.te-packs__hint {
+	margin: var(--space-1) 0 0;
+	color: var(--color-text-tertiary);
+	font-size: var(--text-size-sm);
+}
+
+/* ── Token grid ──────────────────────────────────────────────────── */
+
+.te-grid {
+	display: flex;
+	flex-direction: column;
+}
+
+.te-grid__section {
+	margin: var(--space-4) 0 var(--space-1);
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-semibold);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--color-text-tertiary);
+}
+
+/* A fixed-width name column keeps every value input on the same baseline (a
+ * grid, not a staircase) regardless of token-name length. */
+.te-row {
+	display: grid;
+	grid-template-columns: 15rem 1fr;
+	align-items: center;
+	gap: var(--space-4);
+	padding: var(--space-1) 0;
+	border-bottom: var(--border-width) solid var(--color-border-subtle);
+}
+
+.te-row__name {
+	min-width: 0;
+	font-family: var(--text-family-code);
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.te-row--overridden .te-row__name {
+	color: var(--color-text-primary);
+	font-weight: var(--text-weight-medium);
+}
+
+/* The controls group claims the row's remaining width so the value input can
+ * span it. `gap` collapses to 0 around the reset button while it's removed from
+ * flow (the gap is re-supplied by the button's own margin once it appears). */
+.te-row__controls {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	flex: 1;
+	min-width: 0;
+}
+
+/* The swatch IS the colour-picker trigger — clicking it opens the shared
+ * rich `@brainstorm/sdk/color-picker` menu anchored to the swatch. */
+.te-row__swatch {
+	width: 22px;
+	height: 22px;
+	padding: 0;
+	border-radius: var(--radius-sm);
+	border: var(--border-width) solid var(--color-border-default);
+	flex-shrink: 0;
+	cursor: pointer;
+}
+
+/* The value input takes the WHOLE remaining row width by default; it shrinks
+ * only when the reset button takes up its share (overridden rows). */
+.te-row__value {
+	flex: 1;
+	min-width: 0;
+	height: var(--control-height-sm);
+	padding: 0 var(--space-2);
+	border: var(--border-width) solid var(--color-border-default);
+	border-radius: var(--radius-sm);
+	background: var(--color-surface-default);
+	color: var(--color-text-primary);
+	font-family: var(--text-family-code);
+	font-size: var(--text-size-xs);
+}
+
+/* By default the reset is fully removed from layout flow (zero width / padding /
+ * border, clipped) so the row reserves NO dead space for it — the input spans
+ * the full width. It re-expands (and re-supplies its leading gap via margin)
+ * only on an overridden row. */
+.te-row__reset {
+	width: 0;
+	height: var(--control-height-sm);
+	margin-left: calc(-1 * var(--space-2));
+	padding: 0;
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--color-text-tertiary);
+	font-size: var(--text-size-xs);
+	white-space: nowrap;
+	overflow: hidden;
+	cursor: pointer;
+	visibility: hidden;
+}
+
+.te-row--overridden .te-row__reset {
+	width: auto;
+	margin-left: 0;
+	padding: 0 var(--space-2);
+	visibility: visible;
+	color: var(--color-text-link);
+}
+
+/* ── Focus rings ─────────────────────────────────────────────────── */
+
+/* Per-component opt-in (there is no global :focus-visible outline). Uses the
+ * dedicated `--color-focus-ring` token so it tracks the shell theme rather
+ * than the UA default — every colour here is a token, never a raw value. */
+.te-toolbar__name:focus-visible,
+.te-toolbar__save:focus-visible,
+.te-tab:focus-visible,
+.te-banner__reset:focus-visible,
+.te-pack:focus-visible,
+.te-typo__name:focus-visible,
+.te-typo__stack:focus-visible,
+.te-row__value:focus-visible,
+.te-row__reset:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}
+
+.te-row__swatch:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 2px;
+}
+
+/* ── Style-pack (raw-CSS) editor ─────────────────────────────────── */
+
+.te-stylepack {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	max-width: 640px;
+}
+
+.te-stylepack__name {
+	height: var(--control-height-md);
+	padding: 0 var(--space-2);
+	border: var(--border-width) solid var(--color-border-default);
+	border-radius: var(--radius-md);
+	background: var(--color-surface-default);
+	color: var(--color-text-primary);
+	font-size: var(--text-size-sm);
+}
+
+.te-stylepack__hint {
+	margin: 0;
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+}
+
+.te-stylepack__editor-field {
+	gap: var(--space-1);
+}
+
+.te-stylepack__css {
+	min-height: 240px;
+	padding: var(--space-2) var(--space-2);
+	border: var(--border-width) solid var(--color-border-default);
+	border-radius: var(--radius-md);
+	background: var(--color-surface-default);
+	color: var(--color-text-primary);
+	font-family: var(--text-family-code);
+	font-size: var(--text-size-sm);
+	line-height: var(--text-line-height-normal);
+	resize: vertical;
+	tab-size: 2;
+}
+
+.te-stylepack__problems {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.te-stylepack__problem {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-secondary);
+}
+
+.te-stylepack__problem--ok {
+	color: var(--color-state-success);
+}
+
+.te-stylepack__problem--error {
+	color: var(--color-state-error);
+}
+
+.te-stylepack__problem--warning {
+	color: var(--color-state-warning);
+}
+
+.te-stylepack__problem-loc {
+	font-family: var(--text-family-code);
+	font-weight: var(--text-weight-medium);
+}
+
+.te-stylepack__actions {
+	display: flex;
+	gap: var(--space-2);
+}
+
+.te-stylepack__name:focus-visible,
+.te-stylepack__css:focus-visible,
+.te-stylepack__open:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}

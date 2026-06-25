@@ -1,0 +1,77 @@
+/**
+ * Web Browser app i18n manifest. Per docs/foundations/35-code-conventions.md
+ * §Localization every user-visible string flows through the shared app-side
+ * `t()` (`createT` from `@brainstorm/sdk/i18n`) — no bare literals.
+ */
+
+import { type TParams, createT, plural as sdkPlural } from "@brainstorm/sdk/i18n";
+
+export const BROWSER_I18N = {
+	"comingSoon.badge": "Coming soon",
+	"comingSoon.title": "Web Browser",
+	"comingSoon.blurb":
+		"In-app web browser with tabbed chrome, reader mode, and clip-to-vault capture as bookmarks.",
+	"app.title": "Web Browser",
+	"tab.new": "New tab",
+	"tab.newAria": "Open a new tab",
+	"tab.close": "Close tab",
+	"tab.untitled": "New tab",
+	"nav.back": "Back",
+	"nav.forward": "Forward",
+	"nav.reload": "Reload",
+	"nav.stop": "Stop",
+	"recent.menu": "Recently closed",
+	"recent.reopenLast": "Reopen closed tab",
+	"menu.open": "Browser menu",
+	"menu.label": "Browser",
+	"tab.newPrivate": "New private tab",
+	"data.clear": "Clear browsing data…",
+	"data.cleared": "Browsing data cleared",
+	"history.open": "History",
+	"history.menu": "History",
+	"history.section": "Recently visited",
+	"history.clear": "Clear browsing history",
+	"history.empty": "No history yet",
+	"url.placeholder": "Search or enter web address",
+	"url.aria": "Address bar",
+	"url.suggestions": "History suggestions",
+	"clip.save": "Save to vault",
+	"clip.saving": "Saving to vault…",
+	"clip.saved": "Saved to vault",
+	"clip.failed": "Couldn't save — try again",
+	"find.open": "Find in page",
+	"find.placeholder": "Find in page",
+	"find.close": "Close find bar",
+	"find.next": "Next match",
+	"find.previous": "Previous match",
+	"find.matches": "{active} of {total}",
+	"find.noMatches": "No matches",
+	"permission.ask.camera": "{origin} wants to use your camera",
+	"permission.ask.microphone": "{origin} wants to use your microphone",
+	"permission.ask.geolocation": "{origin} wants to know your location",
+	"permission.allow": "Allow",
+	"permission.block": "Block",
+	"permission.dismiss": "Dismiss",
+	"security.secure": "Secure connection",
+	"security.insecure": "Not secure",
+	"security.mixed": "Mixed content",
+	"security.local": "Local page",
+	"shield.blocked.one": "{count} tracker blocked",
+	"shield.blocked.other": "{count} trackers blocked",
+	"unavailable.title": "Web Browser",
+	"unavailable.blurb":
+		"The browser engine runs in the Brainstorm shell. Launch this app from Brainstorm to browse.",
+} as const;
+
+export type BrowserI18nKey = keyof typeof BROWSER_I18N;
+
+export const t = createT(BROWSER_I18N);
+
+/** Catalog-bound plural — picks `<base>.one` / `<base>.other`. See the SDK
+ *  `plural` doc: the count selection lives in the shared helper, not here. */
+export const plural = (
+	count: number,
+	oneKey: BrowserI18nKey,
+	otherKey: BrowserI18nKey,
+	params?: TParams,
+): string => sdkPlural(t, count, oneKey, otherKey, params);

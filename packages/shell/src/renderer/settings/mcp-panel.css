@@ -1,0 +1,189 @@
+/* Settings → AI → MCP servers (MCP-3). Reuses the shared settings field chrome
+ * (.settings__field / .settings__input / .settings__hint, in settings.css);
+ * MCP-specific bits only. Tokens are real theme tokens (packages/tokens). */
+
+.settings__mcp-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+	gap: var(--space-2);
+	margin-top: var(--space-2);
+}
+
+.settings__mcp-cell {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.settings__mcp-tile {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	padding: var(--space-3);
+	background: var(--color-surface-raised);
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-lg);
+	cursor: pointer;
+	text-align: left;
+	transition: border-color 120ms ease, background 120ms ease;
+}
+
+.settings__mcp-tile:hover {
+	border-color: var(--color-border-strong);
+	background: var(--color-surface-overlay);
+}
+
+.settings__mcp-tile:focus-visible {
+	outline: var(--focus-ring-outline);
+	outline-offset: var(--focus-ring-offset-inset);
+	border-color: transparent;
+}
+
+.settings__mcp-tile[data-enabled="true"] {
+	border-color: var(--color-accent-default);
+}
+
+.settings__mcp-tile--add {
+	align-items: center;
+	justify-content: center;
+	color: var(--color-text-tertiary);
+	font-weight: var(--text-weight-medium);
+	min-height: 4.5rem;
+	border-style: dashed;
+}
+
+.settings__mcp-tile-name {
+	font-size: var(--text-size-sm);
+	font-weight: var(--text-weight-medium);
+	color: var(--color-text-primary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.settings__mcp-tile-url {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.settings__mcp-tile-status {
+	font-size: var(--text-size-xs);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--color-text-tertiary);
+}
+
+.settings__mcp-tile[data-enabled="true"] .settings__mcp-tile-status {
+	color: var(--color-accent-default);
+}
+
+/* Config / inspector popover body. */
+.settings__mcp-form {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.settings__mcp-form .settings__input {
+	width: 100%;
+}
+
+.settings__mcp-label {
+	font-size: var(--text-size-sm);
+	font-weight: var(--text-weight-medium);
+	color: var(--color-text-secondary);
+}
+
+/* stdio argv editor — one argument per line, monospace for path legibility. */
+.settings__mcp-args {
+	resize: vertical;
+	min-height: var(--space-9);
+	font-family: var(--font-family-mono);
+	font-size: var(--text-size-sm);
+	line-height: 1.5;
+}
+
+/* The "this runs a program on your computer" consent note under the stdio
+ * command — the security-relevant caption (spawn rides default-off consent). */
+.settings__mcp-spawn-note {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	line-height: 1.5;
+	color: var(--color-text-secondary);
+}
+
+/* Tools inspector. */
+.settings__mcp-tools {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	margin-top: var(--space-2);
+	padding-top: var(--space-2);
+	border-top: var(--border-width) solid var(--color-border-subtle);
+}
+
+.settings__mcp-untrusted-note {
+	font-size: var(--text-size-xs);
+	color: var(--color-state-warning);
+	margin: 0;
+}
+
+.settings__mcp-tool-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.settings__mcp-tool {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.settings__mcp-tool-head {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	flex-wrap: wrap;
+}
+
+.settings__mcp-tool-name {
+	font-size: var(--text-size-sm);
+	font-weight: var(--text-weight-medium);
+	color: var(--color-text-primary);
+	font-family: var(--font-family-mono);
+}
+
+.settings__mcp-tool-desc {
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+	/* UNTRUSTED server text — wrap, never overflow into chrome. */
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.settings__mcp-badge {
+	font-size: var(--text-size-xs);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	padding: 0 var(--space-1);
+	border-radius: var(--radius-sm);
+	background: var(--color-surface-sunken);
+	color: var(--color-text-tertiary);
+}
+
+.settings__mcp-badge--danger {
+	background: var(--color-state-error);
+	color: var(--color-text-on-accent);
+}
+
+.settings__mcp-badge--warn {
+	background: var(--color-state-warning);
+	color: var(--color-text-on-accent);
+}

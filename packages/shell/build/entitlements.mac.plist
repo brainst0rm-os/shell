@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Minimal Hardened-Runtime entitlements for the Brainstorm main app bundle.
+
+  - allow-jit: Electron's V8 needs JIT for any non-trivial JS.
+  - allow-unsigned-executable-memory: required until 13.1c signs the
+    bundled native .node binary (and any helper executables). Drop this
+    once the signing step lands.
+
+  Code-signing posture: 13.1a ships unsigned artefacts (Apple Developer +
+  Windows EV certs not procurable yet — see project_13_1_skip_code_signing).
+  These entitlements only matter once we sign + notarise (13.1c / 13.2).
+-->
+<plist version="1.0">
+<dict>
+  <key>com.apple.security.cs.allow-jit</key>
+  <true/>
+  <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+  <true/>
+</dict>
+</plist>

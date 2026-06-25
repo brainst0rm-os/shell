@@ -1,0 +1,2482 @@
+.settings {
+	position: fixed;
+	inset: 0;
+	display: flex;
+	justify-content: flex-end;
+	z-index: var(--z-modal);
+	pointer-events: none;
+}
+
+/* Click-catcher rather than visual scrim: the dashboard stays fully visible
+ * underneath (the user is in the middle of picking a wallpaper / theme and
+ * needs to see the result live). The whole left strip of the viewport is
+ * clickable to dismiss the panel. */
+.settings__backdrop {
+	position: absolute;
+	inset: 0;
+	background: transparent;
+	border: 0;
+	cursor: default;
+	pointer-events: auto;
+}
+
+/* Settings is itself a glass surface — `.glass--strong` density so the
+ * content reads cleanly while the wallpaper / dashboard still shows through.
+ * Class is applied in `settings.tsx` via `className="settings__panel glass--strong"`. */
+.settings__panel {
+	position: relative;
+	width: min(880px, 96vw);
+	height: 100%;
+	display: grid;
+	grid-template-columns: 220px 1fr;
+	border-inline-start: var(--border-width) solid var(--color-glass-border);
+	box-shadow: var(--shadow-xl);
+	overflow: hidden;
+	pointer-events: auto;
+}
+
+/* While the panel slides in (transform animation), its backdrop-filter would
+ * be re-sampled against a different slice of the dashboard every frame — the
+ * costliest paint in the shell, on every Settings open. Suspend the blur for
+ * the duration of the entrance; `settings.tsx` drops `--entering` on
+ * `onAnimationComplete`, restoring the resting frosted surface. The two-class
+ * selector beats the single-class `.glass--strong` backdrop-filter rule. */
+.settings__panel.settings__panel--entering {
+	backdrop-filter: none;
+	-webkit-backdrop-filter: none;
+}
+
+/* The focus-trap stamps tabIndex=-1 on the panel and focuses it on mount (and
+   on window re-focus), so the broad :root :focus-visible baseline would draw a
+   ring around the ENTIRE dialog. The visible ring belongs on the focused child
+   control, not the dialog container. */
+.settings__panel:focus,
+.settings__panel:focus-visible {
+	outline: none;
+}
+
+.settings__sidebar {
+	display: flex;
+	flex-direction: column;
+	/* Sidebar sits at a denser glass level than the surrounding panel so
+	 * the eye separates nav from content. Same blur, lighter tint. */
+	background: rgba(0, 0, 0, 0.18);
+	border-inline-end: var(--border-width) solid var(--color-glass-border);
+	min-height: 0;
+}
+
+/* Sidebar header — MUST share the same height (44px) and bottom-border
+ * treatment as `.settings__main-header` and `.dashboard__header`. This is
+ * a project-wide rule: any panel header sits on the same horizontal baseline
+ * as every other panel header, so multi-panel surfaces line up visually.
+ * See CLAUDE.md "Panel headers share height". */
+.settings__sidebar-header {
+	height: var(--app-header-height);
+	box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	padding: 0 var(--space-2);
+	border-bottom: var(--border-width) solid var(--color-border-subtle);
+	flex-shrink: 0;
+}
+
+.settings__sidebar-body {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	padding: var(--space-2);
+}
+
+/* Sidebar footer — pinned-to-bottom slot for session-level actions (Sign out)
+ * so they're discoverable from every Settings section. Height + top-border
+ * mirror `.dashboard__footer` so the two baselines align horizontally when
+ * Settings is open over the dashboard. */
+.settings__sidebar-footer {
+	flex-shrink: 0;
+	height: var(--app-header-height);
+	box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	padding: 0 var(--space-2);
+	border-top: var(--border-width) solid var(--color-border-subtle);
+}
+
+/* Sign-out button stretches the sidebar width and aligns its icon + label
+ * with the nav items above it. Destructive read on hover; quiet at rest. */
+.settings__signout {
+	width: 100%;
+	justify-content: flex-start;
+	color: var(--color-text-secondary);
+}
+
+.settings__signout:hover:not(:disabled) {
+	color: var(--color-state-error);
+	background: rgba(239, 68, 68, 0.08);
+}
+
+.settings__title {
+	margin: 0;
+	font-size: var(--text-size-lg);
+	font-weight: var(--text-weight-semibold);
+	color: var(--color-text-primary);
+}
+
+.settings__nav {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+}
+
+.settings__nav-item {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	background: transparent;
+	border: 0;
+	color: var(--color-text-secondary);
+	font: inherit;
+	font-size: var(--text-size-md);
+	text-align: start;
+	padding: var(--space-2) var(--space-2);
+	border-radius: var(--radius-md);
+	cursor: pointer;
+}
+
+.settings__nav-item:hover {
+	background: var(--color-interactive-hover);
+	color: var(--color-text-primary);
+}
+
+.settings__nav-item--active {
+	background: var(--color-accent-subtle);
+	color: var(--color-text-primary);
+}
+
+.settings__nav-item--active:hover {
+	background: var(--color-accent-subtle);
+}
+
+.settings__nav-icon {
+	width: 18px;
+	display: inline-flex;
+	justify-content: center;
+	font-size: var(--text-size-md);
+	color: var(--color-text-tertiary);
+}
+
+.settings__nav-item--active .settings__nav-icon {
+	color: var(--color-accent-default);
+}
+
+.settings__main {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	min-height: 0;
+}
+
+/* The main pane is a tabIndex=-1 programmatic focus target for region
+   navigation. On window re-focus Chromium restores DOM focus to it and
+   re-evaluates :focus-visible as true, which the broad :root :focus-visible
+   baseline would draw as a ring around the whole panel. The visible ring
+   belongs on the child controls, not the region container (mirrors the
+   .dashboard__body/.footer suppression). */
+.settings__main:focus-visible {
+	outline: none;
+}
+
+.settings__main-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	/* Right padding is optical-compensated for the trailing 28×28 icon button:
+	 * target visual edge = 16px; compensation = 16 − (28 − 20)/2 = 12px. */
+	padding: var(--space-4) var(--space-2) var(--space-4) var(--space-4);
+	border-bottom: var(--border-width) solid var(--color-border-subtle);
+	height: var(--app-header-height);
+	box-sizing: border-box;
+}
+
+.settings__main-title {
+	margin: 0;
+	font-size: var(--text-size-lg);
+	font-weight: var(--text-weight-semibold);
+	color: var(--color-text-primary);
+}
+
+/* Section-injected toolbar items sit just left of the persistent close
+ * button. Sections register actions via `useSettingsHeaderActions`. */
+.settings__main-header-actions {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+}
+
+.settings__body {
+	flex: 1;
+	overflow-y: auto;
+	min-height: 0;
+	/* 16px on the side matches the section-title baseline and the visual
+	 * edge of the trailing icon button — see optical-compensation note on
+	 * .settings__main-header. Bottom padding generous so the last section
+	 * isn't flush against the panel edge after scrolling. */
+	padding: var(--space-4);
+}
+
+/* Inner wrapper — sits inside framer-motion's <motion.div> per `Settings`
+ * so the section gap is applied between sibling <section> children, not on
+ * the motion wrapper itself. */
+.settings__body-inner {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-5);
+	/* Fill the body so a section that opts into full-height layout (Data)
+	 * can flex its list to the available area; shorter sections still scroll
+	 * the body when their content overflows. */
+	min-height: 100%;
+}
+
+.settings__section {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.settings__section-title {
+	margin: 0;
+	font-size: var(--text-size-xs);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--color-text-tertiary);
+}
+
+.settings__value {
+	font-size: var(--text-size-md);
+	color: var(--color-text-primary);
+}
+
+.settings__value--insecure {
+	color: var(--color-state-error);
+	font-weight: var(--text-weight-medium);
+}
+
+.settings__warning {
+	color: var(--color-state-warning);
+	font-size: var(--text-size-xs);
+}
+
+.settings__fingerprint {
+	font-family: var(--text-family-code);
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+	word-break: break-all;
+}
+
+.settings__placeholder,
+.settings__loading {
+	font-size: var(--text-size-sm);
+	color: var(--color-text-tertiary);
+	font-style: italic;
+}
+
+.settings__value-text {
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+}
+
+.settings__updates-actions {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	margin-block-start: var(--space-3);
+}
+
+.settings__updates-last {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+}
+
+.settings__updates-result {
+	margin-block-start: var(--space-3);
+	padding: var(--space-2);
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+	background: var(--color-surface-raised);
+}
+
+.settings__updates-result--available {
+	border-color: var(--color-accent-default);
+	background: var(--color-accent-subtle);
+}
+
+.settings__updates-headline {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	font-weight: var(--text-weight-medium);
+	color: var(--color-text-primary);
+}
+
+.settings__updates-notes {
+	margin: var(--space-1) 0 var(--space-2);
+	font-size: var(--text-size-xs);
+	color: var(--color-text-secondary);
+}
+
+.settings__hint {
+	margin: 0;
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+}
+
+/* Generic settings field group + bordered input chrome. Shared by the AI and
+ * MCP panels (moved here from ai-panel.css so both reference one definition). */
+.settings__field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	padding: var(--space-3) 0;
+	border-top: var(--border-width) solid var(--color-border-subtle);
+}
+
+.settings__field-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-2);
+}
+
+.settings__field-label {
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium);
+	color: var(--color-text-primary);
+}
+
+.settings__input {
+	flex: 1;
+	min-width: 0;
+	height: var(--control-height-md);
+	background: var(--color-surface-default);
+	color: var(--color-text-primary);
+	border: var(--border-width) solid var(--color-border-default);
+	border-radius: var(--radius-md);
+	padding: 0 var(--space-2);
+	font: inherit;
+}
+
+.settings__input:focus-visible {
+	outline: var(--focus-ring-outline);
+	outline-offset: var(--focus-ring-offset-inset);
+	border-color: transparent;
+}
+
+.settings__dropzone {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-2);
+	padding: var(--space-4);
+	min-height: 120px;
+	border: 1.5px dashed var(--color-border-default);
+	border-radius: var(--radius-md);
+	background: transparent;
+	text-align: center;
+	transition: border-color var(--motion-duration-fast) var(--motion-easing-standard), background
+		var(--motion-duration-fast) var(--motion-easing-standard);
+}
+
+.settings__dropzone:hover {
+	border-color: var(--color-border-strong);
+}
+
+.settings__dropzone--active {
+	border-color: var(--color-accent-default);
+	background: var(--color-accent-subtle);
+}
+
+.settings__dropzone-hint {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+}
+
+.settings__dropzone-preview {
+	max-width: 240px;
+	max-height: 140px;
+	border-radius: var(--radius-md);
+	border: var(--border-width) solid var(--color-border-subtle);
+	object-fit: cover;
+}
+
+/* Buttons in Settings use the shared <Button> primitive — see
+ * renderer/ui/button.tsx. No bespoke chrome here. */
+
+.settings__swatch-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+	gap: var(--space-4);
+}
+
+/* The swatch button is structurally just the fill + label; the selected state
+ * applies an outline (rendered OUTSIDE the box) so the fill's edges always
+ * align with the section's left baseline regardless of selection state.
+ * Focus ring is suppressed because the `--selected` box-shadow already
+ * communicates state; a parallel keyboard-focus ring on the same element
+ * would be redundant noise. */
+.settings__swatch {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	background: transparent;
+	border: 0;
+	padding: 0;
+	cursor: pointer;
+	text-align: start;
+	border-radius: var(--radius-md);
+}
+
+.settings__swatch:focus,
+.settings__swatch:focus-visible {
+	outline: none;
+}
+
+.settings__swatch-fill {
+	display: block;
+	width: 100%;
+	height: 80px;
+	border-radius: var(--radius-md);
+	border: var(--border-width) solid var(--color-glass-border);
+	transition: transform var(--motion-duration-normal) var(--motion-easing-decelerated), box-shadow
+		var(--motion-duration-normal) var(--motion-easing-standard);
+}
+
+/* Promote only the hovered swatch — Appearance renders ~28 of these (Light +
+ * Dark slot, presets + uploads + add-tile). Pinning `will-change` on every
+ * one forces a permanent compositor layer per swatch, which fights the glass
+ * `backdrop-filter` ancestor + the framer-motion `transform` on the settings
+ * panel and tanks frame time across the section. `will-change` is a
+ * just-in-time hint, not a default. */
+.settings__swatch:hover .settings__swatch-fill,
+.settings__swatch:focus-visible .settings__swatch-fill {
+	will-change: transform;
+}
+
+/* Hover uses scale (not box-shadow) so the `--selected` ring never has to
+ * compete on mouse-leave. Selected stays put; hover just lifts. */
+.settings__swatch:hover .settings__swatch-fill {
+	transform: scale(1.03);
+}
+
+/* Selected: border AND box-shadow share the accent colour so there's no
+ * visible gap between the image and the ring. */
+.settings__swatch--selected .settings__swatch-fill {
+	border-color: var(--color-accent-default);
+	box-shadow: 0 0 0 1px var(--color-accent-default);
+}
+
+.settings__swatch-label {
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+}
+
+/* Uploaded wallpaper swatch — wraps the swatch pick button + a hover-only
+ * delete affordance. The container is `display:flex` so we can stack the
+ * fill + the action row without rewriting swatch layout. */
+.settings__swatch--uploaded {
+	position: relative;
+}
+
+.settings__swatch-pick {
+	display: block;
+	width: 100%;
+	background: transparent;
+	border: 0;
+	padding: 0;
+	cursor: pointer;
+	border-radius: var(--radius-md);
+}
+
+.settings__swatch-pick:focus,
+.settings__swatch-pick:focus-visible {
+	outline: none;
+}
+
+.settings__swatch-actions {
+	position: absolute;
+	top: var(--space-1);
+	right: var(--space-1);
+	opacity: 0;
+	transition: opacity var(--motion-duration-fast) var(--motion-easing-standard);
+}
+
+.settings__swatch--uploaded:hover .settings__swatch-actions,
+.settings__swatch--uploaded:focus-within .settings__swatch-actions {
+	opacity: 1;
+}
+
+.settings__error {
+	font-size: var(--text-size-sm);
+	color: var(--color-state-error);
+}
+
+/* One tappable row per app. The whole row is the affordance that opens the
+ * per-app permissions popover; it mirrors the list-row treatment used
+ * elsewhere in Settings (surface card + subtle border, hover lift). */
+.grants-panel {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+.grants-panel__app {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	width: 100%;
+	padding: var(--space-2) var(--space-2);
+	background: var(--color-surface-default);
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+	text-align: start;
+	cursor: pointer;
+	transition: background var(--motion-duration-fast) var(--motion-easing-standard);
+}
+
+.grants-panel__app:hover {
+	background: var(--color-surface-raised);
+}
+
+.grants-panel__app:focus-visible {
+	outline: var(--focus-ring-outline);
+	outline-offset: var(--focus-ring-offset-inset);
+	border-color: transparent;
+}
+
+.grants-panel__app-text {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+	min-width: 0;
+	flex: 1;
+}
+
+.grants-panel__app-name {
+	font-size: var(--text-size-md);
+	color: var(--color-text-primary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.grants-panel__app-count {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+}
+
+.grants-panel__manage {
+	flex-shrink: 0;
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+}
+
+.grants-panel__dialog-title {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+
+.grants-panel__list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+.grants-panel__row {
+	display: grid;
+	grid-template-columns: 1fr auto auto;
+	column-gap: var(--space-3);
+	align-items: center;
+	font-size: var(--text-size-md);
+}
+
+.grants-panel__capability {
+	font-family: var(--text-family-code);
+	color: var(--color-text-primary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.grants-panel__source {
+	color: var(--color-text-tertiary);
+	font-size: var(--text-size-xs);
+	font-style: italic;
+}
+
+/* Theme picker — one card per built-in theme. The preview tile samples
+ * the actual tokens (`previewOf()` in @brainstorm/tokens themes.ts) so
+ * the swatch can't drift from the rendered palette.
+ *
+ * Selected state ring sits OUTSIDE the card so the preview edges stay
+ * pixel-true. Mirrors the wallpaper-swatch selected treatment for
+ * visual consistency. */
+
+.settings__section-summary {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--color-text-tertiary);
+}
+
+.settings__theme-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	gap: var(--space-3);
+}
+
+.settings__theme-card {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	padding: var(--space-2);
+	background: var(--color-surface-default);
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+	text-align: start;
+	cursor: pointer;
+	transition: background var(--motion-duration-fast) var(--motion-easing-standard), border-color
+		var(--motion-duration-fast) var(--motion-easing-standard), transform var(--motion-duration-fast)
+		var(--motion-easing-standard);
+}
+
+.settings__theme-card:hover {
+	background: var(--color-interactive-hover);
+	border-color: var(--color-border-default);
+}
+
+.settings__theme-card--selected {
+	border-color: var(--color-accent-default);
+	box-shadow: 0 0 0 1px var(--color-accent-default);
+}
+
+.settings__theme-preview {
+	position: relative;
+	display: block;
+	width: 100%;
+	height: 80px;
+	border-radius: var(--radius-sm);
+	overflow: hidden;
+	border: var(--border-width) solid var(--color-border-subtle);
+}
+
+.settings__theme-preview-surface {
+	position: absolute;
+	left: var(--space-2);
+	right: var(--space-2);
+	bottom: var(--space-2);
+	height: 44px;
+	padding: var(--space-1);
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: var(--space-1);
+	border-radius: var(--radius-sm);
+}
+
+.settings__theme-preview-line {
+	display: block;
+	height: 4px;
+	width: 70%;
+	border-radius: var(--radius-full);
+	opacity: 0.85;
+}
+
+.settings__theme-preview-line--short {
+	width: 40%;
+	opacity: 0.55;
+}
+
+.settings__theme-preview-accent {
+	position: absolute;
+	top: var(--space-2);
+	right: var(--space-2);
+	width: 18px;
+	height: 18px;
+	border-radius: var(--radius-full);
+	box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.12);
+}
+
+.settings__theme-info {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+	min-width: 0;
+}
+
+.settings__theme-label {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	min-width: 0;
+}
+
+.settings__theme-name {
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium);
+	color: var(--color-text-primary);
+}
+
+.settings__theme-applied {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	font-size: var(--text-size-xs);
+	color: var(--color-accent-default);
+}
+
+.settings__theme-description {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+	line-height: var(--text-line-height-normal);
+}
+
+/* ─── Settings → Data section ──────────────────────────────────────── */
+
+.settings__section--data {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	flex: 1;
+	min-height: 0;
+}
+
+/* Toolbar (search + add-button) ───────────────────────────────────── */
+
+.data__panel {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	flex: 1;
+	min-height: 0;
+}
+
+.data__toolbar {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+
+/* Settings/Data uses the shared `.bs-searchbar` chrome (loaded by
+ * `packages/shell/src/renderer/main.tsx` via
+ * `@brainstorm/sdk/searchbar/searchbar.css`); this rule just stretches it
+ * across the toolbar row and gives it the subtle 1px surround the rest of
+ * the data panel carries. */
+/* Specificity (0,3,0) so the `md` height beats the SDK base rule
+ * `:root .bs-searchbar { height: control-height-sm }` (0,2,0) — a plain
+ * `.data__search` (0,1,0) silently loses and leaves the bar at `sm`, one
+ * step shorter than the `md` "New property" button beside it. */
+:root .data__toolbar .data__search {
+	flex: 1;
+	height: var(--control-height-md);
+	border-radius: var(--radius-md);
+	background: var(--color-surface-default);
+	border: var(--border-width) solid var(--color-border-subtle);
+}
+
+:root .data__toolbar .data__search:hover {
+	border-color: var(--color-border-default);
+}
+
+/* Virtualized list ─────────────────────────────────────────────────── */
+
+.data__list-scroller {
+	position: relative;
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	overflow-x: hidden;
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+	background: var(--color-surface-default);
+}
+
+.data__list-sizer {
+	position: relative;
+	width: 100%;
+}
+
+.data__list-window {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.data__row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: 0 var(--space-2);
+	border-bottom: var(--border-width) solid var(--color-border-subtle);
+}
+
+.data__row:last-child {
+	border-bottom: 0;
+}
+
+.data__row:hover {
+	background: var(--color-interactive-hover);
+}
+
+.data__row-trigger {
+	flex: 1;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	background: transparent;
+	border: 0;
+	padding: var(--space-2) var(--space-1);
+	cursor: pointer;
+	text-align: start;
+	min-width: 0;
+	color: inherit;
+	font: inherit;
+	border-radius: var(--radius-md);
+}
+
+/* Deeper inset (-2px, not -1px): a Data row trigger sits inside a 1px-bordered
+ * tile that already inset-rings on focus elsewhere — the deeper offset keeps
+ * the trigger ring clearly inside the tile's edge rather than colliding. */
+.data__row-trigger:focus-visible {
+	outline: var(--focus-ring-outline);
+	outline-offset: -2px;
+}
+
+.data__row-name {
+	flex: 1;
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium);
+	color: var(--color-text-primary);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	min-width: 0;
+}
+
+/* B5.10 — usage pill. Minimal numeric chip; doubles as the count next to
+ * a vocabulary item inside the constructor (same chrome both sites). */
+.data__usage-pill {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 22px;
+	height: 18px;
+	padding: 0 var(--space-2);
+	margin-inline-start: var(--space-2);
+	border-radius: var(--radius-full);
+	font-size: var(--text-size-xs);
+	font-variant-numeric: tabular-nums;
+	color: var(--color-text-tertiary);
+	background: color-mix(in srgb, var(--color-text-tertiary) 12%, transparent);
+	flex-shrink: 0;
+	pointer-events: none;
+}
+
+.data__row-actions {
+	display: inline-flex;
+	align-items: center;
+	opacity: 0;
+	transition: opacity var(--motion-duration-fast) var(--motion-easing-standard);
+	flex-shrink: 0;
+}
+
+.data__row:hover .data__row-actions,
+.data__row:focus-within .data__row-actions {
+	opacity: 1;
+}
+
+.data__no-results {
+	margin: 0;
+	padding: var(--space-4);
+	text-align: center;
+	color: var(--color-text-tertiary);
+	font-size: var(--text-size-sm);
+	background: var(--color-surface-default);
+	border: var(--border-width) dashed var(--color-border-subtle);
+	border-radius: var(--radius-md);
+}
+
+/* Kind glyph (used in rows + form headers) ─────────────────────────── */
+
+.data__kind-glyph {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--radius-md);
+	flex-shrink: 0;
+}
+
+/* Empty state ──────────────────────────────────────────────────────── */
+
+.data__empty {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-6) var(--space-4);
+	background: var(--color-surface-default);
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-lg);
+	text-align: center;
+}
+
+.data__empty-glyph {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 60px;
+	height: 60px;
+	border-radius: var(--radius-full);
+	background: var(--color-interactive-hover);
+	color: var(--color-text-secondary);
+}
+
+.data__empty-title {
+	margin: 0;
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium);
+	color: var(--color-text-primary);
+}
+
+.data__empty-hint {
+	margin: 0;
+	max-width: 360px;
+	font-size: var(--text-size-sm);
+	color: var(--color-text-tertiary);
+	line-height: var(--text-line-height-normal);
+}
+
+.data__empty-action {
+	margin-top: var(--space-2);
+}
+
+/* Constructor form (inside the Popover body) ──────────────────────── */
+
+.data__form {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+}
+
+.data__form-header {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+}
+
+.data__form-name {
+	flex: 1;
+	background: var(--color-background-primary);
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+	font: inherit;
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium);
+	color: var(--color-text-primary);
+	padding: var(--space-2) var(--space-2);
+	transition: border-color var(--motion-duration-fast) var(--motion-easing-standard);
+}
+
+.data__form-name::placeholder {
+	color: var(--color-text-tertiary);
+	font-weight: var(--text-weight-regular);
+}
+
+.data__form-name:hover {
+	border-color: var(--color-border-default);
+}
+
+.data__form-name:focus-visible {
+	outline: var(--focus-ring-outline);
+	outline-offset: var(--focus-ring-offset-inset);
+	border-color: transparent;
+}
+
+.data__form-field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	border: 0;
+	padding: 0;
+	margin: 0;
+}
+
+.data__form-label {
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-semibold);
+	color: var(--color-text-secondary);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.data__form-hint {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--color-text-tertiary);
+	font-style: italic;
+}
+
+/* Sub-options row (format selector, multi toggle) ─────────────────── */
+
+.data__form-subrow {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	margin-top: var(--space-2);
+}
+
+.data__form-sublabel {
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-semibold);
+	color: var(--color-text-secondary);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.data__segmented {
+	display: inline-flex;
+	background: var(--color-background-primary);
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+	padding: var(--space-0_5);
+	gap: var(--space-0_5);
+	width: fit-content;
+}
+
+.data__segmented-tile {
+	background: transparent;
+	border: 0;
+	border-radius: var(--radius-sm);
+	color: var(--color-text-secondary);
+	font: inherit;
+	font-size: var(--text-size-md);
+	padding: var(--space-1);
+	cursor: pointer;
+	transition: background var(--motion-duration-fast) var(--motion-easing-standard), color
+		var(--motion-duration-fast) var(--motion-easing-standard);
+}
+
+.data__segmented-tile:hover {
+	color: var(--color-text-primary);
+}
+
+.data__segmented-tile--selected {
+	background: var(--color-surface-default);
+	color: var(--color-text-primary);
+	box-shadow: var(--shadow-sm);
+}
+
+.data__form-toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	font-size: var(--text-size-md);
+	color: var(--color-text-primary);
+}
+
+.data__form-toggle--disabled {
+	cursor: not-allowed;
+	color: var(--color-text-secondary);
+}
+
+.data__form-toggle-note {
+	color: var(--color-text-tertiary);
+	font-size: var(--text-size-xs);
+}
+
+.data__form-note {
+	margin: 0;
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+	line-height: var(--text-line-height-normal);
+}
+
+.data__type-select {
+	width: 100%;
+}
+
+.data__form-actions {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	width: 100%;
+}
+
+.data__form-actions-spacer {
+	flex: 1;
+}
+
+/* Kind picker grid (in the create-property form) ─────────────────── */
+
+.data__kind-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+	gap: var(--space-2);
+}
+
+.data__kind-tile {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-2) var(--space-2);
+	background: var(--color-background-primary);
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+	cursor: pointer;
+	font: inherit;
+	font-size: var(--text-size-md);
+	color: var(--color-text-primary);
+	transition: background var(--motion-duration-fast) var(--motion-easing-standard), border-color
+		var(--motion-duration-fast) var(--motion-easing-standard);
+}
+
+/* Hover lifts the tile relative to its own background — color-mix so the
+ * tone shift stays consistent across themes (light/dark). The global
+ * `interactive-hover` token (10% white overlay) is too subtle here. */
+.data__kind-tile:hover:not(:disabled):not(.data__kind-tile--selected) {
+	background: color-mix(in srgb, var(--color-background-primary) 82%, var(--color-text-primary) 18%);
+	border-color: var(--color-border-default);
+}
+
+.data__kind-tile--selected {
+	font-weight: var(--text-weight-medium);
+}
+
+.data__kind-tile:focus-visible {
+	outline: var(--focus-ring-outline);
+	outline-offset: var(--focus-ring-offset-inset);
+}
+
+.data__kind-tile--disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+
+.data__kind-tile-glyph {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	border-radius: var(--radius-sm);
+	flex-shrink: 0;
+}
+
+.data__kind-tile-label {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* Vocabulary editor (inside constructor for Select / MultiSelect) ──── */
+
+.data__vocab {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	padding: var(--space-2);
+	background: var(--color-background-primary);
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+}
+
+.data__vocab-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+}
+
+.data__vocab-item {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	padding: var(--space-0_5) 0;
+}
+
+.data__vocab-icon-btn,
+.data__vocab-color-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	background: transparent;
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-sm);
+	color: var(--color-text-secondary);
+	cursor: pointer;
+	flex-shrink: 0;
+	transition: background var(--motion-duration-fast) var(--motion-easing-standard), border-color
+		var(--motion-duration-fast) var(--motion-easing-standard);
+}
+
+.data__vocab-icon-btn:hover,
+.data__vocab-color-btn:hover {
+	background: color-mix(in srgb, var(--color-background-primary) 82%, var(--color-text-primary) 18%);
+	border-color: var(--color-border-subtle);
+}
+
+.data__vocab-icon-btn:focus-visible,
+.data__vocab-color-btn:focus-visible {
+	outline: var(--focus-ring-outline);
+	outline-offset: var(--focus-ring-offset-inset);
+}
+
+.data__vocab-color-dot {
+	display: inline-block;
+	width: 14px;
+	height: 14px;
+	border-radius: var(--radius-full);
+	border: var(--border-width) solid color-mix(in srgb, var(--color-text-primary) 18%, transparent);
+}
+
+/* Colour-swatch glyph painted in the shared colour menu rows (the picker is
+   the fancy-menus anchored menu — chrome comes from `.fm-menu`). */
+.data__vocab-color-swatch {
+	display: inline-block;
+	width: 14px;
+	height: 14px;
+	border-radius: var(--radius-sm);
+	border: var(--border-width) solid color-mix(in srgb, var(--color-text-primary) 14%, transparent);
+}
+
+.data__vocab-color-swatch--none {
+	background-image: linear-gradient(
+		135deg,
+		transparent 45%,
+		var(--color-state-error) 45%,
+		var(--color-state-error) 55%,
+		transparent 55%
+	);
+}
+
+.data__vocab-input {
+	flex: 1;
+	min-width: 0;
+	background: transparent;
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-sm);
+	color: var(--color-text-primary);
+	font: inherit;
+	font-size: var(--text-size-md);
+	padding: var(--space-1);
+	transition: border-color var(--motion-duration-fast) var(--motion-easing-standard), background
+		var(--motion-duration-fast) var(--motion-easing-standard);
+}
+
+.data__vocab-input:hover {
+	border-color: var(--color-border-subtle);
+}
+
+.data__vocab-input:focus-visible {
+	outline: var(--focus-ring-outline);
+	outline-offset: var(--focus-ring-offset-inset);
+	background: var(--color-surface-default);
+	border-color: transparent;
+}
+
+.data__vocab-input--draft {
+	background: var(--color-surface-default);
+	border: var(--border-width) solid var(--color-border-subtle);
+}
+
+.data__vocab-actions {
+	display: flex;
+	gap: var(--space-0_5);
+	opacity: 0.55;
+	transition: opacity var(--motion-duration-fast) var(--motion-easing-standard);
+}
+
+.data__vocab-item:hover .data__vocab-actions,
+.data__vocab-item:focus-within .data__vocab-actions {
+	opacity: 1;
+}
+
+.data__vocab-add {
+	display: flex;
+	gap: var(--space-2);
+	margin-top: var(--space-1);
+}
+
+/* Settings → Default apps ─────────────────────────────────────────── */
+.settings__defaults-subhead {
+	margin: var(--space-4) 0 0;
+	font-size: var(--text-size-sm);
+	font-weight: var(--text-weight-medium);
+	color: var(--text-dim);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.settings__defaults-subhead:first-of-type {
+	margin-top: var(--space-3);
+}
+
+.settings__defaults-list {
+	list-style: none;
+	margin: var(--space-3) 0 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.settings__defaults-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	padding: var(--space-2) var(--space-2);
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+	background: var(--color-surface-raised);
+}
+
+.settings__defaults-type {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: var(--text-size-md);
+	color: var(--color-text-secondary);
+}
+
+/* `.settings__defaults-select` is the shared `.bs-select` trigger (SDK
+ * select-menu); face/focus chrome comes from the SDK — only row layout here. */
+.settings__defaults-select {
+	flex: 0 0 auto;
+	max-width: 14rem;
+}
+
+/* ── Settings → Spellcheck dictionary (B11.17b) ───────────────────────── */
+.settings__dict-list {
+	list-style: none;
+	margin: var(--space-3) 0 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.settings__dict-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	padding: var(--space-2) var(--space-2);
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+	background: var(--color-surface-raised);
+}
+
+.settings__dict-word {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: var(--text-size-md);
+	color: var(--color-text-primary);
+}
+
+/* ── Settings → Search index (9.22.4) ─────────────────────────────────── */
+
+.search-index__stats {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+	gap: var(--space-2);
+	margin-top: var(--space-1);
+}
+
+.search-index__stat {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	padding: var(--space-2);
+	background: var(--color-surface-raised);
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+}
+
+.search-index__stat-head {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	color: var(--color-text-tertiary);
+}
+
+.search-index__stat-icon {
+	display: inline-flex;
+}
+
+.search-index__stat-label {
+	font-size: var(--text-size-xs);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+}
+
+.search-index__stat-value {
+	font-size: var(--text-size-xl);
+	font-weight: var(--text-weight-medium);
+	color: var(--color-text-primary);
+	font-variant-numeric: tabular-nums;
+}
+
+.search-index__stat-sub {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+}
+
+.search-index__bar {
+	margin-top: var(--space-1);
+	height: 4px;
+	border-radius: var(--radius-full);
+	background: var(--color-surface-sunken);
+	overflow: hidden;
+}
+
+/* No `transition: width` — width transitions reflow on every frame
+ * (docs/shell/13-frontend-stack.md §Animation). Indexer ticks ~twice/sec;
+ * an instant width jump reads as a live counter, not a glitch. */
+.search-index__bar-fill {
+	display: block;
+	height: 100%;
+	border-radius: var(--radius-full);
+	background: var(--color-accent-default);
+}
+
+.search-index__bytype {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	margin-top: var(--space-4);
+}
+
+.search-index__bytype-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.search-index__bytype-row {
+	display: grid;
+	grid-template-columns: minmax(80px, 1fr) 2fr auto;
+	align-items: center;
+	gap: var(--space-3);
+}
+
+.search-index__bytype-name {
+	font-size: var(--text-size-md);
+	color: var(--color-text-primary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.search-index__bytype-track {
+	height: 6px;
+	border-radius: var(--radius-full);
+	background: var(--color-surface-sunken);
+	overflow: hidden;
+}
+
+.search-index__bytype-fill {
+	display: block;
+	height: 100%;
+	border-radius: var(--radius-full);
+	background: var(--color-accent-subtle);
+}
+
+.search-index__bytype-count {
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+	font-variant-numeric: tabular-nums;
+	min-width: 3ch;
+	text-align: end;
+}
+
+/* 9.10 — Settings → Security → Open files. Same chrome posture as the
+ * grants panel: rows of (icon · name + meta · destructive action). */
+.files-handles-panel {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.files-handles-panel__row {
+	display: grid;
+	grid-template-columns: auto 1fr auto;
+	align-items: center;
+	gap: var(--space-3);
+	padding: var(--space-2) var(--space-2);
+	border-radius: var(--radius-md);
+	background: var(--color-surface-sunken);
+}
+
+.files-handles-panel__text {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.files-handles-panel__name {
+	font-size: var(--text-size-md);
+	color: var(--color-text-primary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.files-handles-panel__meta {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-secondary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* Appearance section — docs/shell/36-design-system.md §Appearance modes &
+ * pair slots. Three parts: a mode segmented control at the top, then two
+ * side-by-side pair cards (Light / Dark) with theme chips + a compact
+ * wallpaper grid each. */
+
+.settings__appearance-mode {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.settings__segmented {
+	display: inline-flex;
+	background: var(--color-surface-default);
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+	padding: var(--space-0_5);
+	gap: var(--space-0_5);
+	width: max-content;
+}
+
+.settings__segmented-option {
+	appearance: none;
+	background: transparent;
+	border: 0;
+	padding: var(--space-1);
+	border-radius: calc(var(--radius-md) - 2px);
+	color: var(--color-text-secondary);
+	font-size: var(--text-size-md);
+	font-weight: 500;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	transition: background var(--motion-duration-fast) var(--motion-easing-standard), color
+		var(--motion-duration-fast) var(--motion-easing-standard);
+}
+
+.settings__segmented-option:hover {
+	color: var(--color-text-primary);
+}
+
+.settings__segmented-option:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 1px;
+}
+
+.settings__segmented-option--selected,
+.settings__segmented-option--selected:hover {
+	background: var(--color-background-elevated);
+	color: var(--color-text-primary);
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+}
+
+.settings__appearance-pairs {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: var(--space-4);
+}
+
+@media (max-width: 720px) {
+	.settings__appearance-pairs {
+		grid-template-columns: 1fr;
+	}
+}
+
+.settings__appearance-pair {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	padding: 0 var(--space-4) var(--space-4);
+	border-radius: var(--radius-md);
+	background: var(--color-surface-default);
+	border: var(--border-width) solid var(--color-border-subtle);
+	overflow: hidden;
+	transition: border-color var(--motion-duration-fast) var(--motion-easing-standard), box-shadow
+		var(--motion-duration-fast) var(--motion-easing-standard);
+}
+
+.settings__appearance-pair--active {
+	border-color: var(--color-accent-default);
+	box-shadow: 0 0 0 1px var(--color-accent-default);
+}
+
+/* Slot preview band — actual wallpaper + a miniaturised theme "window"
+ * overlay so the user sees what the pair looks like before activating it.
+ * Sits at the top, full-bleed, with a soft gradient mask to blend into the
+ * card body. */
+.settings__appearance-pair-preview {
+	position: relative;
+	height: 88px;
+	margin: 0 calc(-1 * var(--space-4));
+	margin-top: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-size: cover;
+	background-position: center;
+	border-bottom: var(--border-width) solid var(--color-border-subtle);
+}
+
+.settings__appearance-pair-preview::after {
+	content: "";
+	position: absolute;
+	inset: auto 0 0 0;
+	height: 24px;
+	background: linear-gradient(180deg, transparent, var(--color-surface-default));
+	pointer-events: none;
+}
+
+.settings__appearance-pair-preview-window {
+	position: relative;
+	width: 60%;
+	max-width: 220px;
+	height: 56px;
+	border-radius: var(--radius-md);
+	padding: var(--space-2) var(--space-2);
+	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	justify-content: center;
+	overflow: hidden;
+	z-index: 1;
+}
+
+.settings__appearance-pair-preview-line {
+	display: block;
+	height: 4px;
+	border-radius: var(--radius-xs);
+	opacity: 0.75;
+	width: 70%;
+}
+
+.settings__appearance-pair-preview-line--short {
+	width: 40%;
+	opacity: 0.45;
+}
+
+.settings__appearance-pair-preview-accent {
+	position: absolute;
+	inset-inline-end: 10px;
+	bottom: 10px;
+	width: 18px;
+	height: 18px;
+	border-radius: var(--radius-sm);
+}
+
+.settings__appearance-pair-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-2);
+	padding-top: var(--space-3);
+}
+
+.settings__appearance-pair-title {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	margin: 0;
+	font-size: var(--text-size-md);
+	font-weight: 600;
+	color: var(--color-text-primary);
+}
+
+.settings__appearance-pair-active {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	font-size: var(--text-size-xs);
+	font-weight: 500;
+	color: var(--color-accent-default);
+	background: var(--color-accent-subtle);
+	padding: var(--space-0_5);
+	border-radius: var(--radius-md);
+}
+
+.settings__appearance-pair-section {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.settings__appearance-pair-label {
+	margin: 0;
+	font-size: var(--text-size-xs);
+	font-weight: 500;
+	color: var(--color-text-tertiary);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.settings__appearance-theme-list {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: var(--space-2);
+}
+
+.settings__appearance-theme-chip {
+	appearance: none;
+	background: var(--color-surface-overlay);
+	border: var(--border-width) solid var(--color-border-subtle);
+	padding: var(--space-1) var(--space-2) var(--space-1) var(--space-1);
+	border-radius: var(--radius-full);
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	max-width: 100%;
+	cursor: pointer;
+	color: var(--color-text-primary);
+	font-size: var(--text-size-sm);
+	transition: border-color var(--motion-duration-fast) var(--motion-easing-standard), background
+		var(--motion-duration-fast) var(--motion-easing-standard);
+}
+
+.settings__appearance-theme-chip:hover {
+	border-color: var(--color-border-default);
+	background: var(--color-surface-muted);
+}
+
+.settings__appearance-theme-chip:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+	border-color: transparent;
+}
+
+.settings__appearance-theme-chip--selected {
+	border-color: var(--color-accent-default);
+	background: var(--color-accent-subtle);
+	color: var(--color-text-primary);
+}
+
+.settings__appearance-theme-swatch {
+	position: relative;
+	width: 22px;
+	height: 22px;
+	border-radius: var(--radius-full);
+	border: var(--border-width) solid var(--color-glass-border);
+	overflow: hidden;
+	flex: 0 0 auto;
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.settings__appearance-theme-swatch-accent {
+	position: absolute;
+	inset-inline-end: 0;
+	top: 0;
+	bottom: 0;
+	width: 50%;
+}
+
+.settings__appearance-theme-chip-label {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	min-width: 0;
+	padding-inline-end: var(--space-0_5);
+}
+
+.settings__appearance-wallpapers .settings__swatch-grid {
+	grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+	gap: var(--space-2);
+}
+
+.settings__appearance-wallpapers .settings__swatch-fill {
+	height: 48px;
+}
+
+.settings__swatch--upload .settings__swatch-fill--upload {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--color-surface-overlay);
+	color: var(--color-text-secondary);
+	border: var(--border-width) dashed var(--color-border-default);
+}
+
+.settings__swatch--upload:hover .settings__swatch-fill--upload {
+	color: var(--color-text-primary);
+	border-color: var(--color-text-primary);
+}
+
+/* Keyboard shortcuts reference (Settings → Keyboard) ───────────────── */
+
+.keyboard {
+	gap: var(--space-4);
+}
+
+.keyboard__group {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.keyboard__list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+	background: var(--color-surface-default);
+	overflow: hidden;
+}
+
+.keyboard__row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+	padding: var(--space-2) var(--space-2);
+	border-bottom: var(--border-width) solid var(--color-border-subtle);
+	font-size: var(--text-size-md);
+	min-height: var(--control-height-md);
+}
+
+.keyboard__row:last-child {
+	border-bottom: none;
+}
+
+.keyboard__label {
+	color: var(--color-text-primary);
+	min-width: 0;
+	flex: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.keyboard__chord {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	flex-shrink: 0;
+	color: var(--color-text-primary);
+}
+
+.keyboard__chord-empty {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+	font-style: italic;
+}
+
+.keyboard__key {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 22px;
+	height: 22px;
+	padding: 0 var(--space-2);
+	font-family: var(--text-family-ui);
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+	color: var(--color-text-primary);
+	background: var(--color-surface-overlay);
+	border: var(--border-width) solid var(--color-border-default);
+	border-radius: var(--radius-sm);
+	box-shadow: inset 0 -1px 0 var(--color-border-subtle);
+}
+
+/* 6.10f — interactive rebinding affordances inside Settings → Keyboard.
+ * Action buttons use the shared `<Button>` primitive (`renderer/ui/button.tsx`)
+ * — no per-component button chrome. Only structural / layout rules live here. */
+.keyboard__row-idle {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	flex-shrink: 0;
+}
+
+.keyboard__chord-button {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	padding: var(--space-0_5);
+	margin: -2px -6px;
+	background: transparent;
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-sm);
+	color: var(--color-text-primary);
+	font: inherit;
+	cursor: pointer;
+	transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.keyboard__chord-button:hover {
+	background: var(--color-surface-overlay);
+	border-color: var(--color-border-subtle);
+}
+
+.keyboard__chord-button:focus-visible {
+	outline: 2px solid var(--color-accent-default);
+	outline-offset: -1px;
+	border-color: transparent;
+}
+
+.keyboard__override-dot {
+	display: inline-block;
+	width: 6px;
+	height: 6px;
+	margin-left: var(--space-1);
+	border-radius: 50%;
+	background: var(--color-accent-default);
+}
+
+.keyboard__row-capture {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-2);
+	flex-shrink: 0;
+	justify-content: flex-end;
+}
+
+.keyboard__capture-target {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	min-height: 24px;
+	min-width: 120px;
+	padding: var(--space-0_5);
+	border-radius: var(--radius-sm);
+	border: var(--border-width) solid var(--color-accent-default);
+	background: color-mix(in srgb, var(--color-accent-default) 8%, transparent);
+	font: inherit;
+	color: var(--color-text-primary);
+	cursor: text;
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent-default) 18%, transparent);
+}
+
+.keyboard__capture-target:focus-visible {
+	outline: none;
+}
+
+.keyboard__capture-target--conflict {
+	border-color: var(--color-state-error, var(--color-accent-default));
+	background: color-mix(
+		in srgb,
+		var(--color-state-error, var(--color-accent-default)) 8%,
+		transparent
+	);
+	box-shadow: 0 0 0 3px
+		color-mix(in srgb, var(--color-state-error, var(--color-accent-default)) 18%, transparent);
+}
+
+.keyboard__capture-prompt {
+	color: var(--color-text-tertiary);
+	font-style: italic;
+	font-size: var(--text-size-xs);
+}
+
+.keyboard__key--capture {
+	background: var(--color-surface-default);
+	border-color: var(--color-border-default);
+}
+
+.keyboard__capture-status {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+	min-width: 0;
+	flex-basis: 100%;
+	text-align: right;
+}
+
+.keyboard__capture-error {
+	color: var(--color-state-error, var(--color-text-primary));
+}
+
+.keyboard__capture-hint {
+	color: var(--color-text-tertiary);
+}
+
+.keyboard__capture-actions {
+	display: inline-flex;
+	gap: var(--space-2);
+	flex-shrink: 0;
+}
+
+/* ----------------------------------------------------------------
+   Settings → Devices (10.5b — pairing UX)
+   ---------------------------------------------------------------- */
+
+.devices-section {
+	gap: var(--space-4);
+}
+
+.devices-section__notice {
+	margin: 0;
+	padding: var(--space-2) var(--space-2);
+	font-size: var(--text-size-sm);
+	color: var(--color-state-warning);
+	background: var(--color-state-warn-bg, transparent);
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+}
+
+.devices-section__empty {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--space-1);
+	padding: var(--space-4) 0;
+	border: var(--border-width) dashed var(--color-border-subtle);
+	border-radius: var(--radius-md);
+	padding: var(--space-5);
+}
+
+.devices-section__empty-title {
+	margin: 0;
+	font-size: var(--text-size-md);
+	color: var(--color-text-primary);
+}
+
+.devices-section__empty-subtitle {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--color-text-tertiary);
+}
+
+.devices-section__actions {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	margin-top: var(--space-2);
+}
+
+.devices-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.devices-list__row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	padding: var(--space-2) var(--space-2);
+	border-radius: var(--radius-md);
+	border: var(--border-width) solid var(--color-border-subtle);
+	background: var(--color-surface-1);
+}
+
+.devices-list__row--revoked {
+	opacity: 0.55;
+}
+
+.devices-list__icon {
+	display: inline-flex;
+	width: 32px;
+	height: 32px;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--radius-sm);
+	background: var(--color-surface-2);
+	color: var(--color-text-secondary);
+	flex: 0 0 auto;
+}
+
+.devices-list__text {
+	flex: 1 1 auto;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.devices-list__name {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	font-size: var(--text-size-md);
+	color: var(--color-text-primary);
+	max-width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.devices-list__badge {
+	font-size: var(--text-size-xs);
+	padding: 0 var(--space-1);
+	border-radius: var(--radius-sm);
+	background: var(--color-surface-2);
+	color: var(--color-text-tertiary);
+}
+
+.devices-list__badge--revoked {
+	color: var(--color-state-error);
+}
+
+.devices-list__meta {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.devices-list__revoke {
+	opacity: 0.55;
+	transition: opacity 120ms ease;
+}
+
+.devices-list__revoke:hover,
+.devices-list__revoke:focus-visible {
+	opacity: 1;
+}
+
+/* Add/Join flow shared chrome */
+.devices-flow {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	min-height: 320px;
+}
+
+/* Inside a titled `<Popover>` (welcome → Join): the popover owns the chrome,
+ * header, and sizing — let the flow size to its content so the panel doesn't
+ * stretch into an empty glass void below the camera-permission prompt. */
+.devices-flow--embedded {
+	min-height: 0;
+}
+
+.devices-flow--embedded .devices-flow__body {
+	min-height: 0;
+	justify-content: flex-start;
+}
+
+.devices-flow--embedded .devices-flow__footer {
+	border-top: 0;
+	padding-top: 0;
+}
+
+.devices-flow__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.devices-flow__title {
+	margin: 0;
+	font-size: var(--text-size-md);
+	color: var(--color-text-primary);
+}
+
+.devices-flow__body {
+	flex: 1 1 auto;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-3);
+	min-height: 220px;
+}
+
+.devices-flow__footer {
+	display: flex;
+	gap: var(--space-2);
+	justify-content: flex-end;
+	padding-top: var(--space-2);
+	border-top: var(--border-width) solid var(--color-border-subtle);
+}
+
+.devices-flow__loading {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-2);
+	color: var(--color-text-tertiary);
+}
+
+.devices-flow__qr {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-3);
+	max-width: 360px;
+	text-align: center;
+}
+
+.devices-flow__qr canvas {
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+	background: #fff;
+	padding: var(--space-2);
+}
+
+.devices-flow__sas {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+
+.devices-flow__sas-digits {
+	font-family: var(--text-family-code);
+	font-size: var(--text-size-2xl);
+	letter-spacing: 0.18em;
+	color: var(--color-text-primary);
+	user-select: text;
+}
+
+.devices-flow__instruction {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+}
+
+.devices-flow__handshake,
+.devices-flow__paired {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-3);
+}
+
+.devices-flow__success {
+	margin: 0;
+	font-size: var(--text-size-md);
+	color: var(--color-state-success, var(--color-text-primary));
+}
+
+.devices-flow__message {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+	max-width: 360px;
+	text-align: center;
+}
+
+/* Target-side capture */
+.devices-join__capture {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	width: 100%;
+	max-width: 460px;
+}
+
+.devices-join__tabs {
+	display: inline-flex;
+	gap: var(--space-1);
+	background: var(--color-surface-2);
+	padding: var(--space-1);
+	border-radius: var(--radius-md);
+	align-self: center;
+}
+
+.devices-join__tab {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	padding: var(--space-1);
+	font-size: var(--text-size-md);
+	color: var(--color-text-secondary);
+	background: transparent;
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+}
+
+.devices-join__tab:disabled {
+	opacity: 0.55;
+	cursor: not-allowed;
+}
+
+.devices-join__tab--active {
+	background: var(--color-surface-1);
+	color: var(--color-text-primary);
+	border-color: var(--color-border-subtle);
+}
+
+.devices-join__note {
+	margin: 0;
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+	text-align: center;
+}
+
+.devices-join__paste {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.devices-join__permission {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-2);
+	text-align: center;
+	padding: var(--space-4);
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+}
+
+.devices-join__permission h5 {
+	margin: 0;
+	font-size: var(--text-size-md);
+	color: var(--color-text-primary);
+}
+
+.devices-join__permission p {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--color-text-tertiary);
+	max-width: 320px;
+}
+
+.devices-join__permission-actions {
+	display: flex;
+	gap: var(--space-2);
+	margin-top: var(--space-1);
+}
+
+.devices-join__scan {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-2);
+}
+
+.devices-join__video {
+	width: 280px;
+	height: 280px;
+	border-radius: var(--radius-md);
+	background: var(--color-surface-2);
+	object-fit: cover;
+}
+
+/* --- Settings overhaul: shared section controls (Interface / Language &
+   Region / Notifications). Labelled rows + native dropdowns + time inputs. --- */
+.setting-list {
+	display: flex;
+	flex-direction: column;
+}
+
+.setting-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-4);
+	padding: var(--space-2) 0;
+	min-height: 36px;
+}
+
+.setting-row + .setting-row {
+	border-top: var(--border-width) solid var(--color-border-subtle);
+}
+
+/* Boolean rows are one big click target — the whole row is the checkbox's
+ * `<label>`, so the pointer affordance lives on the row, not the 18px box. */
+.setting-row--toggle {
+	cursor: pointer;
+}
+
+.setting-row--disabled {
+	cursor: not-allowed;
+}
+
+.setting-row--disabled .setting-row__title {
+	color: var(--color-text-tertiary);
+}
+
+.setting-row__text {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+	min-width: 0;
+}
+
+.setting-row__title {
+	font-size: var(--text-size-md);
+	color: var(--color-text-primary);
+}
+
+.setting-row__desc {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+}
+
+.setting-row__control {
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+
+/* `.setting-select` is the shared `.bs-select` trigger (SDK select-menu) —
+ * face/focus chrome comes from the SDK; only the row layout cap lives here. */
+.setting-select {
+	max-width: 240px;
+}
+
+.setting-time {
+	font: inherit;
+	font-size: var(--text-size-sm);
+	color: var(--color-text-primary);
+	background: var(--color-surface-2);
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+	padding: var(--space-1);
+	max-width: 240px;
+}
+
+/* Canonical "outline replaces border" focus chrome (not the outside-sandwich):
+ * the ring sits where the border was. Matches the shared TextField primitive. */
+.setting-time:focus-visible {
+	outline: var(--focus-ring-outline);
+	outline-offset: var(--focus-ring-offset-inset);
+	border-color: transparent;
+}
+
+.setting-time:disabled {
+	opacity: 0.5;
+}

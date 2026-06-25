@@ -1,0 +1,59 @@
+{
+  "id": "io.brainstorm.files",
+  "name": "Files",
+  "version": "0.1.0",
+  "sdk": "1",
+  "description": "Browse, open, search, and organize everything in the vault.",
+  "icon": "icon.svg",
+  "entry": "dist/index.html",
+  "capabilities": [
+    "storage.kv",
+    "entities.read:*",
+    "entities.write:brainstorm/Folder/v1",
+    "entities.write:brainstorm/File/v1",
+    "entities.write:brainstorm/Comment/v1",
+    "intents.dispatch:open",
+    "intents.dispatch:quick-look",
+    "intents.dispatch:move",
+    "files.read",
+    "search.open"
+  ],
+  "registrations": {
+    "openers": [
+      { "kind": "primary", "entityType": "brainstorm/Folder/v1" },
+      { "kind": "secondary", "entityType": "brainstorm/File/v1" }
+    ],
+    "entityTypes": [
+      {
+        "id": "brainstorm/Folder/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/files/folder/v1.json",
+        "schema": {
+          "type": "object",
+          "required": ["id", "name", "members", "createdAt", "updatedAt"],
+          "properties": {
+            "id": { "type": "string" },
+            "name": { "type": "string" },
+            "icon": { "type": "string" },
+            "description": { "type": "string" },
+            "members": { "type": "array", "items": { "type": "string" }, "maxItems": 50 },
+            "view": { "type": "string", "enum": ["list", "grid", "tree"] },
+            "sortBy": { "type": "string", "enum": ["manual", "name", "created", "modified"] },
+            "createdAt": { "type": "number" },
+            "updatedAt": { "type": "number" }
+          }
+        }
+      }
+    ],
+    "intents": [
+      {
+        "verb": "open",
+        "entityType": "brainstorm/Folder/v1",
+        "priority": "primary"
+      },
+      {
+        "verb": "move",
+        "priority": "primary"
+      }
+    ]
+  }
+}

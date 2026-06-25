@@ -1,0 +1,1913 @@
+/* Brainstorm — Files first-party app.
+ *
+ * Three-pane layout (sidebar + content + inspector), 44px header,
+ * 28px footer — matches the panel-header baseline rule in CLAUDE.md and
+ * mirrors `apps/notes` + `apps/database` token + drag-region conventions.
+ *
+ * Theme follows the shell-pushed `--color-*` tokens (preload arg +
+ * `app:tokens-changed` IPC). Per the [[apps-inherit-shell-theme]]
+ * memory: no per-app theme system, no `prefers-color-scheme` overrides
+ * — the shell decides. */
+
+/* Theming is the shell's job, not the app's. The shell preload injects
+ * the active theme tokens AND the alias layer (--accent / --bg / --text /
+ * … incl. the --glyph-* entity tints) + component styles via a single
+ * stylesheet — packages/shell/src/preload/app-theme.ts, the single source
+ * of truth. This app declares ZERO theme values; it only consumes the
+ * injected aliases. Don't reintroduce a :root alias block here. */
+:root {
+	color-scheme: light dark;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+[hidden] {
+	display: none !important;
+}
+
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+	height: 100vh;
+	background: var(--bg);
+	color: var(--text);
+	font: 13px / 1.5 -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, system-ui,
+		sans-serif;
+	-webkit-font-smoothing: antialiased;
+	user-select: none;
+	overflow: hidden;
+}
+
+body {
+	display: block;
+}
+
+/* React mounts into #root. The 44px header + 1fr window grid lives here so
+ * the rows actually apply to <header.app-header> + <main.window> instead of
+ * collapsing to content height inside #root. */
+#root {
+	height: 100vh;
+	display: grid;
+	grid-template-rows: 44px 1fr;
+	overflow: hidden;
+}
+
+button,
+input,
+textarea {
+	font: inherit;
+	color: inherit;
+}
+
+/* ── App header (44px) ────────────────────────────────────────────────── */
+
+/* Header chrome (flex skeleton, left/right groups, drag region, height /
+ * padding) is the shared `.app-header` rule in `@brainstorm/sdk/app-theme.css`;
+ * the glass surface is the shared default — no modifier needed. Only the
+ * files-specific delta stays local. */
+.app-header__left {
+	flex: 1 1 auto;
+}
+
+/* The current folder's object-menu host wraps the breadcrumb + the ⋯
+   button; it inherits the breadcrumb's flex slot so the trail still
+   ellipsizes and the ⋯ stays pinned to the trail's end. */
+.breadcrumb__menu-host {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.breadcrumb {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium);
+	color: var(--text);
+	overflow: hidden;
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.breadcrumb__segment {
+	background: transparent;
+	border: 0;
+	cursor: pointer;
+	padding: var(--space-0_5);
+	border-radius: var(--radius-sm);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	color: var(--text-dim);
+	font: inherit;
+	font-size: var(--text-size-md);
+}
+
+.breadcrumb__segment:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+/* The current segment carries the shared `.app-header__title` face
+   (size / weight / colour / ellipsis come from app-theme.css — F-220);
+   only the non-typographic deltas live here. */
+.breadcrumb__segment[data-current="true"] {
+	cursor: default;
+}
+
+.breadcrumb__segment[data-current="true"]:hover {
+	background: transparent;
+}
+
+.breadcrumb__ellipsis {
+	color: var(--text-faint);
+	padding: var(--space-0_5);
+	white-space: nowrap;
+	user-select: none;
+}
+
+.breadcrumb__separator {
+	color: var(--text-faint);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.breadcrumb__separator svg {
+	width: 12px;
+	height: 12px;
+	opacity: 0.6;
+}
+
+/* ── Window (sidebar + content + inspector) ──────────────────────────── */
+
+/* The left sidebar is a grid track (it pushes content); the right
+ * inspector is NOT — it's a glass overlay that floats ABOVE the content
+ * (like Notes/Database), so opening it never reflows the file list. The
+ * sidebar toggle still animates its track to 0 while the absolute slot
+ * slides off on a GPU `transform: translateX(...)`. Mouse-resize would lag
+ * the cursor under this transition; the shell's app-theme zeroes
+ * transition-duration globally under `body.is-resizing`, so the drag path
+ * stays instant without any per-app rule (see [[panel-transition-toggle-only]]). */
+.window {
+	position: relative;
+	display: grid;
+	grid-template-columns: var(--files-sidebar-width, 248px) 1fr;
+	min-height: 0;
+	background: var(--bg);
+	transition: grid-template-columns var(--motion-duration-normal, 180ms) ease;
+}
+
+body[data-nav-open="false"] .window {
+	grid-template-columns: 0 1fr;
+}
+
+/* PHYSICAL-AXIS INTENTIONAL: resize handles straddle the panel edges geometrically */
+.window-resize {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 6px;
+	margin-left: -3px;
+	cursor: col-resize;
+	z-index: 5;
+	background: transparent;
+	transition: background 120ms ease;
+	touch-action: none;
+}
+
+.window-resize--sidebar {
+	left: var(--files-sidebar-width, 248px);
+}
+
+body[data-nav-open="false"] .window-resize--sidebar {
+	display: none;
+}
+
+.window-resize--inspector {
+	left: auto;
+	right: var(--files-inspector-width, 320px);
+	margin-left: 0;
+	margin-right: -3px;
+}
+
+body:not([data-inspector="open"]) .window-resize--inspector {
+	display: none;
+}
+
+.window-resize:hover,
+.window-resize:focus-visible,
+body.is-resizing .window-resize {
+	background: var(--color-accent-subtle, rgba(255, 255, 255, 0.1));
+	outline: none;
+}
+
+/* ── Sidebar ──────────────────────────────────────────────────────────── */
+
+.sidebar {
+	position: absolute;
+	top: 0;
+	inset-inline-start: 0;
+	bottom: 0;
+	width: var(--files-sidebar-width, 248px);
+	display: flex;
+	flex-direction: column;
+	background: var(--bg);
+	border-inline-end: var(--border-width) solid var(--color-glass-border);
+	overflow-y: auto;
+	overflow-x: hidden;
+	z-index: 4;
+	transition: transform var(--motion-duration-normal, 180ms) ease;
+	will-change: transform;
+}
+
+body[data-nav-open="false"] .sidebar {
+	transform: translateX(-100%);
+	border-inline-end-color: transparent;
+}
+
+.sidebar__section {
+	padding: var(--space-2) var(--space-2);
+}
+
+.sidebar__section + .sidebar__section {
+	border-top: var(--border-width) solid var(--border);
+}
+
+.sidebar__section[data-collapsed="true"] .sidebar__list {
+	display: none;
+}
+
+.sidebar__section[data-collapsed="true"] .sidebar__section-chevron {
+	transform: rotate(-90deg);
+}
+
+/* A real button (it collapses the section) wearing the xs-uppercase
+ * section-label face — so it takes the shared control height + the
+ * never-bold button weight (F-221), not an ad-hoc 22px/600 chrome. */
+.sidebar__section-header {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	margin-bottom: var(--space-2);
+	height: var(--control-height-sm, 24px);
+	padding: 0 var(--space-1);
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--text-faint);
+	cursor: pointer;
+	/* Override the shell app-theme button base (default `background: var(--bg-elev)`
+	 * + border) so these read as section *labels*, not chip-shaped buttons. */
+	background: transparent;
+	border: 0;
+	border-radius: var(--radius-xs);
+	margin-inline-start: -4px;
+	text-align: start;
+	width: calc(100% + 8px);
+}
+
+.sidebar__section-header:hover {
+	color: var(--text-dim);
+	background: var(--hover);
+}
+
+.sidebar__chevron {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 14px;
+	height: 14px;
+	color: var(--text-faint);
+	transition: transform 120ms ease;
+	background: transparent;
+	border: 0;
+	padding: 0;
+	cursor: pointer;
+	flex-shrink: 0;
+}
+
+.sidebar__chevron svg {
+	width: 12px;
+	height: 12px;
+}
+
+.sidebar__section-chevron {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 12px;
+	height: 12px;
+	color: var(--text-faint);
+	transition: transform 120ms ease;
+	flex-shrink: 0;
+}
+
+.sidebar__section-chevron svg {
+	width: 10px;
+	height: 10px;
+}
+
+.sidebar__chevron--leaf {
+	visibility: hidden;
+}
+
+.sidebar__list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.sidebar__tree-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	width: 100%;
+	padding: var(--space-1);
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-md);
+	cursor: pointer;
+	color: var(--text);
+	/* The storage row is a <button>; without this the native UA ButtonFace
+	   grey leaks through (worst on Midnight) — the folder rows are <div>s. */
+	appearance: none;
+	background: transparent;
+	font: inherit;
+	text-align: left;
+}
+
+.sidebar__tree-row:hover {
+	background: var(--hover);
+}
+
+.sidebar__tree-row[aria-selected="true"],
+.sidebar__tree-row[aria-current="true"] {
+	background: var(--accent-soft);
+	color: var(--text);
+	border-color: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.sidebar__tree-row[data-drop-target="true"],
+.sidebar__tree-row[data-cross-over="true"] {
+	box-shadow: inset 0 0 0 2px var(--accent);
+	background: var(--active);
+}
+
+.sidebar__chevron--expand {
+	cursor: pointer;
+	user-select: none;
+}
+
+.sidebar__chevron--hidden {
+	visibility: hidden;
+}
+
+.sidebar__glyph {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 16px;
+	height: 16px;
+	flex-shrink: 0;
+	color: var(--glyph-folder);
+}
+
+.sidebar__glyph:empty {
+	display: none;
+}
+
+.sidebar__glyph[data-glyph="file"] {
+	color: var(--glyph-file);
+}
+
+.sidebar__glyph[data-glyph="note"] {
+	color: var(--glyph-note);
+}
+
+.sidebar__glyph[data-glyph="unknown"] {
+	color: var(--glyph-unknown);
+}
+
+.sidebar__tree-row[aria-selected="true"] .sidebar__glyph,
+.sidebar__tree-row[aria-current="true"] .sidebar__glyph {
+	color: var(--accent);
+}
+
+.sidebar__name {
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	flex: 1 1 auto;
+}
+
+.sidebar__coming-soon {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	margin: var(--space-0_5) var(--space-2) var(--space-2);
+	padding: var(--space-2) var(--space-2);
+	border: var(--border-width) dashed var(--border);
+	border-radius: var(--radius-md);
+	color: var(--text-faint);
+	font-size: var(--text-size-sm);
+	cursor: default;
+}
+
+.sidebar__coming-soon-glyph {
+	flex: 0 0 auto;
+	opacity: 0.7;
+}
+
+.sidebar__coming-soon-label {
+	flex: 1 1 auto;
+	min-width: 0;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.sidebar__coming-soon-tag {
+	flex: 0 0 auto;
+	padding: var(--space-0_5);
+	border-radius: var(--radius-full);
+	background: var(--bg-elev);
+	color: var(--text-dim);
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+}
+
+/* ── Content pane ─────────────────────────────────────────────────────── */
+
+.content {
+	/* The sidebar + inspector are position:absolute (so they slide via
+	 * translateX without reflowing the content per frame), which removes
+	 * them from `.window`'s grid flow. Without an explicit grid-column
+	 * placement, .content would auto-place into the FIRST track (the
+	 * sidebar column) and get overlapped by the absolute sidebar. Pin it
+	 * to column 2 so it always occupies the 1fr content track regardless
+	 * of sidebar / inspector state. */
+	grid-column: 2;
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	/* Anchor for the floating bulk-action bar (9.8.12). */
+	position: relative;
+	/* Without `min-height: 0` the flex column expands to fit its children's
+	 * intrinsic heights, so `.content-list { overflow-y: auto }` has
+	 * nothing to clip — the page grows instead of scrolling. Combined with
+	 * `.window { min-height: 0 }`, this chains the height constraint all
+	 * the way down so the list scrolls inside the visible viewport. */
+	min-height: 0;
+	background: var(--bg);
+}
+
+/* Bulk-action bar (9.8.12) — a floating footer pill, centred over the content
+ * area, shown only while items are multi-selected (no reflow of the list). */
+.files-bulkbar {
+	position: absolute;
+	bottom: var(--space-4);
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 20;
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+	border: var(--border-width) solid var(--color-glass-border, var(--border));
+	border-radius: var(--radius-full);
+	background: var(--color-glass-background-strong, var(--bg-elev, rgba(28, 28, 30, 0.92)));
+	box-shadow: var(--shadow-xl, 0 12px 32px -8px rgba(0, 0, 0, 0.45));
+	backdrop-filter: blur(12px);
+}
+
+.files-bulkbar__count {
+	color: var(--text-dim);
+	font-weight: var(--text-weight-medium, 500);
+	white-space: nowrap;
+	padding-right: var(--space-2);
+	border-right: var(--border-width) solid var(--color-border-subtle, var(--border));
+}
+
+.files-bulkbar__actions {
+	display: flex;
+	gap: var(--space-1);
+}
+
+.files-bulkbar__action {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	border: none;
+	background: transparent;
+	color: var(--text);
+	padding: var(--space-1);
+	border-radius: var(--radius-sm);
+	white-space: nowrap;
+	cursor: pointer;
+}
+
+.files-bulkbar__action svg {
+	color: var(--text-dim);
+}
+
+.files-bulkbar__action:hover {
+	background: var(--hover);
+}
+
+.files-bulkbar__action:hover svg {
+	color: var(--text);
+}
+
+.files-bulkbar__action--danger,
+.files-bulkbar__action--danger svg {
+	color: var(--danger, #ef4444);
+}
+
+.files-bulkbar__clear {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border: none;
+	border-radius: 50%;
+	background: transparent;
+	color: var(--text-dim);
+	cursor: pointer;
+}
+
+.files-bulkbar__clear:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+	padding: 0 var(--space-2);
+	height: var(--control-height-lg);
+	border-bottom: var(--border-width) solid var(--border);
+}
+
+.toolbar__group {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+
+.toolbar__group--start {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.toolbar__search {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-1);
+	border-radius: var(--radius-md);
+	background: transparent;
+	border: var(--border-width) solid transparent;
+	flex: 1 1 auto;
+	max-width: 360px;
+}
+
+.toolbar__search:focus-within {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+	border-color: transparent;
+}
+
+.toolbar__search-glyph {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--text-faint);
+}
+
+.toolbar__search-glyph svg {
+	width: 14px;
+	height: 14px;
+}
+
+.toolbar__search-input {
+	flex: 1 1 auto;
+	background: transparent;
+	border: 0;
+	outline: none;
+	color: var(--text);
+	font: inherit;
+	font-size: var(--text-size-md);
+}
+
+.toolbar__search-input::placeholder {
+	color: var(--text-faint);
+}
+
+.toolbar__scope {
+	background: var(--hover);
+	border: 0;
+	border-radius: var(--radius-sm);
+	color: var(--text-dim);
+	padding: var(--space-0_5);
+	font-size: var(--text-size-xs);
+	cursor: pointer;
+}
+
+.toolbar__scope:hover {
+	color: var(--text);
+}
+
+.toolbar__save-search {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	flex-shrink: 0;
+	background: transparent;
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+	color: var(--text-dim);
+	padding: var(--space-1);
+	font-size: var(--text-size-sm);
+	font-weight: var(--text-weight-medium);
+	cursor: pointer;
+}
+
+.toolbar__save-search:hover {
+	color: var(--text);
+	background: var(--hover);
+}
+
+.toolbar__save-search svg {
+	color: var(--accent);
+}
+
+/* ── Smart folders (saved searches) ───────────────────────────────────── */
+
+.smart-folders {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+}
+
+.smart-folders__row {
+	display: flex;
+	align-items: center;
+	border-radius: var(--radius-md);
+}
+
+.smart-folders__row:hover {
+	background: var(--hover);
+}
+
+.smart-folders__open {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	flex: 1 1 auto;
+	min-width: 0;
+	background: transparent;
+	border: 0;
+	padding: var(--space-2) var(--space-2);
+	color: var(--text);
+	font: inherit;
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium);
+	cursor: pointer;
+	text-align: left;
+}
+
+.smart-folders__glyph {
+	flex-shrink: 0;
+	color: var(--accent);
+}
+
+.smart-folders__name {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.smart-folders__more {
+	flex-shrink: 0;
+	background: transparent;
+	border: 0;
+	border-radius: var(--radius-sm);
+	color: var(--text-faint);
+	padding: var(--space-0_5);
+	margin-right: var(--space-1);
+	font-size: var(--text-size-md);
+	line-height: 1;
+	cursor: pointer;
+	opacity: 0;
+}
+
+.smart-folders__row:hover .smart-folders__more,
+.smart-folders__more:focus-visible,
+.smart-folders__more[aria-expanded="true"] {
+	opacity: 1;
+}
+
+.smart-folders__more:hover {
+	color: var(--text);
+	background: var(--active);
+}
+
+.smart-folder-name__form {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	padding: var(--space-2);
+}
+
+.smart-folder-name__input {
+	width: 100%;
+	box-sizing: border-box;
+	background: var(--bg-elev);
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+	color: var(--text);
+	font: inherit;
+	font-size: var(--text-size-md);
+	padding: var(--space-2) var(--space-2);
+}
+
+.smart-folder-name__input:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}
+
+.smart-folder-name__submit {
+	align-self: flex-end;
+}
+
+/* ── Content list ─────────────────────────────────────────────────────── */
+
+.content-list {
+	flex: 1 1 auto;
+	list-style: none;
+	margin: 0;
+	padding: var(--space-1) 0;
+	overflow-y: auto;
+	outline: none;
+}
+
+/* The keyboard cursor lives on the container (`aria-activedescendant`); each
+ * row wrapper is a focusable `role="option"` that takes DOM focus on click and
+ * would otherwise show the browser default focus-visible ring. The active row
+ * is already conveyed by its selection background, so drop the ring — keyboard
+ * affordance intact, no double indicator. */
+.content-list [role="option"] {
+	outline: none;
+}
+
+/* 9.8.15 — Finder/OS drag-in affordance: an inset accent ring on the whole
+ * content surface while external files hover it (depth-counted in the
+ * renderer so crossing child rows doesn't flicker it off). */
+.content-list[data-os-drop="true"],
+.content-empty[data-os-drop="true"] {
+	box-shadow: inset 0 0 0 2px var(--accent);
+	background: var(--color-accent-subtle);
+}
+
+/* Files keeps the absolute-overlay ⋯ rather than the SDK's trailing-flex
+ * default: in grid / gallery view a "row" is a vertical tile, so the ⋯
+ * must overlay the tile's corner instead of taking its own trailing flex
+ * slot (which would land it beside the card). The compound selector
+ * (0,3,0) beats the SDK's host--row rules (≤0,2,0) to restore absolute
+ * positioning; the SDK's display none → reveal-on-hover toggle still
+ * applies. The row reserves a small trailing gutter (see
+ * `.content-row__modified`) so the date ellipsizes before the overlay. */
+.content-row__menu-host {
+	display: block;
+	position: relative;
+}
+
+.content-row__menu-host.bs-object-menu__host--row > .bs-object-menu__more {
+	position: absolute;
+	top: 50%;
+	inset-inline-end: var(--space-2);
+	transform: translateY(-50%);
+	margin: 0;
+}
+
+.content-row {
+	display: grid;
+	/* Per [[feedback_no_default_type_icon_fallback]] (project-wide), the
+	 * icon column auto-sizes so it collapses to 0 (gap included) when an
+	 * entity has no own icon — the name then slides left into the slot
+	 * instead of every iconless row staying indented under the fixed 24px
+	 * track that used to be `24px ...`. */
+	grid-template-columns: auto minmax(0, 1fr) minmax(0, 160px) 120px;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-2);
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+	margin: 0 var(--space-1);
+	/* Anchors the absolute cross-app drag grip in the left gutter (DND-4). */
+	position: relative;
+}
+
+/* List modes use a fixed virtual pitch (`ROW_HEIGHT`/`ICON_LIST_ROW_HEIGHT`
+ * in content-list.tsx). Paint the row 1px shorter than its slot so adjacent
+ * selected/hovered backgrounds keep a 1px gutter instead of fusing into one
+ * block. box-sizing keeps the padded layout inside the reduced height. */
+.content-row[data-view-mode="list"],
+.content-row[data-view-mode="icon-list"] {
+	box-sizing: border-box;
+}
+.content-row[data-view-mode="list"] {
+	height: 35px;
+}
+.content-row[data-view-mode="icon-list"] {
+	height: 47px;
+}
+
+/* Inner host of `<EntityIcon>`: collapse the empty wrapper too so the
+ * grid's `auto` column has nothing to size to. */
+.content-row__glyph:empty {
+	display: none;
+}
+
+.content-row:hover {
+	background: var(--hover);
+}
+
+.content-row[data-selected="true"] {
+	background: var(--active);
+	color: var(--text);
+}
+
+.content-row[data-selected="true"] .content-row__type,
+.content-row[data-selected="true"] .content-row__modified,
+.content-row[data-selected="true"] .content-row__size {
+	color: var(--text-dim);
+}
+
+.content-row[data-drop-target="true"] {
+	box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.content-row[data-dragging="true"] {
+	opacity: 0.4;
+}
+
+/* Cross-app drag grip (DND-4) — a hover-revealed handle pinned to the row's
+ * left gutter; the pointer-driven shell drag session starts here, so it doesn't
+ * shift the cell layout and the row body keeps its native move/copy drag. */
+.content-row__drag-grip {
+	position: absolute;
+	left: -2px;
+	top: 50%;
+	transform: translateY(-50%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 16px;
+	height: 22px;
+	padding: 0;
+	border: none;
+	background: transparent;
+	color: var(--text-faint);
+	cursor: grab;
+	opacity: 0;
+	transition: opacity 0.1s ease;
+	touch-action: none;
+	z-index: 1;
+}
+.content-row:hover .content-row__drag-grip,
+.content-row__drag-grip:focus-visible {
+	opacity: 1;
+}
+.content-row[data-dragging="true"] .content-row__drag-grip {
+	cursor: grabbing;
+}
+
+/* DND-5 — drag a file OUT to the OS. Its own native-draggable handle, pinned to
+ * the row's trailing gutter (mirrors the leading cross-app grip), hover-revealed
+ * for files only. */
+.content-row__export-grip {
+	position: absolute;
+	right: 30px;
+	top: 50%;
+	transform: translateY(-50%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 22px;
+	color: var(--text-faint);
+	cursor: grab;
+	opacity: 0;
+	transition: opacity 0.1s ease;
+	z-index: 1;
+}
+.content-row:hover .content-row__export-grip {
+	opacity: 1;
+}
+
+/* A folder accepting a cross-app object drop (DropSemantic.AddMembership) —
+ * highlight it like the native intra-app drop target. */
+.content-row[data-cross-over="true"] {
+	box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.content-row__glyph {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 20px;
+	height: 20px;
+	color: var(--glyph-folder);
+}
+
+.content-row__glyph[data-glyph="file"] {
+	color: var(--glyph-file);
+}
+
+.content-row__glyph[data-glyph="note"] {
+	color: var(--glyph-note);
+}
+
+.content-row__glyph[data-glyph="unknown"] {
+	color: var(--glyph-unknown);
+}
+
+.content-row__glyph svg {
+	width: 18px;
+	height: 18px;
+}
+
+.content-row__name {
+	font-size: var(--text-size-md);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.content-row__rename-input {
+	width: 100%;
+	background: var(--bg);
+	border: var(--border-width) solid var(--accent);
+	border-radius: var(--radius-sm);
+	padding: var(--space-0_5);
+	font: inherit;
+	font-size: var(--text-size-md);
+	color: var(--text);
+	outline-offset: -1px;
+	outline: 1px solid var(--color-focus-ring);
+}
+
+.content-row__type,
+.content-row__modified,
+.content-row__size {
+	font-size: var(--text-size-sm);
+	color: var(--text-faint);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
+}
+
+.content-row__size {
+	text-align: end;
+	font-variant-numeric: tabular-nums;
+}
+
+.content-row__modified {
+	text-align: end;
+}
+
+/* Reserve room at the row's trailing edge so the hover-revealed ⋯ overlay
+ * doesn't sit on top of the LAST visible cell — whichever column the
+ * chooser put there (9.8.11). List + icon-list (both one-lane lists); tile
+ * modes overlay corners. */
+body[data-view-mode="list"] .content-row > span:last-child,
+body[data-view-mode="icon-list"] .content-row > span:last-child {
+	padding-inline-end: var(--space-5);
+}
+
+/* Icon-list (9.8.10) — same one-lane list grid as List, with a larger
+ * leading glyph + a taller row (`ICON_LIST_ROW_HEIGHT`/`ICON_LIST_ICON_SIZE`
+ * in content-list.tsx). The glyph box + svg sizing override the compact
+ * List defaults; the name + columns inherit List's layout unchanged. */
+body[data-view-mode="icon-list"] .content-row__glyph {
+	width: 28px;
+	height: 28px;
+}
+
+body[data-view-mode="icon-list"] .content-row__glyph svg {
+	width: 28px;
+	height: 28px;
+}
+
+body[data-view-mode="icon-list"] .content-row__name {
+	font-weight: var(--text-weight-medium);
+}
+
+/* Grid mode — the parent .content-list stays a plain block scroll
+ * container; @tanstack/react-virtual lays out tiles itself (absolute
+ * positioning inside a measured wrapper, padding + gap computed in JS
+ * via geometryFor). A `display: grid` on .content-list traps the
+ * virtualizer's single inner wrapper into one grid cell, collapsing
+ * every tile into lane 0 stacked vertically. */
+
+/* The ObjectMenuTrigger wrapper (`.content-row__menu-host`) is the parent
+ * of `.content-row`; the virtualizer gives the OUTER tile div a fixed
+ * pixel height, so the host must pass that height through or
+ * `.content-row { height: 100% }` resolves against an auto-height parent
+ * and the tile collapses to its content — making icon-bearing tiles
+ * taller than icon-less ones (uneven grid). */
+body[data-view-mode="grid"] .content-row__menu-host,
+body[data-view-mode="gallery"] .content-row__menu-host {
+	height: 100%;
+}
+
+/* Tile modes pin the ⋯ to the tile's top-right corner INSIDE the card —
+ * the list-mode overlay (vertical-center, trailing edge) was computed
+ * against the lane box and rendered as orphaned dots floating outside
+ * the tile. Every layout prop is pinned explicitly (the fm-menu
+ * base-style trap); the elevated chip keeps it legible over image
+ * thumbs. */
+body[data-view-mode="grid"] .content-row__menu-host.bs-object-menu__host--row > .bs-object-menu__more,
+body[data-view-mode="gallery"]
+	.content-row__menu-host.bs-object-menu__host--row
+	> .bs-object-menu__more {
+	position: absolute;
+	top: var(--space-2);
+	inset-inline-end: var(--space-2);
+	inset-inline-start: auto;
+	bottom: auto;
+	transform: none;
+	margin: 0;
+	background: var(--bg-elev);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-md);
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+}
+
+body[data-view-mode="grid"] .content-row {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-2);
+	padding: var(--space-4) var(--space-2);
+	border-radius: var(--radius-md);
+	background: var(--bg-elev);
+	border: var(--border-width) solid var(--border);
+	margin: 0;
+	/* Grid cell must be allowed to shrink below its intrinsic min-width
+	 * (= the longest child element's natural width) so auto-fill can
+	 * actually pack multiple tiles per row. Without `min-width: 0` here +
+	 * `max-width: 100%` on the name (below), a long filename inflates the
+	 * tile to its full text width, collapsing the grid to one column.
+	 * Canonical CSS Grid trap. */
+	min-width: 0;
+}
+
+body[data-view-mode="grid"] .content-row:hover {
+	background: var(--bg-subtle);
+}
+
+body[data-view-mode="grid"] .content-row[data-selected="true"] {
+	background: var(--active);
+	border-color: var(--accent);
+}
+
+body[data-view-mode="grid"] .content-row__glyph {
+	width: 44px;
+	height: 44px;
+	/* Explicit display beats the global `.content-row__glyph:empty
+	 * { display: none }` collapse — in tile modes the media slot is part
+	 * of the tile's anatomy (folder tint / thumb / chip), so an empty
+	 * slot keeps its box instead of leaving a name-only "button". */
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	border-radius: var(--radius-md);
+}
+
+body[data-view-mode="grid"] .content-row__glyph svg {
+	width: 36px;
+	height: 36px;
+}
+
+/* Folder tiles read as containers: the folder glyph (the sanctioned
+ * type-indicator) centered on a neutral surface — not a flat tinted band
+ * that reads as an empty cover. */
+body[data-view-mode="grid"] .content-row__glyph[data-kind="folder"],
+body[data-view-mode="gallery"] .content-row__glyph[data-kind="folder"] {
+	background: var(--bg-subtle);
+	color: var(--glyph-folder);
+}
+
+/* Stored-image preview fills its media slot edge to edge. */
+.content-row__thumb {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+/* Extension chip — the no-preview, no-icon fallback so a file tile is
+ * never an anonymous blank rectangle. */
+.content-row__ext {
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-semibold);
+	letter-spacing: 0.05em;
+	color: var(--text-faint);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-md);
+	padding: var(--space-0_5);
+	background: var(--bg-elev);
+}
+
+body[data-view-mode="grid"] .content-row__name {
+	text-align: center;
+	font-size: var(--text-size-md);
+	/* Constrain to parent's width so the inherited `overflow: hidden;
+	 * text-overflow: ellipsis; white-space: nowrap` actually clips long
+	 * filenames. Without `max-width: 100%`, the name takes its full
+	 * intrinsic text width (a flex-child's default), inflates the parent
+	 * tile, and the auto-fill grid collapses to one column. */
+	max-width: 100%;
+	min-width: 0;
+}
+
+body[data-view-mode="grid"] .content-row__type,
+body[data-view-mode="grid"] .content-row__modified,
+body[data-view-mode="grid"] .content-row__size {
+	display: none;
+}
+
+/* Gallery mode — large media tiles ideal for image-heavy folders.
+ * Same virtualization rule as grid: no display:grid on .content-list. */
+
+body[data-view-mode="gallery"] .content-row {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	gap: 0;
+	padding: 0;
+	border-radius: var(--radius-md);
+	background: var(--bg-elev);
+	border: var(--border-width) solid var(--border);
+	margin: 0;
+	overflow: hidden;
+	transition: transform var(--motion-duration-fast, 120ms) ease, box-shadow
+		var(--motion-duration-fast, 120ms) ease;
+}
+
+body[data-view-mode="gallery"] .content-row:hover {
+	background: var(--bg-elev);
+	transform: translateY(-1px);
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+body[data-view-mode="gallery"] .content-row[data-selected="true"] {
+	border-color: var(--accent);
+	box-shadow: 0 0 0 1px var(--accent);
+}
+
+body[data-view-mode="gallery"] .content-row__glyph {
+	width: 100%;
+	/* The band absorbs whatever the tile-size preset leaves after the
+	 * fixed captions — a Small and a Large tile keep proportionate
+	 * preview area instead of sharing one hardcoded band height. */
+	flex: 1 1 auto;
+	min-height: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--bg-subtle, var(--bg));
+	border-bottom: var(--border-width) solid var(--border);
+}
+
+body[data-view-mode="gallery"] .content-row__glyph svg {
+	width: 56px;
+	height: 56px;
+}
+
+body[data-view-mode="gallery"] .content-row__name {
+	padding: var(--space-3) var(--space-2) var(--space-1);
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium);
+	text-align: start;
+}
+
+body[data-view-mode="gallery"] .content-row__type {
+	padding: 0 var(--space-2) var(--space-3);
+	font-size: var(--text-size-xs);
+	color: var(--text-faint);
+}
+
+body[data-view-mode="gallery"] .content-row__modified,
+body[data-view-mode="gallery"] .content-row__size {
+	display: none;
+}
+
+/* Icon-list mode (9.8.10) — compact icon+name rows wrapping into columns
+ * (Finder's high-density browse). Same lane virtualization as grid: the
+ * lane box has a fixed pixel height, so the host passes it through. */
+body[data-view-mode="icon-list"] .content-row__menu-host {
+	height: 100%;
+}
+
+body[data-view-mode="icon-list"] .content-row {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 6px;
+	height: 100%;
+	padding: 0 10px;
+	margin: 0;
+	border-radius: var(--radius-sm);
+	min-width: 0;
+}
+
+body[data-view-mode="icon-list"] .content-row__name {
+	flex: 1 1 auto;
+	min-width: 0;
+	/* Trailing gutter so the hover-⋯ overlay never sits on the name. */
+	padding-inline-end: 20px;
+}
+
+body[data-view-mode="icon-list"] .content-row__type,
+body[data-view-mode="icon-list"] .content-row__modified,
+body[data-view-mode="icon-list"] .content-row__size {
+	display: none;
+}
+
+/* Empty state */
+
+.content-empty {
+	margin: auto;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+	color: var(--text-faint);
+	padding: var(--space-6);
+	max-width: 360px;
+}
+
+.content-empty__glyph {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 72px;
+	height: 72px;
+	margin-bottom: var(--space-4);
+	border-radius: var(--radius-xl);
+	background: var(--bg-elev);
+	color: var(--text-faint);
+	opacity: 0.85;
+}
+
+.content-empty h2 {
+	font-size: var(--text-size-lg);
+	font-weight: var(--text-weight-semibold);
+	margin: 0 0 var(--space-1);
+	color: var(--text-dim);
+}
+
+.content-empty p {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	line-height: 18px;
+}
+
+.content-empty__cta {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	margin-top: var(--space-4);
+}
+
+/* ── Inspector ────────────────────────────────────────────────────────── */
+
+/* Glass overlay (the `.glass--strong` class on the element supplies the
+ * translucent background + blur); floats above the content without a
+ * reserved grid track, matching Notes/Database. */
+.inspector {
+	position: absolute;
+	top: 0;
+	inset-inline-end: 0;
+	bottom: 0;
+	width: var(--files-inspector-width, 320px);
+	border-inline-start: var(--border-width) solid var(--color-glass-border, var(--border));
+	box-shadow: var(--shadow-xl, 0 12px 32px -8px rgba(0, 0, 0, 0.4));
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	z-index: 4;
+	transform: translateX(100%);
+	transition: transform var(--motion-duration-normal, 180ms) ease;
+	will-change: transform;
+}
+
+body[data-inspector="open"] .inspector {
+	transform: translateX(0);
+}
+
+body:not([data-inspector="open"]) .inspector {
+	box-shadow: none;
+	border-inline-start-color: transparent;
+}
+
+.inspector__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	height: var(--app-header-height, 44px);
+	padding: 0 var(--space-2) 0 var(--space-4);
+	border-bottom: var(--border-width) solid var(--border);
+}
+
+.inspector__title {
+	font-weight: var(--text-weight-semibold);
+	font-size: var(--text-size-md);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.inspector__tabs {
+	display: flex;
+	gap: 0;
+	border-bottom: var(--border-width) solid var(--border);
+	padding: 0 var(--space-2);
+}
+
+.inspector__tab {
+	background: transparent;
+	border: 0;
+	padding: var(--space-2) var(--space-2);
+	font-size: var(--text-size-xs);
+	color: var(--text-faint);
+	cursor: pointer;
+	border-bottom: var(--border-width-thick) solid transparent;
+}
+
+.inspector__tab:hover {
+	color: var(--text-dim);
+}
+
+.inspector__tab[data-active="true"] {
+	color: var(--text);
+	border-bottom-color: var(--accent);
+}
+
+.inspector__body {
+	flex: 1 1 auto;
+	overflow-y: auto;
+	padding: var(--space-2);
+	font-size: var(--text-size-md);
+}
+
+.inspector__empty {
+	color: var(--text-faint);
+	font-style: italic;
+	font-size: var(--text-size-sm);
+}
+
+.inspector__preview {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-3) 0;
+}
+
+/* The cover host is a click-to-edit button (opens the shared cover
+ * picker). Button reset + the cover-host pin: in a column flex panel the
+ * aspect-ratio'd band must not flex-shrink, or its height jumps per object.
+ * See CLAUDE.md. */
+.inspector__preview-cover {
+	display: block;
+	align-self: stretch;
+	width: 100%;
+	padding: 0;
+	border: none;
+	background: none;
+	cursor: pointer;
+	border-radius: var(--radius-md);
+	overflow: hidden;
+	flex-shrink: 0;
+}
+
+.inspector__preview-cover:hover {
+	box-shadow: 0 0 0 1px var(--color-border-subtle);
+}
+
+.inspector__preview-cover:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 2px;
+}
+
+/* Read-only cover host (a file — no edit affordance): same layout, no
+ * interactive hover/cursor. */
+.inspector__preview-cover[data-static] {
+	cursor: default;
+}
+
+.inspector__preview-cover[data-static]:hover {
+	box-shadow: none;
+}
+
+/* The icon host is also a click-to-edit button (opens the shared icon
+ * picker); the glyph sizing stays on `.inspector__preview-glyph`. */
+.inspector__preview-icon {
+	display: inline-flex;
+	padding: var(--space-2);
+	border: none;
+	background: none;
+	cursor: pointer;
+	border-radius: var(--radius-md);
+}
+
+.inspector__preview-icon:hover {
+	background: var(--color-accent-subtle);
+}
+
+.inspector__preview-icon:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 2px;
+}
+
+/* Discoverable "add an icon" empty state — the shared dashed-plus glyph
+ * (no synthetic type-default icon, per the no-default-icon-fallback rule).
+ * Sized so the button keeps a comfortable hit area when the object has no
+ * own icon. */
+.inspector__preview-add-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 48px;
+	height: 48px;
+	color: var(--text-faint);
+}
+
+.inspector__preview-add-icon svg {
+	width: 28px;
+	height: 28px;
+}
+
+.inspector__preview-glyph {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 96px;
+	height: 96px;
+	color: var(--glyph-folder);
+}
+
+.inspector__preview-glyph:empty {
+	display: none;
+}
+
+.inspector__preview-glyph svg {
+	width: 64px;
+	height: 64px;
+}
+
+.inspector__preview-glyph[data-glyph="file"] {
+	color: var(--glyph-file);
+}
+
+.inspector__preview-glyph[data-glyph="note"] {
+	color: var(--glyph-note);
+}
+
+.inspector__preview-glyph[data-glyph="unknown"] {
+	color: var(--glyph-unknown);
+}
+
+.inspector__preview-name {
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-semibold);
+	text-align: center;
+}
+
+/* The Properties tab is the shared `<PropertiesPanel>` content (`.bs-props`),
+ * mounted inline inside the inspector's own scrolling tab body — so neutralize
+ * the panel's full-height flex + nested scroll + outer padding; the
+ * `.bs-props__list` rows keep their shared label/value grid + hover. */
+.inspector .bs-props__inner {
+	height: auto;
+}
+
+.inspector .bs-props__body {
+	overflow: visible;
+	padding: 0;
+}
+
+/* ── Inspector links panel ─────────────────────────────────────────────
+ * Realises B6.4: per-entity "Linked from / Links to" surface, fed by
+ * the same `extractNoteReferences` walker the Graph app uses. Live-
+ * updates via `services.vaultEntities.onChange` (B6.3).
+ */
+
+.inspector__links-section {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	margin-bottom: var(--space-4);
+}
+
+.inspector__links-section:last-child {
+	margin-bottom: 0;
+}
+
+.inspector__links-heading {
+	margin: 0;
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-semibold);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--text-faint);
+}
+
+.inspector__links-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+}
+
+.inspector__links-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	min-height: 28px;
+}
+
+.inspector__links-target {
+	flex: 1 1 auto;
+	min-width: 0;
+	background: transparent;
+	border: 0;
+	padding: var(--space-1);
+	margin: 0 -6px;
+	border-radius: var(--radius-sm);
+	font: inherit;
+	color: var(--text);
+	text-align: start;
+	cursor: pointer;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	outline: none;
+}
+
+.inspector__links-target:hover:not(:disabled) {
+	background: var(--bg-elev);
+}
+
+.inspector__links-target:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}
+
+.inspector__links-target:disabled {
+	color: var(--text-faint);
+	cursor: default;
+	font-style: italic;
+}
+
+.inspector__links-chip {
+	flex: 0 0 auto;
+	font-size: var(--text-size-xs);
+	color: var(--text-faint);
+	background: var(--bg-elev);
+	border-radius: var(--radius-full);
+	padding: var(--space-0_5);
+	border: var(--border-width) solid var(--border);
+}
+
+/* ── Buttons ──────────────────────────────────────────────────────────── */
+
+/* Generic dialog / form / toolbar buttons use the shared `.bs-btn` primitive
+ * (neutral · ghost · --icon · data-bs-primary · --danger). Only bespoke
+ * controls (view-switch segmented toggle) stay local. */
+
+/* ── Popover chrome (shared by the remaining dialogs) ─────────────────── */
+
+.popover {
+	position: absolute;
+	top: calc(100% + 4px);
+	inset-inline-end: 0;
+	background: var(--bg);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-popover);
+	padding: var(--space-1);
+	min-width: 180px;
+	z-index: 100;
+	-webkit-app-region: no-drag;
+	app-region: no-drag;
+}
+
+.popover__item {
+	display: grid;
+	grid-template-columns: 20px 1fr auto;
+	align-items: center;
+	gap: var(--space-2);
+	width: 100%;
+	padding: var(--space-2) var(--space-2);
+	background: transparent;
+	border: 0;
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+	color: var(--text);
+	font-size: var(--text-size-md);
+	text-align: start;
+}
+
+.popover__item:hover {
+	background: var(--hover);
+}
+
+.popover__glyph {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 16px;
+	height: 16px;
+	color: var(--glyph-folder);
+}
+
+.popover__glyph[data-glyph="file"] {
+	color: var(--glyph-file);
+}
+
+.popover__chord {
+	color: var(--text-faint);
+	font-size: var(--text-size-xs);
+}
+
+/* ── Footer / status bar (28px) ──────────────────────────────────────── */
+
+/* The view-mode picker is the shared `<SelectMenu>` (`.bs-select` trigger +
+ * fancy-menus popup, 9.8.10); `.view-switch` only constrains the trigger
+ * height to the toolbar's compact controls. The chrome comes from
+ * `@brainstorm/sdk/select-menu.css`. */
+.view-switch.bs-select {
+	height: var(--control-height-sm);
+}
+
+/* Sort menu trigger + popover items */
+
+.toolbar__sort {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	height: var(--control-height-sm);
+	padding: 0 var(--space-2);
+	border-radius: var(--radius-sm);
+	border: var(--border-width) solid transparent;
+	color: var(--text-dim);
+	font-size: var(--text-size-xs);
+	cursor: pointer;
+}
+
+.toolbar__sort:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.toolbar__sort[aria-expanded="true"] {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.toolbar__sort-label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width: 220px;
+}
+
+.toolbar__sort-arrow {
+	color: var(--text-faint);
+	font-variant-numeric: tabular-nums;
+}
+
+.sort-menu__items {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+}
+
+.sort-menu__item {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	width: 100%;
+	text-align: start;
+}
+
+.sort-menu__check {
+	display: inline-flex;
+	width: 16px;
+	height: 16px;
+	align-items: center;
+	justify-content: center;
+	color: var(--accent);
+	flex-shrink: 0;
+}
+
+.sort-menu__item[data-active="true"] {
+	color: var(--text);
+	font-weight: var(--text-weight-medium);
+}
+
+.sort-menu__item[disabled] {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+
+.sort-menu__divider {
+	height: 1px;
+	background: var(--border);
+	margin: var(--space-1) 0;
+}
+
+/* Section heading inside the view-options menu ("Group by"). */
+.sort-menu__heading {
+	padding: var(--space-1) var(--space-2) var(--space-0_5);
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+	color: var(--text-dim);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+/* Group-by section heading rows in the content list (9.8.11). Sticky-less
+ * virtual rows — they translate with the list like every other row. */
+.content-list__group-heading {
+	display: flex;
+	align-items: flex-end;
+	padding: 0 var(--space-3, var(--space-3)) var(--space-2);
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-semibold);
+	color: var(--text-dim);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+/* ── Toasts (transient notices) ──────────────────────────────────────── */
+
+.files-toasts {
+	position: fixed;
+	bottom: var(--space-4);
+	/* PHYSICAL-AXIS INTENTIONAL: symmetric centring */
+	left: 50%;
+	transform: translateX(-50%);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-2);
+	z-index: 300;
+	pointer-events: none;
+}
+
+.files-toast {
+	max-width: 420px;
+	padding: var(--space-2);
+	border-radius: var(--radius-full);
+	border: var(--border-width) solid var(--color-glass-border);
+	background: var(--color-glass-background-strong, var(--bg-elev));
+	backdrop-filter: blur(var(--glass-blur, 5px)) saturate(var(--glass-saturate, 180%));
+	-webkit-backdrop-filter: blur(var(--glass-blur, 5px)) saturate(var(--glass-saturate, 180%));
+	box-shadow: var(--shadow-md, 0 6px 20px rgba(0, 0, 0, 0.18));
+	color: var(--text);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	opacity: 0;
+	transform: translateY(8px);
+	transition: opacity var(--motion-duration-normal) ease, transform var(--motion-duration-normal)
+		ease;
+}
+
+.files-toast[data-shown="true"] {
+	opacity: 1;
+	transform: translateY(0);
+}
+
+/* ── Modal (confirm / collision dialogs) ─────────────────────────────── */
+
+.modal-root {
+	position: fixed;
+	inset: 0;
+	z-index: 200;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	/* Modal scrim — intentionally dark across themes. The convention for
+	 * a modal backdrop is a dark wash that pulls focus to the dialog;
+	 * a theme-aware tint would invert in light mode and stop reading as
+	 * "the rest of the UI is dimmed". */
+	background: rgba(0, 0, 0, 0.32);
+	padding: var(--space-5);
+}
+
+.modal {
+	background: var(--bg);
+	border: var(--border-width) solid var(--border-strong);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-popover);
+	padding: var(--space-5);
+	max-width: 400px;
+	width: 100%;
+}
+
+.modal__title {
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-semibold);
+	margin: 0 0 var(--space-2);
+}
+
+.modal__body {
+	margin: 0 0 var(--space-4);
+	font-size: var(--text-size-md);
+	color: var(--text-dim);
+	line-height: 18px;
+}
+
+.modal__actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--space-2);
+}
+
+/* Bulk Move/Copy destination picker + multi-rename (9.8.12). */
+.destination-picker__empty {
+	margin: 0;
+	padding: var(--space-2) var(--space-2);
+	font-size: var(--text-size-sm);
+	color: var(--text-dim);
+}
+
+.bulk-rename__form {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.bulk-rename__input {
+	padding: var(--space-2) var(--space-2);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-sm);
+	background: var(--bg);
+	color: var(--text);
+	font: inherit;
+}
+
+.bulk-rename__input:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 1px;
+}
+
+.bulk-rename__preview {
+	margin: 0;
+	min-height: 1.2em;
+	font-size: var(--text-size-sm);
+	color: var(--text-dim);
+}
+
+.bulk-rename__submit {
+	align-self: flex-end;
+}

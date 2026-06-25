@@ -1,0 +1,466 @@
+/**
+ * Settings → Privacy → Network panel styles (Net-1f).
+ *
+ * Token-driven. No hardcoded font-sizes, hex literals, or px values
+ * outside layout primitives. Mirrors the shape of `.devices-section`,
+ * `.sync-section`, `.grants-panel` — same group title, same hint, same
+ * empty/error states.
+ */
+
+.network-egress {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+}
+
+.network-egress__group {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	padding: var(--space-3) 0;
+	border-bottom: var(--border-width) solid var(--color-border-subtle);
+}
+
+.network-egress__group:last-child {
+	border-bottom: none;
+}
+
+.network-egress__group--grow {
+	flex: 1;
+}
+
+.network-egress__group--compact {
+	padding: var(--space-3) 0;
+}
+
+.network-egress__group--soft {
+	padding: var(--space-2) 0;
+	border-bottom: none;
+	opacity: 0.7;
+}
+
+.network-egress__group-header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: var(--space-2);
+}
+
+.network-egress__group-heading {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	min-width: 0;
+}
+
+.network-egress__group-title {
+	margin: 0;
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium);
+	color: var(--color-text-primary);
+}
+
+.network-egress__group-actions {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+
+.network-egress__subgroup {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	margin-top: var(--space-2);
+	padding-top: var(--space-3);
+	border-top: var(--border-width) solid var(--color-border-subtle);
+}
+
+.network-egress__subtitle {
+	margin: 0;
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium);
+	color: var(--color-text-primary);
+}
+
+.network-egress__soft-row {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--space-2);
+	color: var(--color-text-secondary);
+}
+
+.network-egress__soft-row > div {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	min-width: 0;
+}
+
+.network-egress__soft-row .network-egress__group-title {
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+}
+
+.network-egress__feedback-actions {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+}
+
+.network-egress__install-id {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+	margin-left: auto;
+}
+
+.network-egress__install-id code {
+	font-family: var(--font-family-mono, monospace);
+	color: var(--color-text-secondary);
+	user-select: all;
+}
+
+.network-egress__hint {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+}
+
+.network-egress__empty {
+	margin: 0;
+	padding: var(--space-2);
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+	background: var(--color-surface-2);
+	border-radius: var(--radius-md);
+	text-align: center;
+}
+
+.network-egress__row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-2);
+}
+
+.network-egress__label {
+	font-size: var(--text-size-md);
+	color: var(--color-text-secondary);
+}
+
+.network-egress__value {
+	font-size: var(--text-size-md);
+	color: var(--color-text-primary);
+	font-variant-numeric: tabular-nums;
+}
+
+.network-egress__pill {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	padding: var(--space-1);
+	background: var(--color-surface-2);
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-full);
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+	color: var(--color-text-primary);
+}
+
+.network-egress__pill--removable {
+	padding-right: var(--space-1);
+}
+
+.network-egress__resolved {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-secondary);
+}
+
+.network-egress__manual {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+/* Privacy segmented control lives on the shared `<Segmented>` primitive
+ * (`renderer/ui/segmented.css`). No per-panel chrome here. */
+
+/* ---------------- Allowlist editor ---------------- */
+
+.network-egress__allowlist {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.network-egress__pills {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-1);
+}
+
+.network-egress__allowlist-add {
+	display: flex;
+	gap: var(--space-2);
+	align-items: end;
+}
+
+.network-egress__allowlist-add .text-field {
+	flex: 1;
+}
+
+/* ---------------- Per-app virtual list ---------------- */
+
+.network-egress__virtual {
+	overflow: auto;
+	background: var(--color-surface-2);
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+}
+
+.network-egress__virtual--per-app {
+	padding: var(--space-1);
+}
+
+.network-egress__per-app-row {
+	display: grid;
+	grid-template-columns: auto 1fr auto;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-2);
+	border-radius: var(--radius-sm);
+}
+
+.network-egress__per-app-row:hover {
+	background: var(--color-surface-3);
+}
+
+.network-egress__per-app-text {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+	min-width: 0;
+}
+
+.network-egress__per-app-name {
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium);
+	color: var(--color-text-primary);
+}
+
+.network-egress__per-app-meta {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-secondary);
+}
+
+.network-egress__per-app-hosts {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* ---------------- Requests table ---------------- */
+
+.network-egress__filters {
+	display: flex;
+	gap: var(--space-2);
+	align-items: center;
+}
+
+/* Select + search input flow through the shared `<TextField>` / `<Select>`
+ * primitive (renderer/ui/text-field.css). The panel only owns the flex
+ * layout that lets the search input stretch beside the fixed-width app
+ * select. */
+
+.network-egress__filter-input {
+	flex: 1;
+	min-width: 0;
+}
+
+.network-egress__virtual--requests {
+	display: flex;
+	flex-direction: column;
+}
+
+.network-egress__table-header,
+.network-egress__table-row {
+	display: grid;
+	grid-template-columns:
+		8ch /* timestamp */
+		minmax(8ch, 1.4fr) /* app */
+		6ch /* method */
+		minmax(10ch, 2fr) /* host */
+		6ch /* status */
+		8ch /* bytes */
+		8ch /* latency */
+		minmax(10ch, 1.4fr); /* reason (optional) */
+	column-gap: var(--space-2);
+	align-items: center;
+	padding: 0 var(--space-2);
+	font-size: var(--text-size-xs);
+	font-variant-numeric: tabular-nums;
+}
+
+.network-egress__table-header {
+	position: sticky;
+	top: 0;
+	background: var(--color-surface-2);
+	border-bottom: var(--border-width) solid var(--color-border-subtle);
+	height: 28px;
+	z-index: 1;
+	font-weight: var(--text-weight-medium);
+	color: var(--color-text-secondary);
+}
+
+.network-egress__table-row {
+	height: 36px;
+	border-bottom: var(--border-width) solid var(--color-border-subtle);
+	color: var(--color-text-primary);
+}
+
+.network-egress__table-row--refused,
+.network-egress__table-row--aborted,
+.network-egress__table-row--errored {
+	color: var(--color-text-secondary);
+}
+
+.network-egress__col-app {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	min-width: 0;
+}
+
+.network-egress__col-app-name {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.network-egress__col-host,
+.network-egress__col-reason {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* ---------------- Collapsible blocked section ---------------- */
+
+.network-egress__collapse {
+	appearance: none;
+	background: transparent;
+	border: 0;
+	padding: 0;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium);
+	color: var(--color-text-primary);
+	cursor: pointer;
+	align-self: flex-start;
+}
+
+.network-egress__collapse-caret {
+	transition: transform 0.15s ease;
+	color: var(--color-text-secondary);
+}
+
+.network-egress__collapse[aria-expanded="false"] .network-egress__collapse-caret {
+	transform: rotate(-90deg);
+}
+
+.network-egress__count {
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+	font-weight: var(--text-weight-regular);
+}
+
+/* ---------------- Preview cache (compact) ---------------- */
+
+.network-egress__cache-text {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+}
+
+/* ---------------- Proxy editor ----------------
+ * Bordered inputs / select / checkbox all live on the shared
+ * `<TextField>` / `<Select>` / `<Checkbox>` primitives. The proxy editor
+ * only owns row layout (label + host + port grid). */
+
+.network-egress__editor {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+}
+
+.network-egress__fieldset {
+	border: 0;
+	padding: 0;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.network-egress__fieldset[disabled] {
+	opacity: 0.55;
+	pointer-events: none;
+}
+
+.network-egress__field--label {
+	min-width: 6ch;
+	font-size: var(--text-size-md);
+	color: var(--color-text-secondary);
+}
+
+.network-egress__endpoint-row {
+	display: grid;
+	grid-template-columns: 8ch 1fr 7ch;
+	gap: var(--space-2);
+	align-items: end;
+}
+
+.network-egress__editor-footer {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--space-2);
+}
+
+.network-egress__crash-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	max-height: 360px;
+	overflow-y: auto;
+}
+
+.network-egress__crash-row {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	padding: var(--space-2);
+	background: var(--color-surface-2);
+	border-radius: var(--radius-md);
+	font-size: var(--text-size-md);
+}
+
+.network-egress__crash-meta {
+	color: var(--color-text-secondary);
+	font-size: var(--text-size-xs);
+}
+
+.network-egress__crash-line {
+	color: var(--color-text-primary);
+	font-family: var(--font-family-mono, monospace);
+	word-break: break-all;
+}

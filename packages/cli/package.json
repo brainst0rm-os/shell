@@ -1,0 +1,19 @@
+{
+  "name": "@brainstorm/cli",
+  "version": "0.0.1",
+  "private": true,
+  "description": "brainstorm-cli — scaffolding, publishing, and headless tooling for app authors.",
+  "license": "UNLICENSED",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "bin": {
+    "brainstorm-cli": "./src/cli.ts"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@brainstorm/sdk-types": "workspace:*"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "@brainstorm/relay-server",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Blind relay for Brainstorm Stage 10.4 — opaque-bytes fan-out over WebSocket.",
+  "license": "UNLICENSED",
+  "type": "module",
+  "main": "src/server.ts",
+  "scripts": {
+    "start": "bun --bun run bin/relay.ts"
+  }
+}

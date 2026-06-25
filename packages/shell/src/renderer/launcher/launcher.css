@@ -1,0 +1,80 @@
+/*
+ * Launcher palette (Stage 7.4 / 9.22.2, fancy-menus at 8.8). The overlay
+ * chrome, search input, sectioned list, keyboard nav and focus are now a
+ * `@react-fancy-menus` surface (themed via `@brainstorm/sdk/menus.css`).
+ * Only the per-row content layout (app icon + title + subtitle, entity
+ * snippet) keeps bespoke styling here, rendered inside each row's name slot.
+ */
+
+.launcher-menu__row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	min-width: 0;
+	width: 100%;
+}
+
+/* The search field bleeds across `.fm-body`'s inset so its bottom border
+ * spans the full menu width; the list rows below keep the inset. */
+.launcher-menu .fm-composed > div:first-child {
+	margin-inline: calc(-1 * var(--fm-body-padding-x));
+	margin-top: calc(-1 * var(--fm-body-padding-y));
+}
+
+.launcher-menu__icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border-radius: var(--radius-sm);
+	background: var(--color-surface-default);
+	color: var(--color-text-secondary);
+	flex-shrink: 0;
+}
+
+.launcher-menu__icon img {
+	width: 20px;
+	height: 20px;
+	object-fit: contain;
+}
+
+.launcher-menu__body {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	gap: var(--space-0_5);
+}
+
+.launcher-menu__title {
+	font-size: var(--text-size-md);
+	color: var(--color-text-primary);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.launcher-menu__snippet {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-secondary);
+	overflow: hidden;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	line-clamp: 2;
+}
+
+.launcher-menu__snippet mark {
+	background: var(--color-state-highlight, rgba(255, 230, 100, 0.45));
+	color: var(--color-text-primary);
+	padding: 0 var(--space-0_5);
+	border-radius: var(--radius-xs);
+}
+
+.launcher-menu__subtitle {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}

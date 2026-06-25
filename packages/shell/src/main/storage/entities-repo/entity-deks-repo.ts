@@ -1,0 +1,119 @@
+/**
+ * EntityDeksRepository — CRUD on `entities.db`'s `entity_deks` table
+ * (Stage 10.1).
+ *
+ * Per the Stage 5 repository-pattern decision, all SQL for this table
+ * lives here; the entities service / `EntityDekStore` (Stage 10.1) is pure
+ * orchestration on top.
+ *
+ * Per docs/_review/2026-05-20-10.0-sync-spike.md §3.1 and
+ * docs/security/16-identity-orgs-encryption.md, each row stores one
+ * per-entity Data Encryption Key, sealed under the vault master key
+ * (XChaCha20-Poly1305 via `sealSecret`). The wrap binds to the entity id
+ * via AAD (defense vs. DEK-swap); enforcement of that binding lives in
+ * `EntityDekStore.open()`.
+ *
+ * Multi-row support per entity is forward-allocated for the rotation path
+ * (Stage 10.2 / OQ-27). 10.1 writes exactly one row at create; readers use
+ * `getByEntityId` which returns the **most-recent-by-`created_at`** row —
+ * the rotation policy when 10.2 lands.
+ */
+
+import { type SealedSecret, isSealedSecret } from "../../credentials/crypto";
+import type { SqliteDatabase, SqliteStatement } from "../sqlite";
+
+export type EntityDekRecord = {
+	dekId: string;
+	entityId: string;
+	version: number;
+	sealedDek: SealedSecret;
+	createdAt: number;
+};
+
+export type CreateEntityDekInput = {
+	dekId: string;
+	entityId: string;
+	sealedDek: SealedSecret;
+	/** Optional — defaults to 1. Reserved for the rotation path (10.2). */
+	version?: number;
+	now: number;
+};
+
+type DbEntityDekRow = {
+	dek_id: string;
+	entity_id: string;
+	version: number;
+	sealed_dek_json: string;
+	created_at: number;
+};
+
+export class EntityDeksRepository {
+	private readonly statements = new Map<string, SqliteStatement>();
+
+	constructor(private readonly db: SqliteDatabase) {}
+
+	private stmt(sql: string): SqliteStatement {
+		const cached = this.statements.get(sql);
+		if (cached) return cached;
+		const prepared = this.db.prepare(sql);
+		this.statements.set(sql, prepared);
+		return prepared;
+	}
+
+	create(input: CreateEntityDekInput): void {
+		if (!isSealedSecret(input.sealedDek)) {
+			throw new Error("EntityDeksRepository.create: invalid sealedDek shape");
+		}
+		this.stmt(
+			"INSERT INTO entity_deks (dek_id, entity_id, version, sealed_dek_json, created_at) VALUES (?, ?, ?, ?, ?)",
+		).run(
+			input.dekId,
+			input.entityId,
+			input.version ?? 1,
+			JSON.stringify(input.sealedDek),
+			input.now,
+		);
+	}
+
+	/**
+	 * Most-recent live DEK row for an entity, or null when no row exists.
+	 * Ordering = `created_at DESC, version DESC, dek_id DESC`. The
+	 * `dek_id` tail tie-break makes the result deterministic across
+	 * `bun:sqlite` and `better-sqlite3` even when `created_at` and
+	 * `version` collide (deterministic-clock tests + 10.1's single-row
+	 * policy can both produce that case). Returning a single row is the
+	 * v1 policy; 10.2's rotation still picks the newest via the same call.
+	 */
+	getByEntityId(entityId: string): EntityDekRecord | null {
+		const row = this.stmt(
+			"SELECT dek_id, entity_id, version, sealed_dek_json, created_at FROM entity_deks WHERE entity_id = ? ORDER BY created_at DESC, version DESC, dek_id DESC LIMIT 1",
+		).get(entityId) as DbEntityDekRow | undefined;
+		return row ? rowToRecord(row) : null;
+	}
+
+	deleteByEntityId(entityId: string): number {
+		const result = this.stmt("DELETE FROM entity_deks WHERE entity_id = ?").run(entityId);
+		return Number(result.changes);
+	}
+
+	delete(dekId: string): boolean {
+		const result = this.stmt("DELETE FROM entity_deks WHERE dek_id = ?").run(dekId);
+		return Number(result.changes) > 0;
+	}
+}
+
+function rowToRecord(row: DbEntityDekRow): EntityDekRecord {
+	const parsed = JSON.parse(row.sealed_dek_json) as unknown;
+	if (!isSealedSecret(parsed)) {
+		throw new Error(
+			`entity_deks: malformed sealed_dek_json for dek_id=${row.dek_id} (entity=${row.entity_id})`,
+		);
+	}
+	return {
+		dekId: row.dek_id,
+		entityId: row.entity_id,
+		version: row.version,
+		sealedDek: parsed,
+		createdAt: row.created_at,
+	};
+}

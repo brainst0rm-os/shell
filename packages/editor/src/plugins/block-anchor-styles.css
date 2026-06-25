@@ -1,0 +1,18 @@
+/* Transient highlight for a block landed on via a `#block-<id>` anchor
+ * link (B11.13). Applied by `revealBlockByKey` for ~2s, then removed —
+ * the keyframe fades the accent wash out so the landing block reads as
+ * "you were brought here" without leaving a persistent selection. */
+
+@keyframes bs-block-anchor-flash {
+	0% {
+		background-color: color-mix(in srgb, var(--accent) 22%, transparent);
+	}
+	100% {
+		background-color: transparent;
+	}
+}
+
+.bs-block-anchor-flash {
+	animation: bs-block-anchor-flash 1.8s ease-out 1;
+	border-radius: var(--radius-md);
+}

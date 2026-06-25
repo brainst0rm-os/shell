@@ -1,0 +1,1203 @@
+/* Brainstorm — Code-Editor first-party app (9.7.1.5 preview drop).
+ *
+ * Theming is the shell's job. The shell preload injects the active
+ * theme tokens + alias layer (--accent / --bg / --text / …) + the
+ * centralized `.app-header` chrome (height + macOS/Windows insets) AND
+ * the `.app-header__icon` background+gloss (B-3, `:root`-prefixed so it
+ * wins) via a single stylesheet (packages/shell/src/preload/app-theme.ts).
+ * This app declares ZERO theme/colour values: it never sets `.app-header`
+ * height/padding nor any `.app-header__icon` background — only the icon
+ * chip's geometry, which the shell rule deliberately leaves to the app.
+ * Don't reintroduce a :root alias block or an icon gradient. */
+:root {
+	color-scheme: light dark;
+	/* Shared code row height — the textarea/overlay line-height, the gutter
+	   line-no box, and the refs/diff bodies all key off this so numbers stay
+	   in lockstep with the code rows. */
+	--code-line-height: 18px;
+	/* Gutter fold-chevron column reserve — kept in lockstep between the
+	   line-no padding-inline-end and the JS gutter-width calc so a row's
+	   number never collides with (or gets clipped behind) the chevron. */
+	--gutter-fold-reserve: 1.6ch;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	overflow: hidden;
+}
+
+button {
+	font: inherit;
+	color: inherit;
+}
+
+/* Header chrome (flex skeleton, left/right groups, drag region, skin, title
+ * face) is the shared `.app-header` / `.app-header__title` pair in
+ * `@brainstorm/sdk/app-theme.css`. */
+
+.app-header__meta {
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	padding-inline-end: var(--space-0_5);
+}
+
+.editor {
+	position: relative;
+	height: calc(100vh - var(--app-header-height, 44px));
+	display: grid;
+	grid-template-columns: 248px 1fr;
+	overflow: hidden;
+}
+
+/* Closed: collapse the file-list track + slide the panel out via GPU
+   transform per [[animate-transform-not-width]]. Mirrors Notes/Tasks. */
+.editor[data-nav-open="false"] {
+	grid-template-columns: 0 minmax(0, 1fr);
+}
+
+.editor[data-nav-open="false"] .editor__files {
+	transform: translateX(-100%);
+	border-inline-end-color: transparent;
+}
+
+.editor__files {
+	transition: transform var(--motion-duration-normal, 180ms) ease;
+	will-change: transform;
+}
+
+/* ── File list (left = navigation, per project convention) ─────────── */
+
+.editor__files {
+	border-inline-end: var(--border-width) solid var(--border);
+	background: var(--bg);
+	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+}
+
+.editor__files-head {
+	display: flex;
+	align-items: center;
+	height: 44px;
+	padding: 0 var(--space-4);
+	border-bottom: var(--border-width) solid var(--border-subtle, var(--border));
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--text-dim);
+	position: sticky;
+	top: 0;
+	background: var(--bg);
+}
+
+.editor__file-list {
+	display: flex;
+	flex-direction: column;
+}
+
+.editor__file {
+	display: flex;
+	align-items: center;
+	width: 100%;
+	color: var(--text);
+	font-size: var(--text-size-md);
+}
+
+.editor__file:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -2px;
+}
+
+.editor__file:hover {
+	background: var(--hover, rgba(127, 127, 127, 0.1));
+}
+
+.editor__file[aria-current="true"] {
+	background: var(--accent-soft, rgba(127, 127, 127, 0.18));
+	color: var(--text);
+}
+
+.editor__file-open {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	flex: 1 1 auto;
+	min-width: 0;
+	padding: 7px;
+	border: 0;
+	background: transparent;
+	color: inherit;
+	text-align: start;
+	cursor: pointer;
+	font: inherit;
+}
+
+.editor__file-open:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -2px;
+}
+
+.editor__file-icon {
+	flex: 0 0 auto;
+	color: var(--text-dim);
+	display: inline-flex;
+}
+
+.editor__file-name {
+	flex: 1 1 auto;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.editor__file-dirty {
+	flex: 0 0 auto;
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: var(--accent);
+}
+
+/* ── Editor pane ──────────────────────────────────────────────────── */
+
+.editor__pane {
+	display: grid;
+	/* Just the code surface — the file path / language / ⋯ menu live in the
+	   shell `.app-header` (one unified header), and file tabs at the window
+	   level. */
+	grid-template-rows: 1fr;
+	min-width: 0;
+	min-height: 0;
+	/* Anchor for the shared `.bs-find-bar` chrome (B9.3), which floats at
+	   the pane's top inline-end. */
+	position: relative;
+}
+
+/* Language chip — lives in the `.app-header` right group beside the file
+   meta now that the pane has no header of its own. */
+.editor__lang {
+	flex: 0 0 auto;
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	padding: var(--space-0_5);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-full);
+}
+
+.editor__code {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	min-height: 0;
+	overflow: hidden;
+	font-family: var(--text-family-code, ui-monospace, monospace);
+	font-size: var(--text-size-sm);
+	line-height: var(--code-line-height);
+}
+
+.editor__gutter {
+	overflow: hidden;
+	padding: var(--space-3) 0 var(--space-3) var(--space-4);
+	color: var(--text-dim);
+	background: var(--bg);
+	border-inline-end: var(--border-width) solid var(--border-subtle, var(--border));
+	user-select: none;
+}
+
+/* One element per buffer line so each can carry its own diff marker (9.7.7).
+   The height matches the textarea/overlay `line-height` so numbers stay in
+   lockstep with the code rows. A `position: relative` host anchors the
+   change-marker rule the modifier classes draw on the inline-start edge. */
+.editor__line-no {
+	position: relative;
+	height: var(--code-line-height);
+	padding-inline: var(--space-2);
+	/* Reserve the fold-chevron column (9.7.3) so numbers keep a stable
+	   inline-end edge whether or not a row is foldable. */
+	padding-inline-end: calc(var(--space-2) + var(--gutter-fold-reserve));
+	text-align: end;
+	white-space: pre;
+}
+
+/* Change markers: a coloured bar on the gutter's inline-start edge, mirroring
+   the standard editor "unsaved changes" gutter against the saved baseline.
+   Added = success, Modified = warning, DeletedBefore = a caret on the top edge
+   where the removed line(s) sat. */
+.editor__line-no--added::before,
+.editor__line-no--modified::before {
+	content: "";
+	position: absolute;
+	inset-block: 0;
+	inset-inline-start: 0;
+	width: 2px;
+}
+
+.editor__line-no--added::before {
+	background: var(--ok);
+}
+
+.editor__line-no--modified::before {
+	background: var(--warn);
+}
+
+/* Fold chevron (9.7.3): mouse toggle on a region header's gutter row.
+   The gutter stays aria-hidden — the keyboard path is the fold chords —
+   so this is a pointer-only affordance, never a tab stop. */
+.editor__fold-chevron {
+	position: absolute;
+	inset-inline-end: 2px;
+	top: 0;
+	width: 1.6ch;
+	cursor: pointer;
+	color: var(--text-dim);
+	text-align: center;
+}
+
+.editor__fold-chevron:hover,
+.editor__fold-chevron--folded {
+	color: var(--text);
+}
+
+.editor__line-no--deleted::before {
+	content: "";
+	position: absolute;
+	inset-inline-start: 0;
+	top: -1px;
+	width: 0;
+	height: 0;
+	border-inline-start: 4px solid var(--danger);
+	border-block-start: 3px solid transparent;
+	border-block-end: 3px solid transparent;
+}
+
+/* The textarea + highlight overlay share the SAME font metrics so the
+   tokens line up under the caret. `editor__edit-area` is a positioned
+   container; the overlay sits behind, the textarea on top with
+   transparent text + opaque caret (`color: transparent;
+   caret-color: var(--text)`) so the user sees only the highlighted
+   spans while still typing into a real `<textarea>`. */
+.editor__edit-area {
+	position: relative;
+	min-width: 0;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.editor__highlight,
+.editor__buffer {
+	position: absolute;
+	inset: 0;
+	margin: 0;
+	padding: var(--space-3);
+	border: 0;
+	font: inherit;
+	tab-size: 4;
+	white-space: pre;
+	overflow: auto;
+}
+
+.editor__highlight {
+	pointer-events: none;
+	background: transparent;
+	color: var(--text);
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.editor__highlight[data-empty="true"] {
+	visibility: hidden;
+}
+
+.editor__highlight-line {
+	position: relative;
+	min-height: 1.5em;
+	white-space: pre;
+}
+
+/* Indent guides (9.7.3): faint vertical rules drawn one per indent level
+   inside each line. The guide spans the full line box height so adjacent
+   lines stack into an unbroken column; blank-line depths are bridged by
+   `indentGuideDepths` so a guide runs through gaps inside a block. */
+.editor__indent-guide {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 0;
+	border-inline-start: var(--border-width) solid var(--border-subtle, var(--border));
+	pointer-events: none;
+}
+
+/* Guides only make sense in column mode; word-wrap reflows columns away. */
+.editor__code--wrap .editor__indent-guide {
+	display: none;
+}
+
+/* Matched-bracket highlight (9.7.3): a 1ch-wide box drawn over each bracket
+   of the pair adjacent to the caret. Positioned at the bracket's column
+   inside its `position: relative` line; sits under the transparent textarea
+   text so the actual glyph reads on top. */
+.editor__bracket-match {
+	position: absolute;
+	top: 0;
+	height: 1.5em;
+	width: 1ch;
+	border-radius: var(--radius-xs);
+	background: var(--accent-soft, rgba(127, 127, 127, 0.32));
+	box-shadow: inset 0 0 0 1px var(--accent);
+	pointer-events: none;
+}
+
+/* Find matches (B9.3): a soft box per match segment under the transparent
+   textarea text; the active match gets the strong outline. Same absolute
+   in-line placement idiom as the bracket marker. */
+.editor__find-match {
+	position: absolute;
+	top: 0;
+	height: 1.5em;
+	border-radius: var(--radius-xs);
+	background: var(--accent-soft, rgba(127, 127, 127, 0.24));
+	pointer-events: none;
+}
+
+.editor__find-match--active {
+	box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+/* Secondary multi-cursor paint (9.7.3): a caret rule + a selection wash
+   per extra cursor. The carets blink-free by design — only the primary
+   (real) caret blinks, signalling which cursor owns IME/scroll. */
+.editor__extra-caret {
+	position: absolute;
+	top: 0;
+	height: 1.5em;
+	width: 2px;
+	margin-inline-start: -1px;
+	background: var(--accent);
+	pointer-events: none;
+}
+
+.editor__extra-selection {
+	position: absolute;
+	top: 0;
+	height: 1.5em;
+	background: var(--accent-soft, rgba(127, 127, 127, 0.24));
+	pointer-events: none;
+}
+
+/* Zero-width caret probe (9.7.3): stamped transiently in a line so the
+   completion popup can read the caret's pixel position, then removed. Spans
+   the line height; never painted. */
+.editor__caret-probe {
+	position: absolute;
+	top: 0;
+	height: 1.5em;
+	width: 0;
+	pointer-events: none;
+}
+
+/* Autocomplete completion popup (9.7.3): a caret-anchored candidate list.
+   Floats above the textarea (the one overlay child that takes pointer
+   events) so rows are clickable; positioned in JS relative to the edit
+   area. Surface mirrors the menu/popover chrome via theme tokens. */
+.editor__completion {
+	position: absolute;
+	z-index: 5;
+	margin: 2px 0 0;
+	padding: var(--space-1);
+	list-style: none;
+	min-width: 16ch;
+	max-width: 42ch;
+	max-height: 13.5em;
+	overflow-y: auto;
+	background: var(--bg-elev);
+	border: var(--border-width) solid var(--border-subtle);
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-popover);
+	font-family: var(--text-family-code, ui-monospace, monospace);
+	font-size: var(--text-size-sm);
+}
+
+.editor__completion[hidden] {
+	display: none;
+}
+
+.editor__completion-item {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-1);
+	border-radius: var(--radius-sm);
+	color: var(--text);
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+.editor__completion-item--active {
+	background: var(--accent-soft);
+}
+
+.editor__completion-kind {
+	flex: 0 0 auto;
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	text-transform: uppercase;
+}
+
+.editor__completion-label {
+	flex: 1 1 auto;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* Inline diagnostic squiggle (9.7.6): a wavy underline under the offending
+   span, painted in the overlay under the transparent textarea text. Same
+   absolute in-line placement idiom as the bracket/find markers; the wave is
+   a repeating SVG so it scales with the monospace cell. Severity drives the
+   stroke colour (real --color-state-* tokens, matching the problem list). */
+.editor__squiggle {
+	position: absolute;
+	bottom: 0;
+	height: 1.5em;
+	pointer-events: none;
+	background-repeat: repeat-x;
+	background-position: left bottom;
+	background-size: 6px 3px;
+}
+
+.editor__squiggle--error {
+	background-image: linear-gradient(
+		135deg,
+		transparent 0,
+		transparent 35%,
+		var(--color-state-error) 35%,
+		var(--color-state-error) 65%,
+		transparent 65%
+	), linear-gradient(
+		45deg,
+		transparent 0,
+		transparent 35%,
+		var(--color-state-error) 35%,
+		var(--color-state-error) 65%,
+		transparent 65%
+	);
+}
+
+.editor__squiggle--warning {
+	background-image: linear-gradient(
+		135deg,
+		transparent 0,
+		transparent 35%,
+		var(--color-state-warning) 35%,
+		var(--color-state-warning) 65%,
+		transparent 65%
+	), linear-gradient(
+		45deg,
+		transparent 0,
+		transparent 35%,
+		var(--color-state-warning) 35%,
+		var(--color-state-warning) 65%,
+		transparent 65%
+	);
+}
+
+/* Folded-region badge (9.7.3): trails the fold header line. Static flow
+   (not absolute) so it sits right after the line's last token. */
+.editor__fold-badge {
+	display: inline-block;
+	margin-inline-start: 1ch;
+	padding: 0 var(--space-2);
+	border-radius: var(--radius-xs);
+	background: var(--hover);
+	color: var(--text-dim);
+	user-select: none;
+}
+
+.editor__highlight-token {
+	white-space: pre;
+}
+
+.editor__citation {
+	border-bottom: var(--border-width) dashed var(--accent);
+	cursor: pointer;
+	/* Citations are part of the read-only overlay; we still want the
+	   pointer events for hover so re-enable just on these spans. */
+	pointer-events: auto;
+}
+
+.editor__buffer {
+	resize: none;
+	background: transparent;
+	color: transparent;
+	caret-color: var(--text);
+	outline: none;
+}
+
+.editor__buffer::selection {
+	background: var(--accent-soft, rgba(127, 127, 127, 0.32));
+}
+
+.editor__buffer:focus-visible {
+	box-shadow: inset 2px 0 0 var(--accent);
+}
+
+/* Word-wrap mode. The modifier lives on the shared `.editor__code` host so
+   the textarea AND the highlight overlay (incl. its line/token spans) flip
+   together — identical white-space + width means they wrap to the same
+   points, keeping tokens aligned over the caret. */
+.editor__code--wrap .editor__highlight,
+.editor__code--wrap .editor__buffer,
+.editor__code--wrap .editor__highlight-line,
+.editor__code--wrap .editor__highlight-token {
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
+.editor__code--wrap .editor__highlight,
+.editor__code--wrap .editor__buffer {
+	overflow-x: hidden;
+}
+
+/* ── Citation hover tooltip ─────────────────────────────────────────── */
+
+.editor__citation-tooltip {
+	position: fixed;
+	z-index: 9999;
+	min-width: 220px;
+	max-width: 360px;
+	padding: var(--space-3) var(--space-2);
+	background: var(--bg);
+	color: var(--text);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-popover, 0 10px 30px rgba(0, 0, 0, 0.18));
+	font-size: var(--text-size-sm);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	pointer-events: auto;
+}
+
+.editor__citation-tooltip[hidden] {
+	display: none;
+}
+
+.editor__citation-tooltip__heading {
+	font-size: var(--text-size-xs);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--text-dim);
+}
+
+.editor__citation-tooltip__title {
+	font-weight: var(--text-weight-semibold);
+	color: var(--text);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+}
+
+.editor__citation-tooltip__status {
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	padding: var(--space-0_5);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-full);
+	align-self: flex-start;
+	text-transform: capitalize;
+}
+
+.editor__citation-tooltip__status[data-status="done"],
+.editor__citation-tooltip__status[data-status="resolved"] {
+	color: var(--text);
+	border-color: transparent;
+	background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.editor__citation-tooltip__code {
+	font-family: var(--text-family-code, ui-monospace, monospace);
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+}
+
+.editor__citation-tooltip__summary {
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	line-height: 1.45;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: -webkit-box;
+	-webkit-line-clamp: 4;
+	-webkit-box-orient: vertical;
+}
+
+.editor__citation-tooltip__action {
+	margin-top: var(--space-1);
+	align-self: flex-start;
+	font: inherit;
+	font-size: var(--text-size-xs);
+	color: var(--accent);
+	background: transparent;
+	border: 0;
+	padding: var(--space-1);
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+}
+
+.editor__citation-tooltip__action:hover {
+	background: var(--hover, rgba(127, 127, 127, 0.1));
+}
+
+/* ── Empty state ──────────────────────────────────────────────────── */
+
+/* The empty state renders through the shared `@brainstorm/sdk/empty-state`
+ * (Hero tone); this only makes it span the editor's grid columns. */
+.editor__empty {
+	grid-column: 1 / -1;
+}
+
+/* ── References panel (SH-14, right = inspector per project convention) ──
+   Glassy absolute overlay anchored to the right edge (mirrors Notes /
+   Database inspector). Floats over the editor stage — no reflow on the
+   code column — and slides on GPU transform; border + shadow drop on
+   close. The previous third-grid-column layout caused the panel to fight
+   the editor for width and bled outside the window when the column was
+   wider than the remaining space. */
+/* Glass overlay (`.glass--strong` on the element supplies the translucent
+ * background + blur); floats above the editor without reflowing it,
+ * matching Notes/Database. */
+.editor__refs {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	inset-inline-end: 0;
+	width: 280px;
+	border-inline-start: var(--border-width) solid var(--color-glass-border, var(--border));
+	box-shadow: var(--shadow-xl, 0 12px 32px -8px rgba(0, 0, 0, 0.4));
+	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	z-index: 5;
+	transition: transform var(--motion-duration-normal, 180ms) ease;
+	will-change: transform;
+}
+
+.editor[data-refs-open="false"] .editor__refs {
+	transform: translateX(100%);
+	box-shadow: none;
+	border-inline-start-color: transparent;
+	pointer-events: none;
+}
+
+.editor__refs-head {
+	display: flex;
+	align-items: center;
+	height: 44px;
+	padding: 0 var(--space-4);
+	border-bottom: var(--border-width) solid var(--border-subtle, var(--border));
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--text-dim);
+	position: sticky;
+	top: 0;
+	/* Opaque-ish backing so list rows don't bleed through the sticky head
+	 * while scrolling under the translucent glass panel. */
+	background: var(--color-glass-background-strong, var(--bg));
+}
+
+.editor__refs-list {
+	display: flex;
+	flex-direction: column;
+	padding: var(--space-2);
+	gap: var(--space-2);
+}
+
+.editor__refs-empty {
+	padding: var(--space-3);
+	font-size: var(--text-size-sm);
+	color: var(--text-dim);
+	line-height: var(--code-line-height);
+}
+
+.editor__ref {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	width: 100%;
+	padding: var(--space-2) var(--space-2);
+	border: var(--border-width) solid var(--border-subtle, var(--border));
+	border-radius: var(--radius-md);
+	background: transparent;
+	color: var(--text);
+	text-align: start;
+	cursor: pointer;
+}
+
+.editor__ref:hover {
+	background: var(--hover, rgba(127, 127, 127, 0.1));
+	border-color: var(--border);
+}
+
+.editor__ref:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+	border-color: transparent;
+}
+
+.editor__ref-top {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+
+.editor__ref-code {
+	font-family: var(--text-family-code, ui-monospace, monospace);
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+	color: var(--text);
+}
+
+.editor__ref-status {
+	flex: 0 0 auto;
+	font-size: var(--text-size-xs);
+	text-transform: capitalize;
+	color: var(--text-dim);
+	padding: var(--space-0_5);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-full);
+}
+
+.editor__ref-status[data-status="done"],
+.editor__ref-status[data-status="resolved"] {
+	color: var(--text);
+	border-color: transparent;
+	background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.editor__ref-count {
+	margin-inline-start: auto;
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+}
+
+.editor__ref-title {
+	font-size: var(--text-size-md);
+	color: var(--text);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+}
+
+.editor__ref-summary {
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	line-height: 1.45;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: -webkit-box;
+	-webkit-line-clamp: 3;
+	-webkit-box-orient: vertical;
+}
+
+/* Quick-open palette (9.7.5) — a centred fuzzy jump-to-file overlay (Cmd+P). */
+.editor__quickopen-overlay {
+	position: absolute;
+	inset: 0;
+	z-index: 50;
+	display: flex;
+	justify-content: center;
+	align-items: flex-start;
+	padding-top: 12vh;
+	background: var(--color-dimmer, rgba(0, 0, 0, 0.32));
+}
+
+.editor__quickopen {
+	width: min(560px, 90%);
+	max-height: 60vh;
+	display: flex;
+	flex-direction: column;
+	border: var(--border-width) solid var(--color-glass-border, var(--border));
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-xl, 0 12px 32px -8px rgba(0, 0, 0, 0.4));
+	overflow: hidden;
+}
+
+.editor__quickopen-input {
+	flex-shrink: 0;
+	border: none;
+	border-bottom: var(--border-width) solid var(--color-border-subtle, var(--border));
+	background: transparent;
+	padding: var(--space-3);
+	font-size: var(--text-size-md);
+	color: var(--text);
+	outline: none;
+}
+
+.editor__quickopen-list {
+	list-style: none;
+	margin: 0;
+	padding: var(--space-1);
+	overflow-y: auto;
+	min-height: 0;
+}
+
+.editor__quickopen-item {
+	display: flex;
+	align-items: baseline;
+	gap: var(--space-2);
+	padding: var(--space-2) var(--space-2);
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+}
+
+.editor__quickopen-item[data-active="true"] {
+	background: var(--color-accent-subtle, var(--hover));
+}
+
+.editor__quickopen-name {
+	color: var(--text);
+	font-weight: var(--text-weight-medium, 500);
+}
+
+.editor__quickopen-path {
+	color: var(--text-faint);
+	font-size: var(--text-size-xs);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.editor__quickopen-empty {
+	list-style: none;
+	padding: var(--space-3);
+	color: var(--text-faint);
+	font-size: var(--text-size-sm);
+}
+
+/* ── New-file button (9.7.5) ─────────────────────────────────────── */
+
+.editor__files-head {
+	justify-content: space-between;
+}
+
+.editor__file-new {
+	border: var(--border-width) solid var(--border-subtle, var(--border));
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text-dim);
+	font: inherit;
+	letter-spacing: normal;
+	text-transform: none;
+	padding: var(--space-0_5);
+	cursor: pointer;
+}
+
+.editor__file-new:hover {
+	background: var(--color-accent-subtle, var(--hover));
+	color: var(--color-accent-default, var(--text));
+}
+
+.editor__file-new:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}
+
+/* Header "+" New-file (F-205) — borderless icon chip matching the
+   panel-toggles it sits beside, so the header right group reads as one row. */
+.editor__header-new {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--control-height-sm, 24px);
+	height: var(--control-height-sm, 24px);
+	padding: 0;
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text-dim);
+	cursor: pointer;
+}
+
+.editor__header-new:hover {
+	background: var(--color-accent-subtle, var(--hover));
+	color: var(--color-accent-default, var(--text));
+}
+
+.editor__header-new:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}
+
+/* ── Diagnostics problem list (9.7.6) ────────────────────────────── */
+
+.editor__diagnostics {
+	border-bottom: var(--border-width) solid var(--border-subtle, var(--border));
+	padding: var(--space-2);
+}
+
+.editor__diagnostics-head {
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	margin-bottom: var(--space-1);
+}
+
+.editor__diagnostics-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.editor__diagnostic {
+	display: flex;
+	gap: var(--space-2);
+	width: 100%;
+	border: 0;
+	background: transparent;
+	color: var(--text);
+	font: inherit;
+	text-align: left;
+	padding: var(--space-0_5);
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+}
+
+.editor__diagnostic:hover {
+	background: var(--color-accent-subtle, var(--hover));
+}
+
+.editor__diagnostic:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}
+
+.editor__diagnostic-loc {
+	flex: 0 0 auto;
+	font-family: var(--text-family-code);
+	font-size: var(--text-size-xs);
+}
+
+.editor__diagnostic--error .editor__diagnostic-loc {
+	color: var(--color-state-error);
+}
+
+.editor__diagnostic--warning .editor__diagnostic-loc {
+	color: var(--color-state-warning);
+}
+
+.editor__diagnostic-msg {
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+}
+
+/* Diff view (9.7.7) — a centred overlay reviewing the buffer against the
+   saved baseline, in unified or side-by-side layout. Mirrors the quick-open
+   overlay chrome (same backdrop + glass panel + radius + shadow). */
+.editor__diff-overlay {
+	position: absolute;
+	inset: 0;
+	z-index: 50;
+	display: flex;
+	justify-content: center;
+	align-items: flex-start;
+	padding-top: 8vh;
+	background: var(--color-dimmer, rgba(0, 0, 0, 0.32));
+}
+
+.editor__diff {
+	width: min(960px, 94%);
+	max-height: 80vh;
+	display: flex;
+	flex-direction: column;
+	border: var(--border-width) solid var(--color-glass-border, var(--border));
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-xl, 0 12px 32px -8px rgba(0, 0, 0, 0.4));
+	overflow: hidden;
+}
+
+.editor__diff-head {
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+	border-bottom: var(--border-width) solid var(--color-border-subtle, var(--border));
+}
+
+.editor__diff-title {
+	flex: 1 1 auto;
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-semibold, 600);
+	color: var(--text);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.editor__diff-stats {
+	flex-shrink: 0;
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+}
+
+.editor__diff-close {
+	flex-shrink: 0;
+	width: var(--control-height-sm, 24px);
+	height: var(--control-height-sm, 24px);
+	border: none;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text-dim);
+	font-size: var(--text-size-md);
+	line-height: 1;
+	cursor: pointer;
+}
+
+.editor__diff-close:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.editor__diff-body {
+	min-height: 0;
+	overflow: auto;
+	font-family: var(--text-family-code, ui-monospace, monospace);
+	font-size: var(--text-size-sm);
+	line-height: var(--code-line-height);
+}
+
+.editor__diff-empty {
+	padding: var(--space-5) var(--space-4);
+	color: var(--text-dim);
+	text-align: center;
+	font-family: var(--text-family-code, ui-monospace, monospace);
+}
+
+.editor__diff-columns {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	position: sticky;
+	top: 0;
+	background: var(--bg-elev, var(--bg));
+	border-bottom: var(--border-width) solid var(--color-border-subtle, var(--border));
+	z-index: 1;
+}
+
+.editor__diff-colhead {
+	padding: var(--space-1);
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	font-weight: var(--text-weight-medium, 500);
+}
+
+.editor__diff-colhead + .editor__diff-colhead {
+	border-inline-start: var(--border-width) solid var(--color-border-subtle, var(--border));
+}
+
+.editor__diff-row {
+	display: flex;
+	align-items: stretch;
+	white-space: pre;
+}
+
+.editor__diff-body--side-by-side .editor__diff-row {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+}
+
+.editor__diff-side {
+	display: flex;
+	align-items: stretch;
+	overflow: hidden;
+}
+
+.editor__diff-side--next {
+	border-inline-start: var(--border-width) solid var(--color-border-subtle, var(--border));
+}
+
+.editor__diff-gutter {
+	flex-shrink: 0;
+	width: 4ch;
+	padding-inline: var(--space-2);
+	text-align: end;
+	color: var(--text-faint, var(--text-dim));
+	user-select: none;
+}
+
+.editor__diff-text {
+	flex: 1 1 auto;
+	padding-inline-end: var(--space-2);
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.editor__diff-row--added,
+.editor__diff-side--next:not(.editor__diff-side--empty) .editor__diff-text {
+	background: color-mix(in srgb, var(--ok) 14%, transparent);
+}
+
+.editor__diff-row--removed,
+.editor__diff-side--base:not(.editor__diff-side--empty) .editor__diff-text {
+	background: color-mix(in srgb, var(--danger) 14%, transparent);
+}
+
+/* Side-by-side context rows carry no tint — only the changed halves do. The
+   broad row-level tints above apply in unified mode; reset them for the
+   two-column layout so unchanged context stays plain there. */
+.editor__diff-body--side-by-side .editor__diff-row--added,
+.editor__diff-body--side-by-side .editor__diff-row--removed {
+	background: transparent;
+}
+
+.editor__diff-side--empty {
+	background: color-mix(in srgb, var(--text-dim) 6%, transparent);
+}
+
+/* F-238 — file rename + delete affordances (shared popover body). The
+ * popover chrome is the SDK `.bs-popover`; these style only the rename
+ * form field + action rows inside it. */
+.editor__rename-field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.editor__rename-input {
+	width: 100%;
+	background: var(--bg);
+	border: var(--border-width) solid var(--accent);
+	border-radius: var(--radius-sm);
+	padding: var(--space-1);
+	font: inherit;
+	font-size: var(--text-size-md);
+	color: var(--text);
+	outline-offset: -1px;
+	outline: 1px solid var(--color-focus-ring);
+}
+
+.editor__rename-error {
+	font-size: var(--text-size-sm);
+	color: var(--danger);
+}
+
+.editor__rename-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--space-1);
+}

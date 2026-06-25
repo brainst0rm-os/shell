@@ -1,0 +1,159 @@
+{
+  "id": "io.brainstorm.calendar",
+  "name": "Calendar",
+  "version": "0.1.0",
+  "sdk": "1",
+  "description": "Cross-app temporal browser. Surfaces every entity in the vault with a date property — Events, Tasks, Notes, Person birthdays — on Month / Week / Day / Agenda views. Recurrence is shared with Tasks via @brainstorm/sdk-types.",
+  "icon": "icon.svg",
+  "entry": "dist/index.html",
+  "capabilities": [
+    "storage.kv",
+    "caldav.manage",
+    "entities.read:brainstorm/Event/v1",
+    "entities.write:brainstorm/Event/v1",
+    "entities.read:brainstorm/CalDavAccount/v1",
+    "entities.write:brainstorm/CalDavAccount/v1",
+    "entities.read:brainstorm/CalDavCalendar/v1",
+    "entities.write:brainstorm/CalDavCalendar/v1",
+    "entities.read:brainstorm/CalendarView/v1",
+    "entities.write:brainstorm/CalendarView/v1",
+    "entities.read:*",
+    "entities.write:brainstorm/Task/v1",
+    "intents.dispatch:open",
+    "intents.dispatch:compose",
+    "intents.dispatch:quick-look",
+    "blocks.provide:io.brainstorm.calendar/inline-event",
+    "properties.read",
+    "properties.write",
+    "notifications.post",
+    "files.read",
+    "files.write"
+  ],
+  "registrations": {
+    "entityTypes": [
+      {
+        "id": "brainstorm/Event/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/calendar/event/v1.json",
+        "schema": {
+          "type": "object",
+          "required": ["id", "title", "start", "allDay", "createdAt", "updatedAt"],
+          "properties": {
+            "id": { "type": "string" },
+            "title": { "type": "string" },
+            "description": { "type": "string" },
+            "icon": { "type": ["object", "null"] },
+            "start": { "type": "number" },
+            "end": { "type": ["number", "null"] },
+            "allDay": { "type": "boolean" },
+            "location": { "type": ["string", "null"] },
+            "recurrence": { "type": ["object", "null"] },
+            "statusKey": { "type": ["string", "null"] },
+            "colorHint": { "type": ["string", "null"] },
+            "reminders": { "type": "array", "items": { "type": "number" } },
+            "attendees": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "email": { "type": ["string", "null"] },
+                  "rsvp": { "type": "string" }
+                }
+              }
+            },
+            "timeZone": { "type": ["string", "null"] },
+            "createdAt": { "type": "number" },
+            "updatedAt": { "type": "number" }
+          }
+        }
+      },
+      {
+        "id": "brainstorm/CalDavAccount/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/calendar/caldav-account/v1.json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "serverUrl",
+            "principalUrl",
+            "homeUrl",
+            "username",
+            "egressOrigins",
+            "enabled"
+          ],
+          "properties": {
+            "serverUrl": { "type": "string" },
+            "principalUrl": { "type": "string" },
+            "homeUrl": { "type": "string" },
+            "username": { "type": "string" },
+            "displayName": { "type": "string" },
+            "egressOrigins": { "type": "array", "items": { "type": "string" } },
+            "enabled": { "type": "boolean" }
+          }
+        }
+      },
+      {
+        "id": "brainstorm/CalDavCalendar/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/calendar/caldav-calendar/v1.json",
+        "schema": {
+          "type": "object",
+          "required": ["accountRef", "url", "displayName", "enabled"],
+          "properties": {
+            "accountRef": { "type": "string" },
+            "url": { "type": "string" },
+            "displayName": { "type": "string" },
+            "color": { "type": "string" },
+            "enabled": { "type": "boolean" },
+            "syncToken": { "type": "string" },
+            "knownHrefs": { "type": "object" },
+            "lastSyncAt": { "type": "string" }
+          }
+        }
+      },
+      {
+        "id": "brainstorm/CalendarView/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/calendar/calendar-view/v1.json",
+        "schema": {
+          "type": "object",
+          "required": ["id", "name", "kind", "createdAt", "updatedAt"],
+          "properties": {
+            "id": { "type": "string" },
+            "name": { "type": "string" },
+            "kind": {
+              "type": "string",
+              "enum": ["year", "month", "week", "day", "agenda"]
+            },
+            "weekStartsOn": { "type": "number" },
+            "showWeekends": { "type": "boolean" },
+            "visibleEntityTypes": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "createdAt": { "type": "number" },
+            "updatedAt": { "type": "number" }
+          }
+        }
+      }
+    ],
+    "openers": [
+      { "kind": "primary", "entityType": "brainstorm/Event/v1" },
+      { "kind": "primary", "entityType": "brainstorm/CalendarView/v1" }
+    ],
+    "blocks": [
+      {
+        "id": "io.brainstorm.calendar/inline-event",
+        "name": "Inline event",
+        "entityTypes": ["brainstorm/Event/v1"]
+      }
+    ],
+    "intents": [
+      { "verb": "open", "entityType": "brainstorm/Event/v1", "priority": "primary" },
+      { "verb": "open", "entityType": "brainstorm/CalendarView/v1", "priority": "primary" },
+      { "verb": "compose", "entityType": "brainstorm/Event/v1", "priority": "primary" },
+      { "verb": "quick-look", "entityType": "brainstorm/Event/v1", "priority": "primary" }
+    ],
+    "widgets": [
+      { "id": "today-agenda", "name": "Today's Agenda", "size": "medium" },
+      { "id": "week-ahead", "name": "Week Ahead", "size": "large" }
+    ]
+  }
+}

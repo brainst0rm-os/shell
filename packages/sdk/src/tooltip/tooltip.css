@@ -1,0 +1,79 @@
+/* Tooltip chip — the app-side twin of the shell renderer's `.tooltip`
+ * (packages/shell/src/renderer/ui/tooltip.css). A small, dark, deliberately
+ * theme-independent chip with a fade-and-slide entrance, rendered by the
+ * delegated `mountTooltipHost` controller into a fresh element each open so
+ * the keyframe re-triggers every time. Positioned via inline `left/top` set
+ * at the trigger's horizontal centre; `translate(-50%, …)` lines the chip's
+ * centre up and the placement variant pulls it above or below the trigger.
+ *
+ * The chip is dark on every theme on purpose (it floats over arbitrary app
+ * chrome and glass), so the surface is a fixed rgba rather than a token. */
+
+.bs-tooltip {
+	position: fixed;
+	z-index: var(--z-toast);
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	max-width: min(420px, 92vw);
+	padding: var(--space-1);
+	border-radius: var(--radius-sm);
+	background: rgba(20, 20, 20, 0.94);
+	color: #ffffff;
+	font-size: var(--text-size-xs);
+	line-height: 1.3;
+	/* Tooltips are short action labels — keep them on one line so a label like
+	 * "Workflow actions" never breaks mid-phrase. The generous max-width above is
+	 * the safety cap for the rare long label. */
+	white-space: nowrap;
+	pointer-events: none;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+	will-change: transform, opacity;
+}
+
+/* The chord segment — dimmed and tabular so a shortcut reads as secondary
+ * metadata next to the action name. */
+.bs-tooltip__chord {
+	flex-shrink: 0;
+	color: rgba(255, 255, 255, 0.6);
+	font-variant-numeric: tabular-nums;
+}
+
+.bs-tooltip--top {
+	transform: translate(-50%, -100%);
+	animation: bs-tooltip-in-top 160ms var(--motion-easing-decelerated) both;
+}
+
+.bs-tooltip--bottom {
+	transform: translate(-50%, 0);
+	animation: bs-tooltip-in-bottom 160ms var(--motion-easing-decelerated) both;
+}
+
+@keyframes bs-tooltip-in-top {
+	from {
+		opacity: 0;
+		transform: translate(-50%, calc(-100% + 6px)) scale(0.96);
+	}
+	to {
+		opacity: 1;
+		transform: translate(-50%, -100%) scale(1);
+	}
+}
+
+@keyframes bs-tooltip-in-bottom {
+	from {
+		opacity: 0;
+		transform: translate(-50%, -6px) scale(0.96);
+	}
+	to {
+		opacity: 1;
+		transform: translate(-50%, 0) scale(1);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.bs-tooltip--top,
+	.bs-tooltip--bottom {
+		animation: none;
+	}
+}

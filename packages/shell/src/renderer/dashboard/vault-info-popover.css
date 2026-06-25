@@ -1,0 +1,42 @@
+.vault-info {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	column-gap: var(--space-4);
+	row-gap: var(--space-3);
+	margin: 0;
+}
+
+.vault-info dt {
+	font-size: var(--text-size-sm);
+	color: var(--color-text-tertiary);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+.vault-info dd {
+	margin: 0;
+	font-size: var(--text-size-md);
+	color: var(--color-text-primary);
+	word-break: break-all;
+	/* Opt back in from the dashboard-wide `user-select: none` so the
+	 * path / version can be selected + copied (same pattern as toasts /
+	 * error-boundary). */
+	user-select: text;
+	-webkit-user-select: text;
+}
+
+.vault-info__mono {
+	font-family: var(--text-family-code);
+	font-size: var(--text-size-sm);
+	cursor: text;
+}
+
+.vault-info__warn {
+	margin: var(--space-3) 0 0;
+	padding: var(--space-2) var(--space-2);
+	border: var(--border-width) solid var(--color-state-warning);
+	border-radius: var(--radius-sm);
+	background: var(--color-state-warning-subtle, rgba(247, 191, 95, 0.12));
+	color: var(--color-state-warning);
+	font-size: var(--text-size-sm);
+}

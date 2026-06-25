@@ -1,0 +1,15 @@
+import "@brainstorm/sdk/app-theme.css";
+import { AppErrorBoundary } from "@brainstorm/sdk/error-boundary";
+import { createRoot } from "react-dom/client";
+import { BrowserApp } from "./app";
+import "./styles.css";
+
+const root = document.getElementById("root");
+if (!root) throw new Error("Web Browser: #root not found in index.html");
+// No <StrictMode> — the dev double-mount races shell-driven view attachment
+// (project convention; the Browser drives an external WebContentsView).
+createRoot(root).render(
+	<AppErrorBoundary appName="browser">
+		<BrowserApp />
+	</AppErrorBoundary>,
+);

@@ -1,0 +1,54 @@
+name: Publish catalog
+
+# 14.34 — first-party catalog publish. Builds the apps, packs + signs each into a
+# `.brainstorm` bundle, and emits the signed catalog index (docs/apps/59 §The
+# publish pipeline + tools/publish-first-party-catalog.ts). Manual or on a
+# `catalog-v*` tag. The output is uploaded as an artifact; wiring it to the
+# catalog-edge bundle store / CDN is the deploy step (cloud Phase 3.4c).
+on:
+  workflow_dispatch:
+    inputs:
+      asset-base:
+        description: "Public origin the bundles will be served from (sets bundleUrl/manifestUrl/iconUrl)."
+        required: false
+        default: "https://brainstorm.app/catalog"
+  push:
+    tags: ["catalog-v*"]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    name: Pack + sign first-party catalog
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup-bun-rust
+        with:
+          rust-target: x86_64-unknown-linux-gnu
+
+      - name: Build native + apps
+        run: bun run build:native && bun run build:apps
+
+      - name: Pack + sign catalog
+        env:
+          CATALOG_OUT: out/catalog
+          # The Brainstorm publisher Ed25519 seed (hex64). Without it the
+          # publisher falls back to the dev seed — fine for a dry run, never for
+          # a real release. Set the repo secret before tagging a release.
+          CATALOG_PUBLISHER_SEED: ${{ secrets.CATALOG_PUBLISHER_SEED }}
+          # Public origin the bundles will be served from.
+          CATALOG_ASSET_BASE: ${{ github.event.inputs.asset-base || 'https://brainstorm.app/catalog' }}
+        run: bun tools/publish-first-party-catalog.ts
+
+      - name: Upload catalog artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: catalog-${{ github.ref_name }}
+          path: out/catalog/*
+          retention-days: 14

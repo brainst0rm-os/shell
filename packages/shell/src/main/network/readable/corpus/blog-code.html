@@ -1,0 +1,5 @@
+<!doctype html><html lang="en"><head><title>Debouncing in TypeScript</title></head>
+<body><nav>Blog · About</nav><main><article><h1>Debouncing in TypeScript</h1>
+<p>A debounce delays a function until activity settles. Here is a small, dependency-free implementation you can drop into any project today.</p><p>This paragraph carries enough genuine prose for Mozilla Readability to score the article body above the surrounding navigation and sidebar chrome, which is the whole point of the readable-extraction pass.</p>
+<pre class="language-ts"><code class="language-ts">const debounce = (fn, ms) =&gt; { let t; return (...a) =&gt; { clearTimeout(t); t = setTimeout(() =&gt; fn(...a), ms); }; };</code></pre>
+<p>The closure keeps the timer handle private, and each call resets it.</p><p>This paragraph carries enough genuine prose for Mozilla Readability to score the article body above the surrounding navigation and sidebar chrome, which is the whole point of the readable-extraction pass.</p></article></main></body></html>

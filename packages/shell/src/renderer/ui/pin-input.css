@@ -1,0 +1,51 @@
+/* `<PinInput>` — segmented PIN boxes. Tokens only. */
+
+.pin-input {
+	display: flex;
+	/* Sized so six boxes fit the 320px lock-screen card (272px usable after
+	 * its --space-5 padding): 6×40 + 5×4 = 260px. */
+	gap: var(--space-1);
+	justify-content: center;
+}
+
+.pin-input__box {
+	width: 40px;
+	height: 48px;
+	padding: 0;
+	box-sizing: border-box;
+	font-size: var(--text-size-2xl);
+	font-weight: var(--text-weight-semibold);
+	line-height: 1;
+	text-align: center;
+	color: var(--color-text-primary);
+	background: var(--color-background-subtle, var(--color-background-secondary));
+	border: var(--border-width) solid var(--color-border-default);
+	border-radius: var(--radius-md);
+	caret-color: transparent;
+	transition:
+		border-color 120ms ease,
+		box-shadow 120ms ease,
+		background 120ms ease;
+	-webkit-appearance: none;
+	appearance: none;
+}
+
+/* A filled box gets a subtle accent tint so progress is legible at a glance. */
+.pin-input__box:not(:placeholder-shown) {
+	border-color: var(--color-border-strong, var(--color-border-default));
+	background: var(--color-background-primary);
+}
+
+/* The active box: accent ring sitting on the border position (no sandwich),
+ * per [[feedback_focus_outline_replaces_border]]. */
+.pin-input__box:focus,
+.pin-input__box:focus-visible {
+	outline: none;
+	border-color: var(--color-border-focus, var(--color-accent));
+	box-shadow: 0 0 0 1px var(--color-border-focus, var(--color-accent));
+}
+
+.pin-input__box:disabled {
+	opacity: 0.55;
+	cursor: not-allowed;
+}

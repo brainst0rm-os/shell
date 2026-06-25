@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true
+  },
+  "include": [
+    "**/*.ts",
+    "../perf/lib/launch-shell.ts",
+    "../perf/lib/measure-paint.ts",
+    "../perf/lib/stats.ts",
+    "../perf/lib/results.ts",
+    "../perf/lib/budgets.ts"
+  ]
+}

@@ -1,0 +1,187 @@
+{
+  "name": "@brainstorm/shell",
+  "version": "0.0.1",
+  "private": true,
+  "description": "The Brainstorm shell (Electron main + preload + dashboard renderer).",
+  "license": "UNLICENSED",
+  "type": "module",
+  "main": "out/main/index.js",
+  "scripts": {
+    "build:help-corpus": "node scripts/build-help-corpus.mjs",
+    "predev": "node scripts/build-help-corpus.mjs",
+    "prebuild": "node scripts/build-help-corpus.mjs",
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "start": "electron-vite preview",
+    "package": "electron-builder --publish never",
+    "package:mac": "electron-builder --mac --publish never",
+    "package:win": "electron-builder --win --publish never",
+    "package:linux": "electron-builder --linux --publish never"
+  },
+  "build": {
+    "appId": "io.brainstorm.shell",
+    "productName": "Brainstorm",
+    "directories": {
+      "output": "dist",
+      "buildResources": "art"
+    },
+    "files": [
+      "out/**",
+      "package.json",
+      "!**/*.map",
+      "!**/node_modules/@brainstorm/native/target/**",
+      "!**/node_modules/@brainstorm/native/{src,Cargo.toml,Cargo.lock,build.rs}",
+      "!node_modules/@blockprotocol/**",
+      "!node_modules/@phosphor-icons/**",
+      "!node_modules/pdfjs-dist/**",
+      "!node_modules/typescript/**",
+      "!node_modules/@shikijs/**",
+      "!node_modules/shiki/**",
+      "!node_modules/prettier/**",
+      "!node_modules/framer-motion/**",
+      "!node_modules/motion-dom/**",
+      "!node_modules/react-dom/**",
+      "!node_modules/@lexical/**"
+    ],
+    "extraResources": [
+      {
+        "from": "../../apps",
+        "to": "apps",
+        "filter": [
+          "*/dist/**",
+          "!*/dist/**/*.map",
+          "*/manifest.json",
+          "*/package.json",
+          "*/icon.svg"
+        ]
+      },
+      {
+        "from": "art/wallpaper",
+        "to": "art/wallpaper"
+      },
+      {
+        "from": "art",
+        "to": "art",
+        "filter": [
+          "icon.png",
+          "icon@2x.png",
+          "tray.png",
+          "tray@2x.png",
+          "trayTemplate.png",
+          "trayTemplate@2x.png"
+        ]
+      }
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "**/*.node",
+      "node_modules/better-sqlite3-multiple-ciphers/**",
+      "node_modules/@napi-rs/**"
+    ],
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        },
+        {
+          "target": "zip",
+          "arch": ["x64", "arm64"]
+        }
+      ],
+      "hardenedRuntime": false,
+      "entitlements": "build/entitlements.adhoc.plist",
+      "entitlementsInherit": "build/entitlements.adhoc.plist",
+      "gatekeeperAssess": false,
+      "extraResources": [
+        {
+          "from": "../native/brainstorm-native.darwin-${arch}.node",
+          "to": "native/brainstorm-native.darwin-${arch}.node"
+        }
+      ]
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64", "arm64"]
+        }
+      ],
+      "extraResources": [
+        {
+          "from": "../native/brainstorm-native.win32-${arch}-msvc.node",
+          "to": "native/brainstorm-native.win32-${arch}-msvc.node"
+        }
+      ]
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": ["x64", "arm64"]
+        },
+        {
+          "target": "deb",
+          "arch": ["x64", "arm64"]
+        }
+      ],
+      "category": "Office",
+      "extraResources": [
+        {
+          "from": "../native/brainstorm-native.linux-${arch}-gnu.node",
+          "to": "native/brainstorm-native.linux-${arch}-gnu.node"
+        }
+      ]
+    }
+  },
+  "dependencies": {
+    "@blockprotocol/core": "0.1.4",
+    "@blockprotocol/graph": "0.4.2",
+    "@blockprotocol/hook": "0.1.8",
+    "@blockprotocol/type-system": "0.2.1",
+    "@brainstorm/editor": "workspace:*",
+    "@brainstorm/native": "workspace:*",
+    "@brainstorm/react-yjs": "workspace:*",
+    "@brainstorm/sdk": "workspace:*",
+    "@brainstorm/sdk-types": "workspace:*",
+    "@brainstorm/tokens": "workspace:*",
+    "@formatjs/intl": "^4.1.12",
+    "@mozilla/readability": "^0.6.0",
+    "@napi-rs/keyring": "^1.3.0",
+    "@phosphor-icons/react": "^2.1.10",
+    "@react-fancy-menus/core": "0.2.1",
+    "@tanstack/react-virtual": "^3.13.24",
+    "@types/better-sqlite3": "^7.6.13",
+    "better-sqlite3": "^12.9.0",
+    "better-sqlite3-multiple-ciphers": "12.9.0",
+    "framer-motion": "^12.38.0",
+    "imapflow": "^1.4.0",
+    "linkedom": "^0.18.12",
+    "mailparser": "^3.9.9",
+    "nodemailer": "^8.0.11",
+    "qrcode": "^1.5.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "sanitize-html": "^2.17.4",
+    "sqlite-vec": "^0.1.9",
+    "ulid": "^3.0.2",
+    "y-protocols": "^1.0.6",
+    "yjs": "^13.6.30"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^4.0.4",
+    "@types/imapflow": "^1.0.189",
+    "@types/mailparser": "^3.4.6",
+    "@types/nodemailer": "^8.0.1",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/sanitize-html": "^2.16.1",
+    "@vitejs/plugin-react": "^4.3.0",
+    "electron": "41",
+    "electron-builder": "^26.0.0",
+    "electron-vite": "^2.3.0",
+    "vite": "^5.4.0"
+  }
+}

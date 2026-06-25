@@ -1,0 +1,101 @@
+{
+  "id": "io.brainstorm.tasks",
+  "name": "Tasks",
+  "version": "0.1.0",
+  "sdk": "1",
+  "description": "Focused Todoist/Things-style task UX over typed Task + Project entities. Inbox, Today, Upcoming, and per-project surfaces; status vocabulary; recurrence; priority.",
+  "icon": "icon.svg",
+  "entry": "dist/index.html",
+  "capabilities": [
+    "storage.kv",
+    "editor.spellcheck.read",
+    "editor.spellcheck.write",
+    "entities.read:brainstorm/Task/v1",
+    "entities.write:brainstorm/Task/v1",
+    "entities.read:brainstorm/Project/v1",
+    "entities.write:brainstorm/Project/v1",
+    "entities.write:brainstorm/Comment/v1",
+    "entities.read:*",
+    "intents.dispatch:open",
+    "intents.dispatch:compose",
+    "intents.dispatch:quick-look",
+    "files.write",
+    "blocks.provide:io.brainstorm.tasks/inline-task",
+    "properties.read",
+    "properties.write",
+    "notifications.post"
+  ],
+  "registrations": {
+    "entityTypes": [
+      {
+        "id": "brainstorm/Task/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/tasks/task/v1.json",
+        "schema": {
+          "type": "object",
+          "required": ["id", "name", "createdAt", "updatedAt"],
+          "properties": {
+            "id": { "type": "string" },
+            "name": { "type": "string" },
+            "notes": { "type": "string" },
+            "icon": { "type": ["object", "null"] },
+            "completedAt": { "type": ["number", "null"] },
+            "priority": {
+              "type": "string",
+              "enum": ["none", "low", "medium", "high", "critical"]
+            },
+            "scheduledAt": { "type": ["number", "null"] },
+            "dueAt": { "type": ["number", "null"] },
+            "projectId": { "type": ["string", "null"] },
+            "assigneeId": { "type": ["string", "null"] },
+            "recurrence": { "type": ["object", "null"] },
+            "statusKey": { "type": ["string", "null"] },
+            "values": { "type": "object" },
+            "createdAt": { "type": "number" },
+            "updatedAt": { "type": "number" }
+          }
+        }
+      },
+      {
+        "id": "brainstorm/Project/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/tasks/project/v1.json",
+        "schema": {
+          "type": "object",
+          "required": ["id", "name", "createdAt", "updatedAt"],
+          "properties": {
+            "id": { "type": "string" },
+            "name": { "type": "string" },
+            "description": { "type": "string" },
+            "icon": { "type": ["object", "null"] },
+            "statusKey": { "type": ["string", "null"] },
+            "milestoneAt": { "type": ["number", "null"] },
+            "archivedAt": { "type": ["number", "null"] },
+            "colorHint": { "type": ["string", "null"] },
+            "createdAt": { "type": "number" },
+            "updatedAt": { "type": "number" }
+          }
+        }
+      }
+    ],
+    "openers": [
+      { "kind": "primary", "entityType": "brainstorm/Task/v1" },
+      { "kind": "primary", "entityType": "brainstorm/Project/v1" }
+    ],
+    "blocks": [
+      {
+        "id": "io.brainstorm.tasks/inline-task",
+        "name": "Inline task",
+        "entityTypes": ["brainstorm/Task/v1"]
+      }
+    ],
+    "intents": [
+      { "verb": "open", "entityType": "brainstorm/Task/v1", "priority": "primary" },
+      { "verb": "open", "entityType": "brainstorm/Project/v1", "priority": "primary" },
+      { "verb": "compose", "entityType": "brainstorm/Task/v1", "priority": "primary" },
+      { "verb": "quick-look", "entityType": "brainstorm/Task/v1", "priority": "primary" }
+    ],
+    "widgets": [
+      { "id": "open-tasks", "name": "Open Tasks", "size": "medium" },
+      { "id": "task-stats", "name": "Task Stats", "size": "small" }
+    ]
+  }
+}

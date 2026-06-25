@@ -1,0 +1,213 @@
+/* Transclusion card + inline-reference + typeahead chrome for the shared editor.
+ *
+ * These classes are emitted by `transclusion-node.tsx`,
+ * `inline-transclusion-node.tsx`, and `transclusion-typeahead-plugin.tsx` —
+ * all of which live in this package — so their styling must ship from the
+ * package, not from any single host app. It used to live only in
+ * `apps/notes/src/styles.css`, which meant the Reference/transclusion node
+ * rendered UNSTYLED (a bare underlined link) in Journal and Tasks once the
+ * editor unification + F-070 rung (c) gave them the affordance (dogfood F-138).
+ *
+ * The `notes__` class prefix is retained to avoid a cross-file rename; it is
+ * package-owned now and is tech debt to migrate to a neutral prefix
+ * (`bs-transclusion-*`) when the node renderers are next touched.
+ */
+
+/* B6.4a — TransclusionNode card. Same chrome family as the BlockEmbed
+   card (a framed pill with icon + title + type label) but a smaller
+   icon slot (36px vs 56px) so a transclusion reads as a "live reference
+   that opens elsewhere" rather than a generic preview. The v1 subtitle
+   carries "Transcluded {type}"; B6.4b swaps the subtitle for a real
+   read-only body preview. */
+.notes__transclusion-host {
+	margin: var(--space-2) 0;
+}
+
+.notes__transclusion-card {
+	display: grid;
+	grid-template-columns: 36px 1fr;
+	align-items: center;
+	gap: 10px;
+	padding: var(--space-2);
+	border: var(--border-width) solid var(--border-subtle);
+	border-radius: var(--radius-md);
+	background: var(--bg-elevated, var(--bg));
+	color: inherit;
+	text-decoration: none;
+	cursor: pointer;
+	min-width: 0;
+	transition: background var(--motion-duration-fast) ease, border-color var(--motion-duration-fast)
+		ease;
+}
+
+.notes__transclusion-card:hover,
+.notes__transclusion-card:focus-visible {
+	background: var(--hover);
+	border-color: var(--border-strong);
+}
+
+.notes__transclusion-card-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	border-radius: var(--radius-sm);
+	overflow: hidden;
+	background: var(--bg-elev, var(--hover));
+	color: var(--text-dim);
+}
+
+.notes__transclusion-card-icon-glyph {
+	width: 100%;
+	height: 100%;
+}
+
+.notes__transclusion-card-icon-fallback {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+	font-size: var(--text-size-md);
+	color: var(--text-dim);
+}
+
+.notes__transclusion-card-body {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+	min-width: 0;
+}
+
+.notes__transclusion-card-title {
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium);
+	color: var(--text);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.notes__transclusion-card-type {
+	font-size: var(--text-size-xs);
+	color: var(--text-faint);
+}
+
+/* B6.4b — live body preview. The card becomes a compact "source" header and
+   the resolved body sits in an indented, left-accented well: the visual cue
+   that this content is transcluded from another object. */
+.notes__transclusion {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.notes__transclusion[data-decision="render"] .notes__transclusion-card {
+	border-style: dashed;
+}
+
+.notes__transclusion-body {
+	border-left: var(--border-width-thick) solid var(--border-strong);
+	padding-left: var(--space-2);
+	margin-left: var(--space-2);
+}
+
+.notes__transclusion-body-content {
+	outline: none;
+}
+
+/* Cycle / depth collapse — the body would recurse, so we show a muted hint
+   pointing at the source card above instead. */
+.notes__transclusion-elided {
+	padding: var(--space-1);
+	font-size: var(--text-size-xs);
+	font-style: italic;
+	color: var(--text-faint);
+}
+
+/* `!@`-transclusion typeahead menu — same chrome family as the mention
+   menu (`.notes__mention-menu`); kept separate so a future redesign can
+   diverge without touching mention behavior. */
+.notes__transclusion-menu {
+	position: fixed;
+	z-index: 200;
+	max-height: 360px;
+	overflow-y: auto;
+}
+
+.notes__transclusion-empty {
+	padding: var(--space-3) 10px;
+	font-size: var(--text-size-sm);
+	color: var(--text-faint);
+}
+
+.notes__transclusion-row {
+	display: grid;
+	grid-template-columns: 1fr auto;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-2) var(--space-2);
+	border: 0;
+	background: transparent;
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+	text-align: start;
+	font: inherit;
+	color: var(--text);
+	min-width: 0;
+}
+
+.notes__transclusion-row--active {
+	background: var(--hover);
+}
+
+.notes__transclusion-row-name {
+	font-size: var(--text-size-md);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.notes__transclusion-row-type {
+	font-size: var(--text-size-xs);
+	color: var(--text-faint);
+}
+
+/* Inline `!@`-transclusion reference (a compact chip that opens the source). */
+.notes__inline-transclusion {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	max-width: 24em;
+	padding: 0 var(--space-2);
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-sm);
+	background: var(--bg-elev, color-mix(in srgb, var(--accent) 5%, transparent));
+	color: inherit;
+	text-decoration: none;
+	cursor: pointer;
+	user-select: none;
+	vertical-align: baseline;
+	font-size: 0.95em;
+}
+
+.notes__inline-transclusion:hover {
+	background: color-mix(in srgb, var(--accent) 14%, transparent);
+	border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.notes__inline-transclusion-arrow {
+	color: var(--accent);
+	font-weight: var(--text-weight-semibold);
+}
+
+.notes__inline-transclusion-glyph {
+	flex: 0 0 auto;
+}
+
+.notes__inline-transclusion-label {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}

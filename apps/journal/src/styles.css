@@ -1,0 +1,943 @@
+/* Brainstorm — Journal first-party app (9.16.1.5 preview drop).
+ *
+ * Same shell-theme aliasing pattern as apps/tasks + apps/calendar.
+ */
+/* Theming is the shell's job, not the app's. The shell preload injects
+ * the active theme tokens AND the alias layer (--accent / --bg / --text /
+ * …) + base type + component styles via a single stylesheet —
+ * packages/shell/src/preload/app-theme.ts, the single source of truth.
+ * This app declares ZERO theme values. Don't reintroduce a :root alias
+ * block or root font/colour here. */
+:root {
+	color-scheme: light dark;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	overflow: hidden;
+}
+
+button {
+	font: inherit;
+	color: inherit;
+}
+
+/* Header chrome (flex skeleton, left/right groups, drag region, skin) is the
+ * shared `.app-header` rule in `@brainstorm/sdk/app-theme.css`. */
+
+/* Two-column layout (mirrors Notes): collapsible left calendar sidebar +
+ * the entry editor. The right properties panel is NOT a grid track — it is
+ * a glass overlay that floats ABOVE the editor (like Notes/Database), so
+ * opening it never reflows the content. Only `data-nav-open` drives the
+ * column tracks; `data-props-open` drives the panel's `translateX` alone. */
+.journal {
+	/* `position: relative` is the positioning context for the shared
+	 * `.bs-find-bar` (absolute, top-right of its host). Without it the bar
+	 * lands at the viewport corner and covers the app header. */
+	position: relative;
+	height: calc(100vh - var(--app-header-height, 44px));
+	display: grid;
+	grid-template-columns: var(--journal-nav-width, 260px) minmax(0, 1fr);
+	transition: grid-template-columns var(--motion-duration-normal, 180ms) ease;
+	overflow: hidden;
+}
+
+.journal[data-nav-open="false"] {
+	grid-template-columns: 0 minmax(0, 1fr);
+}
+
+.journal__main {
+	grid-column: 2 / 3;
+	grid-row: 1 / -1;
+	position: relative;
+	min-width: 0;
+	min-height: 0;
+	overflow-y: auto;
+	background: var(--bg);
+}
+
+/* ── Left calendar sidebar ───────────────────────────────────────────── */
+/* Opaque absolute overlay anchored to the left edge so its width is
+ * stable through `grid-template-columns` track collapse. Slides off on
+ * GPU transform when closed; the editor column grows smoothly. */
+.journal__nav {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	inset-inline-start: 0;
+	width: var(--journal-nav-width, 260px);
+	display: flex;
+	flex-direction: column;
+	background: var(--bg);
+	border-inline-end: var(--border-width) solid var(--color-border-subtle, var(--border));
+	overflow: hidden;
+	z-index: 90;
+	transition: transform var(--motion-duration-normal, 180ms) ease;
+	will-change: transform;
+}
+
+.journal[data-nav-open="false"] .journal__nav {
+	transform: translateX(-100%);
+	border-color: transparent;
+}
+
+.journal__nav-inner {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow-y: auto;
+	padding: var(--space-2);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+}
+
+/* PHYSICAL-AXIS INTENTIONAL: resize handle straddles the nav's right edge geometrically */
+.journal__nav-resize {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: var(--journal-nav-width, 260px);
+	width: 6px;
+	margin-left: -3px;
+	cursor: col-resize;
+	z-index: 95;
+	background: transparent;
+	transition: background 120ms ease;
+	touch-action: none;
+}
+
+.journal[data-nav-open="false"] .journal__nav-resize {
+	display: none;
+}
+
+/* ── Right properties panel ──────────────────────────────────────────── */
+.journal__props {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	inset-inline-end: 0;
+	width: var(--journal-props-width, 320px);
+	border-inline-start: var(--border-width) solid var(--color-glass-border, var(--border));
+	box-shadow: var(--shadow-xl, 0 12px 32px -8px rgba(0, 0, 0, 0.4));
+	overflow: hidden;
+	z-index: 100;
+	transition: transform var(--motion-duration-normal, 180ms) ease;
+	will-change: transform;
+	display: flex;
+	flex-direction: column;
+}
+
+/* The active panel (Properties or Comments) fills below the tab strip; the
+ * strip itself (`.bs-panel-tabs`) is the shared `@brainstorm/editor`
+ * CommentsRightPanel chrome (mirrors Notes' `.notes__props` rule). */
+.journal__props > :not(.bs-panel-tabs) {
+	flex: 1 1 0;
+	min-height: 0;
+}
+
+.journal[data-props-open="false"] .journal__props {
+	transform: translateX(100%);
+	box-shadow: none;
+	border-color: transparent;
+}
+
+/* PHYSICAL-AXIS INTENTIONAL: resize handle straddles the props panel's left edge geometrically */
+.journal__props-resize {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	right: var(--journal-props-width, 320px);
+	width: 6px;
+	margin-right: -3px;
+	cursor: col-resize;
+	z-index: 101;
+	background: transparent;
+	transition: background 120ms ease;
+	touch-action: none;
+}
+
+.journal[data-props-open="false"] .journal__props-resize {
+	display: none;
+}
+
+.journal__nav-resize:hover,
+.journal__nav-resize:focus-visible,
+.journal__props-resize:hover,
+.journal__props-resize:focus-visible,
+body.is-resizing .journal__nav-resize,
+body.is-resizing .journal__props-resize {
+	background: var(--color-accent-subtle);
+	outline: none;
+}
+
+/* ── Main panel ──────────────────────────────────────────────────────── */
+
+.journal__day {
+	padding: var(--space-5);
+	max-width: 920px;
+	width: 100%;
+	margin: 0 auto;
+}
+
+/* App-header object identity (Notes/Tasks-consistent): the focused day's
+ * date title sits beside its icon picker in `.app-header__left`. The
+ * title host carries the right-click object-menu trigger. */
+.journal__header-title-host {
+	display: inline-flex;
+	align-items: center;
+	min-width: 0;
+}
+
+.journal__entry-body {
+	color: var(--text-dim);
+	font-size: var(--text-size-md);
+	line-height: 1.6;
+}
+
+.journal__entry-text {
+	margin: 0 0 var(--space-3);
+	color: var(--text);
+}
+
+/* Day-body editor island: hosts the live <BrainstormEditor>. The host
+ * div carries no chrome of its own — the editor's contenteditable
+ * paints inline text directly into the entry-body column. */
+.journal__entry-editor-host {
+	margin: 0 0 var(--space-3);
+}
+
+/* Lexical contenteditable inside the journal entry. Read-only-looking
+ * by default (no border, no background); the cursor + selection are
+ * how the user knows it's editable. Matches the Notes default theme. */
+.journal__entry-editor {
+	outline: none;
+	color: var(--text);
+	font-size: var(--text-size-md);
+	line-height: 1.6;
+	min-height: 1.6em;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+.journal__entry-editor p {
+	margin: 0 0 var(--space-2);
+}
+
+.journal__entry-editor p:last-child {
+	margin-bottom: 0;
+}
+
+.journal__entry-editor:focus-visible {
+	outline: none;
+}
+
+/* Seeded journal `.ydoc` files plant a TitleNode at root[0] carrying the
+ * ISO date. The journal day already paints that date in the app header
+ * (`.journal__header-title`), so the duplicate inside the editor is
+ * hidden. The shared `TitleNode` from `@brainstorm/editor` renders as
+ * `<h1 class="notes__title">`; we scope the hide rule to the editor host
+ * so the same class on the Notes side keeps its visible styling. */
+.journal__entry-editor .notes__title {
+	display: none;
+}
+
+.journal__entry-meta {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	color: var(--text-faint);
+	font-size: var(--text-size-sm);
+}
+
+/* Link-an-entry affordance (9.16.10). */
+.journal__link-btn {
+	padding: var(--space-0_5) var(--space-2, var(--space-2));
+	border: var(--border-width) solid var(--color-border-subtle, var(--border));
+	border-radius: var(--radius-full);
+	background: transparent;
+	color: var(--text-dim);
+	cursor: pointer;
+}
+
+.journal__link-btn:hover {
+	background: var(--color-accent-subtle);
+	color: var(--text);
+	border-color: var(--accent);
+}
+
+.journal__link-btn:focus-visible {
+	outline: 2px solid var(--color-focus-ring, var(--accent));
+	outline-offset: 1px;
+}
+
+.journal__empty {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--space-3);
+	color: var(--text-faint);
+	padding: var(--space-5) 0;
+}
+
+.journal__empty p {
+	margin: 0;
+}
+
+/* Empty-today placeholder editable — replaces the old "Start today's
+ * journal" CTA per the implicit-create UX. Looks identical to the live
+ * `.journal__entry-editor` (same type scale, no chrome) so the first
+ * keystroke flows into the editor without any visible jump when
+ * `entities.create` resolves. The placeholder text is painted via a
+ * pseudo-element so the contenteditable's actual text node stays empty
+ * until the user types. */
+.journal__write-placeholder {
+	outline: none;
+	color: var(--text);
+	font-size: var(--text-size-md);
+	line-height: 1.6;
+	min-height: 1.6em;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+	margin: 0 0 var(--space-3);
+}
+
+.journal__write-placeholder:empty::before {
+	content: attr(data-placeholder);
+	color: var(--text-faint);
+	pointer-events: none;
+}
+
+/* ── Entry templates (9.16.5) ────────────────────────────────────────── */
+.journal__templates {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2, var(--space-2));
+	margin: 0 0 var(--space-4, 14px);
+}
+
+.journal__templates-label {
+	color: var(--text-faint);
+}
+
+.journal__templates-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2, var(--space-2));
+}
+
+.journal__template-chip {
+	padding: var(--space-1, var(--space-1)) var(--space-2);
+	border: var(--border-width) solid var(--color-border-subtle, var(--border));
+	border-radius: var(--radius-full);
+	background: transparent;
+	color: var(--text-dim);
+	font-size: var(--text-size-sm);
+	cursor: pointer;
+	transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+
+.journal__template-chip:hover {
+	background: var(--color-accent-subtle);
+	color: var(--text);
+	border-color: var(--accent);
+}
+
+.journal__template-chip:focus-visible {
+	outline: 2px solid var(--color-focus-ring, var(--accent));
+	outline-offset: 1px;
+}
+
+/* ── Sidebar mini-calendar ───────────────────────────────────────────── */
+/* The grid + nav are the shared `@brainstorm/sdk/calendar` mini-calendar
+ * (`.bs-cal-mini*`, square day cells styled by the SDK). Journal's only
+ * addition is the per-day entry-presence dot, riding under the day number
+ * inside the rounded cell. */
+
+/* Compact-density grids hide `.bs-cal-month__content` by default (the SDK
+ * collapses the slot to keep mini cells tight). The sidebar mini-calendar
+ * renders its presence dot INTO that slot via React `renderCell`, so re-show
+ * it here (the imperative popovers append straight to the cell, so they were
+ * never affected — this is what made the widget show no dots while the
+ * popover did). The dot is absolutely positioned to the cell regardless. */
+:root .journal__mini .bs-cal-month--compact .bs-cal-month__content {
+	display: block;
+	overflow: visible;
+}
+
+.journal__mini-dot {
+	position: absolute;
+	bottom: 3px;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 4px;
+	height: 4px;
+	border-radius: 50%;
+	background: var(--accent);
+	pointer-events: none;
+}
+
+/* Density heatmap (9.16.7) — the dot grows + saturates with the day's entry
+ * length, so a month reads at a glance as how much was written each day. */
+.journal__mini-dot[data-density="1"] {
+	opacity: 0.45;
+}
+.journal__mini-dot[data-density="2"] {
+	opacity: 0.75;
+	width: 5px;
+	height: 5px;
+}
+.journal__mini-dot[data-density="3"] {
+	opacity: 1;
+	width: 6px;
+	height: 6px;
+}
+
+/* Mood heatmap (9.16.8) — a set mood overrides the accent dot with its hue
+ * (great→good→ok→low→bad runs green→amber→red). Density still drives size. */
+.journal__mini-dot[data-mood] {
+	opacity: 1;
+}
+.journal__mini-dot[data-mood="great"] {
+	background: var(--color-state-success);
+}
+.journal__mini-dot[data-mood="good"] {
+	background: color-mix(in srgb, var(--color-state-success) 70%, var(--color-state-warning));
+}
+.journal__mini-dot[data-mood="ok"] {
+	background: var(--color-state-warning);
+}
+.journal__mini-dot[data-mood="low"] {
+	background: color-mix(in srgb, var(--color-state-warning) 50%, var(--color-state-error));
+}
+.journal__mini-dot[data-mood="bad"] {
+	background: var(--color-state-error);
+}
+
+/* ── Cross-day search overlay (9.16.9) ───────────────────────────────── */
+.journal-search {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	min-width: 420px;
+	max-width: 560px;
+}
+
+.journal-search__input {
+	width: 100%;
+	padding: var(--space-2, var(--space-2)) var(--space-2);
+	border: var(--border-width) solid var(--color-border-subtle, var(--border));
+	border-radius: var(--radius-md);
+	background: var(--bg);
+	color: var(--text);
+	font-size: var(--text-size-md);
+}
+
+.journal-search__input:focus-visible {
+	outline: 2px solid var(--color-focus-ring, var(--accent));
+	outline-offset: -1px;
+}
+
+.journal-search__filter {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--space-2, var(--space-2));
+}
+
+.journal-search__filter-label {
+	flex: 0 0 auto;
+	min-width: 48px;
+	color: var(--text-faint);
+}
+
+.journal-search__chip {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1, var(--space-1));
+	padding: var(--space-0_5) var(--space-2, var(--space-2));
+	border: var(--border-width) solid var(--color-border-subtle, var(--border));
+	border-radius: var(--radius-full);
+	background: transparent;
+	color: var(--text-dim);
+	font-size: var(--text-size-sm);
+	cursor: pointer;
+}
+
+.journal-search__chip[aria-pressed="true"] {
+	background: var(--color-accent-subtle);
+	color: var(--text);
+	border-color: var(--accent);
+}
+
+.journal-search__chip:focus-visible {
+	outline: 2px solid var(--color-focus-ring, var(--accent));
+	outline-offset: 1px;
+}
+
+.journal-search__status {
+	margin: 0;
+	color: var(--text-faint);
+	font-size: var(--text-size-sm);
+}
+
+.journal-search__results {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	max-height: 320px;
+	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+}
+
+.journal-search__row {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+	width: 100%;
+	padding: var(--space-2, var(--space-2)) var(--space-2);
+	border: none;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	text-align: start;
+	cursor: pointer;
+	color: var(--text);
+}
+
+.journal-search__row:hover,
+.journal-search__row[data-active="true"] {
+	background: var(--color-accent-subtle);
+}
+
+.journal-search__when {
+	font-size: var(--text-size-sm);
+	color: var(--text-dim);
+	font-weight: var(--text-weight-medium, 500);
+}
+
+.journal-search__excerpt {
+	font-size: var(--text-size-sm);
+	color: var(--text-faint);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* ── Daily check-in: mood + habits (9.16.8) ──────────────────────────── */
+.journal__checkin {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2, var(--space-2));
+	margin: var(--space-3) 0;
+	padding: var(--space-3) 0;
+	border-top: var(--border-width) solid var(--color-border-subtle, var(--border));
+}
+
+.journal__checkin-group {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--space-2, var(--space-2));
+}
+
+.journal__checkin-label {
+	flex: 0 0 auto;
+	min-width: 56px;
+	color: var(--text-faint);
+	font-weight: var(--text-weight-medium, 500);
+}
+
+.journal__mood-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	font-size: 18px;
+	line-height: 1;
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-md);
+	background: transparent;
+	cursor: pointer;
+	filter: grayscale(0.6);
+	opacity: 0.7;
+	transition: filter 120ms ease, opacity 120ms ease, background 120ms ease;
+}
+
+.journal__mood-btn:hover {
+	filter: grayscale(0);
+	opacity: 1;
+	background: var(--hover, rgba(127, 127, 127, 0.1));
+}
+
+.journal__mood-btn[aria-pressed="true"] {
+	filter: grayscale(0);
+	opacity: 1;
+	background: var(--color-accent-subtle);
+	border-color: var(--accent);
+}
+
+.journal__mood-btn:focus-visible {
+	outline: 2px solid var(--color-focus-ring, var(--accent));
+	outline-offset: 1px;
+}
+
+.journal__habit-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1, var(--space-1));
+	padding: var(--space-1, var(--space-1)) var(--space-2, var(--space-2));
+	border: var(--border-width) solid var(--color-border-subtle, var(--border));
+	border-radius: var(--radius-full);
+	background: transparent;
+	color: var(--text-dim);
+	cursor: pointer;
+	transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+
+.journal__habit-btn:hover {
+	background: var(--hover, rgba(127, 127, 127, 0.1));
+}
+
+.journal__habit-btn[aria-pressed="true"] {
+	background: var(--color-accent-subtle);
+	color: var(--text);
+	border-color: var(--accent);
+}
+
+.journal__habit-btn:focus-visible {
+	outline: 2px solid var(--color-focus-ring, var(--accent));
+	outline-offset: 1px;
+}
+
+.journal__habit-glyph {
+	font-size: 13px;
+	line-height: 1;
+	filter: grayscale(0.5);
+}
+
+.journal__habit-btn[aria-pressed="true"] .journal__habit-glyph {
+	filter: grayscale(0);
+}
+
+/* Writing-streak badge (9.16.7) — a compact pill above the mini-calendar. */
+/* A compact badge that hugs its content — the nav's flex `gap` owns the
+ * spacing below it (no own margin, else it double-spaces vs sibling rows). */
+.journal__streak {
+	align-self: flex-start;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2, var(--space-2));
+	padding: var(--space-1, var(--space-1)) var(--space-2);
+	border-radius: var(--radius-full);
+	background: var(--color-accent-subtle);
+	color: var(--text-dim);
+	font-size: var(--text-size-sm);
+	font-weight: var(--text-weight-medium, 500);
+}
+
+.journal__streak[data-active="false"] {
+	background: transparent;
+	color: var(--text-faint);
+	font-weight: var(--text-weight-regular, 400);
+}
+
+/* Streak-break warning (9.16.11) — today's entry is unwritten but a streak
+ * is still savable. */
+.journal__streak[data-risk="true"] {
+	background: var(--warn-bg, rgba(224, 169, 59, 0.16));
+	color: var(--warn, var(--text));
+}
+
+/* ── Write reminder settings (9.16.11) ───────────────────────────────── */
+.journal__reminder {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2, var(--space-2));
+	padding-inline-start: var(--space-2, var(--space-2));
+}
+
+/* The shared `createCheckbox` paints the box; scope its label down to the
+ * sidebar's small-text scale so it reads with the surrounding controls. */
+.journal__reminder-toggle .checkbox__label {
+	color: var(--text-dim);
+}
+
+.journal__reminder-time {
+	align-self: flex-start;
+	padding: var(--space-1, var(--space-1)) var(--space-2, var(--space-2));
+	border: var(--border-width) solid var(--color-border-subtle, var(--border));
+	border-radius: var(--radius-md);
+	background: var(--bg);
+	color: var(--text);
+}
+
+.journal__reminder-time:focus-visible {
+	outline: 2px solid var(--color-focus-ring, var(--accent));
+	outline-offset: -1px;
+}
+
+.journal__streak-flame {
+	font-size: 13px;
+	line-height: 1;
+}
+
+/* ── Periodic rollups (9.16.4) ───────────────────────────────────────── */
+.journal__rollups {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1, var(--space-1));
+}
+
+.journal__rollups-heading {
+	margin: 0;
+	padding-inline-start: var(--space-2, var(--space-2));
+	font-size: var(--text-size-sm);
+	font-weight: var(--text-weight-semibold, 600);
+	color: var(--text-faint);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.journal__rollup-btn {
+	display: block;
+	width: 100%;
+	padding: var(--space-1, var(--space-1)) var(--space-2, var(--space-2));
+	border: none;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	text-align: start;
+	cursor: pointer;
+	color: var(--text-dim);
+}
+
+.journal__rollup-btn:hover {
+	background: var(--hover, rgba(127, 127, 127, 0.1));
+	color: var(--text);
+}
+
+.journal__rollup-btn:focus-visible {
+	outline: 2px solid var(--color-focus-ring, var(--accent));
+	outline-offset: -2px;
+}
+
+.journal__rollup-btn[data-active="true"] {
+	background: var(--color-accent-subtle);
+	color: var(--text);
+}
+
+/* ── Overview (9.16.6) ───────────────────────────────────────────────── */
+.journal__overview {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1, var(--space-1));
+}
+
+.journal__overview-heading-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-2, var(--space-2));
+	padding-inline-start: var(--space-2, var(--space-2));
+}
+
+.journal__overview-heading {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	font-weight: var(--text-weight-semibold, 600);
+	color: var(--text-faint);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.journal__overview-export {
+	padding: var(--space-0_5) var(--space-2, var(--space-2));
+	border: var(--border-width) solid var(--color-border-subtle, var(--border));
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text-dim);
+	cursor: pointer;
+}
+
+.journal__overview-export:hover {
+	background: var(--color-accent-subtle);
+	color: var(--text);
+	border-color: var(--accent);
+}
+
+.journal__overview-export:focus-visible {
+	outline: 2px solid var(--color-focus-ring, var(--accent));
+	outline-offset: 1px;
+}
+
+.journal__overview-empty {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--text-faint);
+}
+
+.journal__overview-lists {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1, var(--space-1));
+}
+
+.journal__overview-lists:focus-visible {
+	outline: none;
+}
+
+.journal__overview-month {
+	margin: var(--space-2, var(--space-2)) 0 var(--space-1, var(--space-1));
+	padding-inline-start: var(--space-2, var(--space-2));
+	font-size: var(--text-size-sm);
+	font-weight: var(--text-weight-medium, 500);
+	color: var(--text-dim);
+}
+
+.journal__overview-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+}
+
+.journal__overview-btn {
+	display: grid;
+	grid-template-columns: 4rem 1fr;
+	align-items: center;
+	column-gap: var(--space-2, var(--space-2));
+	width: 100%;
+	padding: var(--space-1, var(--space-1)) var(--space-2, var(--space-2));
+	border: none;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	text-align: start;
+	cursor: pointer;
+	color: var(--text-dim);
+	line-height: 1.4;
+}
+
+.journal__overview-btn:hover {
+	background: var(--hover, rgba(127, 127, 127, 0.1));
+}
+
+.journal__overview-btn:focus-visible {
+	outline: 2px solid var(--color-focus-ring, var(--accent));
+	outline-offset: -2px;
+}
+
+.journal__overview-btn[data-active="true"] {
+	background: var(--color-accent-subtle);
+	color: var(--text);
+}
+
+.journal__overview-weekday {
+	color: var(--text);
+	font-weight: var(--text-weight-medium, 500);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.journal__overview-preview {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--text-faint);
+}
+
+/* ── Properties panel ────────────────────────────────────────────────── */
+/* The panel CONTENT is the shared `@brainstorm/sdk/properties-panel`
+ * (`.bs-props__*`, identical chrome to Notes / Database); only the
+ * "Open in Notes" hint below the rows is Journal-local. */
+
+.journal__props-hint {
+	margin: var(--space-2) 0 0;
+	font-size: var(--text-size-xs);
+	color: var(--text-faint);
+	line-height: 18px;
+}
+
+/* ── Backlinks panel ──────────────────────────────────────────────────── */
+
+.journal__backlinks {
+	margin-top: var(--space-6);
+	padding-top: var(--space-4);
+	border-top: var(--border-width) solid var(--border);
+}
+
+.journal__backlinks-heading {
+	margin: 0 0 var(--space-2);
+	font-size: var(--text-size-sm);
+	font-weight: var(--text-weight-medium, 500);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--text-faint);
+}
+
+.journal__backlinks-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+}
+
+.journal__backlink-btn {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	flex: 1 1 auto;
+	min-width: 0;
+	background: transparent;
+	border: 0;
+	color: var(--text-dim);
+	padding: var(--space-1);
+	cursor: pointer;
+	text-align: start;
+	transition: color 0.12s ease;
+}
+
+/* The host (not the inner button) carries the hover backdrop so it spans
+ * the full row including the ⋯ slot — the button flex-shrinks as the ⋯
+ * reveals, but the backdrop doesn't move. */
+.journal__backlink {
+	border-radius: var(--radius-sm);
+	transition: background 0.12s ease;
+}
+
+.journal__backlink:hover {
+	background: var(--hover);
+}
+
+.journal__backlink:hover .journal__backlink-btn {
+	color: var(--text);
+}
+
+.journal__backlink-title {
+	flex: 1;
+	font-size: var(--text-size-md);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
+}
+
+.journal__backlink-meta {
+	font-size: var(--text-size-xs);
+	color: var(--text-faint);
+	flex: 0 0 auto;
+}

@@ -1,0 +1,871 @@
+/*
+ * Property-value cell chrome — the resting + edit visuals for the shared
+ * property cells (`@brainstorm/sdk/property-ui` cells: pill / plain / date /
+ * checkbox / tag / link / file / progress / popover). MOVED here from the Notes
+ * app so EVERY app that renders a property cell gets identical styling (the
+ * cells emit `.bs-cell-*` classes). Loaded via `app-theme.css`.
+ */
+
+/* ── Scalar text cells (Pill / Plain) + the inline editor ──────────── */
+/* The resting render of every Text / Number / Date / EntityRef scalar cell.
+ * A bare `<button>` so it inherits the row's typography; the chrome below is
+ * what makes it read as an editable value rather than a default control. */
+.bs-cell-pill {
+	display: inline-flex;
+	align-items: center;
+	max-width: 100%;
+	min-height: 26px;
+	margin: 0 -6px;
+	padding: var(--space-0_5);
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text);
+	font: inherit;
+	font-size: var(--text-size-md);
+	text-align: start;
+	cursor: text;
+	transition: background var(--motion-duration-fast, 120ms) ease;
+}
+
+.bs-cell-pill:not(:disabled):hover {
+	background: var(--hover);
+}
+
+.bs-cell-pill:disabled {
+	cursor: default;
+}
+
+.bs-cell-pill-text {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.bs-cell-plain {
+	max-width: 100%;
+	min-height: 26px;
+	margin: 0 -4px;
+	padding: var(--space-0_5);
+	border: 0;
+	border-radius: var(--radius-xs);
+	background: transparent;
+	color: var(--text);
+	font: inherit;
+	font-size: var(--text-size-md);
+	text-align: start;
+	cursor: text;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	transition: background var(--motion-duration-fast, 120ms) ease;
+}
+
+.bs-cell-plain:not(:disabled):hover {
+	background: var(--hover);
+}
+
+.bs-cell-plain:disabled {
+	cursor: default;
+}
+
+/* Empty placeholder ("Empty") reads faint, never as a real value. */
+.bs-cell-pill--empty .bs-cell-pill-text,
+.bs-cell-plain--empty {
+	color: var(--text-faint);
+}
+
+/* Inline editor — shared by pill + plain (and the formatted Text cell).
+ * Mirrors the popover search input so an in-row edit looks intentional.
+ * Box math mirrors the resting button EXACTLY (the 1px border eats 1px of
+ * the button's padding on each side, min-height matches) so swapping
+ * rest ↔ edit never shifts the row height or the text position. */
+.bs-cell-input,
+.bs-cell-plain-input {
+	width: 100%;
+	min-width: 0;
+	min-height: 26px;
+	margin: 0 -6px;
+	padding: var(--space-0_5);
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-sm);
+	background: var(--bg-elev);
+	color: var(--text);
+	font: inherit;
+	font-size: var(--text-size-md);
+	outline: none;
+}
+
+/* The plain face uses tighter chrome (-4px bleed, 4px radius) than the pill
+ * — its editor overlays the same footprint. */
+.bs-cell-plain-input {
+	margin: 0 -4px;
+	padding: var(--space-0_5);
+	border-radius: var(--radius-xs);
+}
+
+.bs-cell-input:focus,
+.bs-cell-plain-input:focus {
+	outline: 2px solid color-mix(in srgb, var(--color-focus-ring) 55%, transparent);
+	outline-offset: -1px;
+	background: var(--bg);
+}
+
+/* ── Multiline text cell ───────────────────────────────────────────── */
+.bs-cell-multiline {
+	display: block;
+	width: 100%;
+	min-height: 26px;
+	margin: 0 -6px;
+	padding: var(--space-1);
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text);
+	font: inherit;
+	font-size: var(--text-size-md);
+	text-align: start;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	cursor: text;
+	transition: background var(--motion-duration-fast, 120ms) ease;
+}
+
+.bs-cell-multiline:not(:disabled):hover {
+	background: var(--hover);
+}
+
+.bs-cell-multiline:disabled {
+	cursor: default;
+}
+
+.bs-cell-multiline--empty {
+	color: var(--text-faint);
+}
+
+/* Same rest ↔ edit box parity as the scalar editor: the 1px border eats
+ * 1px of the button's padding, and `line-height: inherit` (vs a hardcoded
+ * value) keeps the per-line height identical to the resting face. */
+.bs-cell-multiline-input {
+	display: block;
+	width: 100%;
+	min-width: 0;
+	min-height: 26px;
+	margin: 0 -6px;
+	padding: var(--space-0_5);
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-sm);
+	background: var(--bg-elev);
+	color: var(--text);
+	font: inherit;
+	font-size: var(--text-size-md);
+	line-height: inherit;
+	resize: none;
+	overflow-y: auto;
+	outline: none;
+}
+
+.bs-cell-multiline-input:focus {
+	outline: 2px solid color-mix(in srgb, var(--color-focus-ring) 55%, transparent);
+	outline-offset: -1px;
+	background: var(--bg);
+}
+
+/* ── Boolean (Checkbox) cell ───────────────────────────────────────── */
+.bs-cell-checkbox {
+	display: inline-flex;
+	align-items: center;
+	cursor: pointer;
+}
+
+.bs-cell-checkbox input[type="checkbox"] {
+	width: 16px;
+	height: 16px;
+	margin: 0;
+	accent-color: var(--accent);
+	cursor: pointer;
+}
+
+.bs-cell-checkbox input[type="checkbox"]:disabled {
+	cursor: default;
+}
+
+/* The property name is already shown by the panel row label / grid column
+ * header, so the cell's own copy is redundant — keep it as the accessible
+ * name + a wider hit target, but hide it visually. */
+.bs-cell-checkbox-label {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	padding: 0;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+/* ── Boolean (Toggle) cell ─────────────────────────────────────────── */
+.bs-cell-toggle {
+	display: inline-flex;
+	align-items: center;
+	flex: 0 0 auto;
+	width: 32px;
+	height: 18px;
+	padding: 0;
+	border: 0;
+	border-radius: var(--radius-full);
+	background: var(--bg-elev);
+	box-shadow: inset 0 0 0 1px var(--border);
+	cursor: pointer;
+	transition: background var(--motion-duration-fast, 120ms) ease;
+}
+
+.bs-cell-toggle--on {
+	background: var(--accent);
+	box-shadow: none;
+}
+
+.bs-cell-toggle:disabled {
+	cursor: default;
+	opacity: 0.6;
+}
+
+.bs-cell-toggle-knob {
+	width: 14px;
+	height: 14px;
+	margin: 0 var(--space-0_5);
+	border-radius: 50%;
+	background: var(--bg);
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+	transition: transform var(--motion-duration-fast, 120ms) ease;
+}
+
+.bs-cell-toggle--on .bs-cell-toggle-knob {
+	transform: translateX(14px);
+	background: #fff;
+}
+
+/* ── Number (Rating) cell ──────────────────────────────────────────── */
+.bs-cell-rating {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-0_5);
+	min-height: 26px;
+}
+
+.bs-cell-star {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 20px;
+	height: 22px;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--text-faint);
+	font-size: 15px;
+	line-height: 1;
+	cursor: pointer;
+	transition: color var(--motion-duration-fast, 120ms) ease;
+}
+
+.bs-cell-star--on {
+	color: var(--accent);
+}
+
+.bs-cell-star:not(:disabled):hover {
+	color: color-mix(in srgb, var(--accent) 70%, var(--text-faint));
+}
+
+.bs-cell-star:disabled {
+	cursor: default;
+}
+
+.bs-cell-rating-empty {
+	margin-left: var(--space-2);
+	color: var(--text-faint);
+	font-size: var(--text-size-sm);
+}
+
+/* ── Shared cell popover (Tag / Date / Link pickers) ───────────────── */
+.bs-cell-pop {
+	position: fixed;
+	z-index: 200;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	background: var(--color-glass-background, var(--bg));
+	backdrop-filter: blur(var(--glass-blur, 18px)) saturate(var(--glass-saturate, 180%));
+	-webkit-backdrop-filter: blur(var(--glass-blur, 18px)) saturate(var(--glass-saturate, 180%));
+	border: var(--border-width) solid var(--color-glass-border, var(--border-strong));
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-xl, 0 16px 40px -12px rgba(0, 0, 0, 0.45)),
+		var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.08));
+}
+
+.bs-cell-pop-search {
+	padding: var(--space-2);
+	border-bottom: var(--border-width) solid var(--color-border-subtle, var(--border));
+}
+
+.bs-cell-pop-input {
+	width: 100%;
+	height: 30px;
+	padding: 0 var(--space-2);
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-md);
+	background: var(--bg-elev);
+	color: var(--text);
+	font-size: var(--text-size-md);
+	outline: none;
+	outline-offset: -1px;
+}
+
+.bs-cell-pop-input:focus {
+	border-color: transparent;
+	outline: 2px solid color-mix(in srgb, var(--color-focus-ring) 55%, transparent);
+	outline-offset: -1px;
+	background: var(--bg);
+}
+
+.bs-cell-pop-list {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow-y: auto;
+	padding: var(--space-2);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+}
+
+.bs-cell-pop-status {
+	padding: var(--space-4) var(--space-2);
+	color: var(--text-faint);
+	font-size: var(--text-size-sm);
+	text-align: center;
+}
+
+.bs-cell-pop-row {
+	display: grid;
+	grid-template-columns: 14px 1fr auto;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-2) var(--space-2);
+	border: 0;
+	background: transparent;
+	border-radius: var(--radius-md);
+	cursor: pointer;
+	text-align: start;
+	font: inherit;
+	color: var(--text);
+	min-width: 0;
+}
+
+.bs-cell-pop-row:hover,
+.bs-cell-pop-row--selected {
+	background: var(--hover);
+}
+
+.bs-cell-pop-swatch {
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+}
+
+/* Inline "Create '<query>'" row — the swatch slot carries a + glyph and
+ * the label reads as an action. */
+.bs-cell-pop-row--create .bs-cell-pop-row-label {
+	color: var(--text-dim);
+}
+
+.bs-cell-pop-row--create:hover .bs-cell-pop-row-label {
+	color: var(--text);
+}
+
+.bs-cell-pop-swatch--add {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 14px;
+	height: 14px;
+	margin: 0 -2px;
+	border-radius: var(--radius-xs);
+	background: var(--accent-soft, color-mix(in srgb, var(--accent) 16%, transparent));
+	color: var(--accent);
+}
+
+.bs-cell-pop-row-label {
+	font-size: var(--text-size-md);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	min-width: 0;
+}
+
+.bs-cell-pop-check {
+	color: var(--accent);
+	font-size: var(--text-size-sm);
+}
+
+.bs-cell-pop-foot {
+	flex: 0 0 auto;
+	padding: var(--space-2) var(--space-2);
+	border: 0;
+	border-top: var(--border-width) solid var(--color-border-subtle, var(--border));
+	background: transparent;
+	cursor: pointer;
+	text-align: start;
+	font: inherit;
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium);
+	color: var(--text-dim);
+}
+
+.bs-cell-pop-foot:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+/* ── Tag / TagList cell ────────────────────────────────────────────── */
+.bs-cell-tag-trigger {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--space-1);
+	min-height: 26px;
+	width: 100%;
+	margin: 0 -4px;
+	padding: var(--space-0_5);
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	cursor: pointer;
+	text-align: start;
+	font: inherit;
+	transition: background var(--motion-duration-fast, 120ms) ease;
+}
+
+.bs-cell-tag-trigger:not(:disabled):not([aria-disabled="true"]):hover {
+	background: var(--hover);
+}
+
+.bs-cell-tag-trigger:disabled,
+.bs-cell-tag-trigger[aria-disabled="true"] {
+	cursor: default;
+}
+
+.bs-cell-tag-set {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--space-1);
+	min-width: 0;
+}
+
+.bs-cell-tag-empty {
+	color: var(--text-faint);
+	font-size: var(--text-size-sm);
+}
+
+.bs-cell-tag {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	max-width: 18em;
+	padding: 0 var(--space-1);
+	border: var(--border-width) solid;
+	border-radius: var(--radius-full);
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+}
+
+.bs-cell-tag-label {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	min-width: 0;
+}
+
+/* The chip's remove affordance is clutter at rest — a grid full of tags
+ * shouldn't read as a grid full of ✕, and (per design feedback) it must NOT
+ * reserve trailing space when hidden. So it's fully removed from layout
+ * (`display: none`) at rest and only laid out while the cell is being
+ * interacted with (hover / keyboard focus / open picker). */
+.bs-cell-tag-remove {
+	display: none;
+	align-items: center;
+	justify-content: center;
+	width: 14px;
+	height: 14px;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: transparent;
+	color: inherit;
+	opacity: 0.7;
+	cursor: pointer;
+	font-size: var(--text-size-sm);
+	line-height: 1;
+}
+
+.bs-cell-tag-trigger:hover .bs-cell-tag-remove,
+.bs-cell-tag-trigger:focus-visible .bs-cell-tag-remove,
+.bs-cell-tag-trigger:focus-within .bs-cell-tag-remove,
+.bs-cell-tag-trigger[aria-expanded="true"] .bs-cell-tag-remove {
+	display: inline-flex;
+}
+
+.bs-cell-tag-remove:hover {
+	opacity: 1;
+	background: color-mix(in srgb, currentColor 18%, transparent);
+}
+
+/* ── B5.9 cells ────────────────────────────────────────────────────── */
+/* Invalid state is layout-stable: the resting buttons have no border, so
+ * they ring via inset box-shadow; the editors already carry a 1px
+ * (transparent) border, so it just recolors. */
+.bs-cell-pill--invalid,
+.bs-cell-plain--invalid {
+	box-shadow: inset 0 0 0 1px var(--danger);
+	border-radius: var(--radius-sm);
+}
+
+.bs-cell-input--invalid,
+.bs-cell-plain-input--invalid {
+	border-color: var(--danger);
+	outline-offset: -1px;
+}
+
+/* Progress bar */
+.bs-cell-progress {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	width: 100%;
+	min-height: 26px;
+	margin: 0 -4px;
+	padding: var(--space-0_5);
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	cursor: pointer;
+	font: inherit;
+	text-align: start;
+	transition: background var(--motion-duration-fast, 120ms) ease;
+}
+
+.bs-cell-progress:not(:disabled):hover {
+	background: var(--hover);
+}
+
+.bs-cell-progress:disabled {
+	cursor: default;
+}
+
+.bs-cell-progress-track {
+	flex: 1 1 auto;
+	height: 6px;
+	border-radius: var(--radius-full);
+	background: var(--bg-elev);
+	overflow: hidden;
+}
+
+.bs-cell-progress-fill {
+	display: block;
+	width: 100%;
+	height: 100%;
+	border-radius: var(--radius-full);
+	background: var(--accent);
+	transform-origin: left;
+	transition: transform var(--motion-duration-fast, 120ms) ease;
+}
+
+.bs-cell-progress-text {
+	flex: 0 0 auto;
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	font-variant-numeric: tabular-nums;
+}
+
+/* Date cell */
+.bs-cell-date-trigger,
+.bs-cell-link-trigger {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--space-1);
+	min-height: 26px;
+	width: 100%;
+	margin: 0 -4px;
+	padding: var(--space-0_5);
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	cursor: pointer;
+	font: inherit;
+	text-align: start;
+	transition: background var(--motion-duration-fast, 120ms) ease;
+}
+
+.bs-cell-date-trigger:not(:disabled):hover,
+.bs-cell-link-trigger:not(:disabled):hover {
+	background: var(--hover);
+}
+
+.bs-cell-date-trigger:disabled,
+.bs-cell-link-trigger:disabled {
+	cursor: default;
+}
+
+.bs-cell-date-empty,
+.bs-cell-link-empty {
+	color: var(--text-faint);
+	font-size: var(--text-size-sm);
+}
+
+.bs-cell-date-value {
+	font-size: var(--text-size-md);
+	color: var(--text);
+}
+
+.bs-cell-date-pop {
+	padding: var(--space-2);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.bs-cell-date-preview {
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	min-height: 1em;
+}
+
+/* Month calendar inside the date popover */
+.bs-cell-cal {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.bs-cell-cal-nav {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-1);
+}
+
+.bs-cell-cal-month {
+	font-weight: var(--text-weight-medium);
+	color: var(--text);
+}
+
+.bs-cell-cal-arrow {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text-dim);
+	font-size: 16px;
+	line-height: 1;
+	cursor: pointer;
+}
+
+.bs-cell-cal-arrow:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.bs-cell-cal-weekdays,
+.bs-cell-cal-grid {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: var(--space-0_5);
+}
+
+.bs-cell-cal-weekday {
+	text-align: center;
+	font-size: var(--text-size-xs);
+	color: var(--text-faint);
+	padding: var(--space-0_5) 0;
+}
+
+.bs-cell-cal-day {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	aspect-ratio: 1 / 1;
+	min-width: 0;
+	padding: 0;
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text);
+	font: inherit;
+	font-size: var(--text-size-xs);
+	font-variant-numeric: tabular-nums;
+	cursor: pointer;
+	transition: background var(--motion-duration-fast, 120ms) ease;
+}
+
+.bs-cell-cal-day:hover {
+	background: var(--hover);
+}
+
+.bs-cell-cal-day--muted {
+	color: var(--text-faint);
+}
+
+.bs-cell-cal-day--today {
+	font-weight: var(--text-weight-bold);
+	color: var(--accent);
+}
+
+.bs-cell-cal-day--selected,
+.bs-cell-cal-day--selected:hover {
+	background: var(--accent);
+	color: #fff;
+}
+
+.bs-cell-date-actions {
+	display: flex;
+	gap: var(--space-2);
+}
+
+.bs-cell-date-set,
+.bs-cell-date-clear {
+	flex: 1 1 0;
+	height: 28px;
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-sm);
+	background: var(--bg-elev);
+	color: var(--text);
+	font-size: var(--text-size-xs);
+	cursor: pointer;
+}
+
+.bs-cell-date-set:disabled {
+	opacity: 0.5;
+	cursor: default;
+}
+
+.bs-cell-date-set:not(:disabled):hover,
+.bs-cell-date-clear:hover {
+	background: var(--hover);
+}
+
+/* File-aware cells */
+.bs-cell-file {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	min-height: 30px;
+	padding: var(--space-2) var(--space-2);
+	border: var(--border-width) dashed var(--border);
+	border-radius: var(--radius-md);
+	background: var(--bg-elev);
+}
+
+.bs-cell-file--hover {
+	border-color: var(--accent);
+	background: color-mix(in srgb, var(--accent) 8%, var(--bg-elev));
+}
+
+.bs-cell-file--gallery .bs-cell-file-items {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+}
+
+.bs-cell-file-items {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-1);
+}
+
+.bs-cell-file-item {
+	max-width: 16em;
+	padding: var(--space-0_5);
+	border-radius: var(--radius-xs);
+	background: var(--bg);
+	font-size: var(--text-size-xs);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.bs-cell-file-empty {
+	font-size: var(--text-size-sm);
+	color: var(--text-faint);
+}
+
+.bs-cell-file-pending {
+	font-size: var(--text-size-xs);
+	color: var(--text-faint);
+	font-style: italic;
+}
+
+/* Link cells */
+.bs-cell-link-set {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--space-1);
+	min-width: 0;
+}
+
+.bs-cell-link {
+	display: inline-flex;
+	align-items: center;
+	max-width: 18em;
+	font-size: var(--text-size-xs);
+	color: var(--accent);
+}
+
+.bs-cell-link--inline {
+	padding: var(--space-0_5);
+	border-radius: var(--radius-full);
+	background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.bs-cell-link--card {
+	padding: var(--space-1);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-md);
+	background: var(--bg-elev);
+	color: var(--text);
+}
+
+.bs-cell-link-title {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	min-width: 0;
+}
+
+/* Formula cell — read-only computed value (number + format=formula). */
+.bs-cell-formula {
+	display: inline-flex;
+	align-items: center;
+	min-height: 26px;
+	padding: var(--space-0_5);
+	color: var(--text);
+	font-size: var(--text-size-md);
+	font-variant-numeric: tabular-nums;
+}
+
+.bs-cell-formula--empty {
+	color: var(--text-dim);
+}
+
+.bs-cell-formula--error {
+	color: var(--danger);
+	cursor: help;
+}

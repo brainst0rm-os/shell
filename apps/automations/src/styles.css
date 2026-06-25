@@ -1,0 +1,709 @@
+/* Automations — 11b.1 scaffold chrome. Tabs + entity list over the
+ * shared app-theme tokens. The full builder surface lands in 11b.11. */
+
+/* Base resets every app needs: `border-box` keeps the 1px `.app-header`
+ * border INSIDE the shell's 44px height (content-box renders it 45px); the
+ * `body` reset kills the browser-default 8px margin that insets the header
+ * off the window edges. The shell (`app-preload.ts`) owns the header HEIGHT
+ * + macOS traffic-light PADDING; the title face is the shared
+ * `.app-header__title` in `@brainstorm/sdk/app-theme.css`. */
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	overflow: hidden;
+}
+
+/* `body` stays a plain block — NEVER a flex container. The fancy-menus
+ * runtime + `mountMenuHost()` portal their menus straight into `document.body`;
+ * a `display: flex` body coerces those portaled menu nodes into flex items,
+ * which breaks the menu's hit-testing so hover/click never reach the rows (the
+ * dead overflow ⋯ menu). The flex column lives on `#root`. */
+
+/* The React root is the flex column that fills the viewport: the fixed
+ * `app-header` (height + chrome owned by the SDK) on top, the app body
+ * below filling the rest — so nothing floats over a dead-space void. */
+#root {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-height: 0;
+}
+
+#app-root {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.au-tabs {
+	display: flex;
+	gap: var(--space-4, var(--space-4));
+	align-items: stretch;
+	height: 44px;
+	padding: 0 var(--space-4, var(--space-4));
+	border-bottom: var(--border-width) solid var(--color-border-subtle);
+}
+
+/* Top-level view tabs use the underline-indicator pattern (matching the
+ * Database app) — a transparent track with an accent bottom border on the
+ * selected tab, never a filled box. The 2px underline overlaps the 1px
+ * container border via the negative margin so it reads as one baseline. */
+.au-tab {
+	appearance: none;
+	background: transparent;
+	border: 0;
+	border-bottom: var(--border-width-thick) solid transparent;
+	margin-bottom: -1px;
+	padding: 0 var(--space-1, var(--space-1));
+	font: inherit;
+	font-weight: var(--text-weight-medium);
+	color: var(--color-text-secondary);
+	cursor: pointer;
+	transition: color var(--motion-duration-fast, 120ms) ease, border-color var(--motion-duration-fast, 120ms) ease;
+}
+
+.au-tab:hover {
+	color: var(--color-text-primary);
+}
+
+.au-tab[aria-selected="true"] {
+	color: var(--color-accent-default);
+	border-bottom-color: var(--color-accent-default);
+}
+
+.au-body {
+	flex: 1;
+	min-height: 0;
+	padding: var(--space-4, var(--space-4));
+	overflow-y: auto;
+}
+
+.au-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1, var(--space-1));
+}
+
+.au-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3, var(--space-3));
+	padding: var(--space-2, var(--space-2)) var(--space-3, var(--space-3));
+	border-radius: var(--radius-sm);
+	border: var(--border-width) solid var(--color-border-subtle);
+	transition: background var(--motion-duration-fast, 120ms) ease;
+}
+
+.au-row:hover {
+	background: var(--hover);
+}
+
+.au-row__name {
+	flex: 1 1 auto;
+	color: var(--color-text-primary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.au-row__meta {
+	flex: 0 0 auto;
+	color: var(--color-text-secondary);
+	font-size: var(--text-size-sm);
+}
+
+.au-row__badge {
+	flex: 0 0 auto;
+	padding: 0 var(--space-2, var(--space-2));
+	border-radius: var(--radius-full);
+	background: var(--color-accent-subtle);
+	color: var(--color-text-secondary);
+	font-size: var(--text-size-xs);
+}
+
+.au-row__status {
+	flex: 0 0 auto;
+	font-size: var(--text-size-xs);
+}
+
+.au-row__status--on {
+	color: var(--color-state-success);
+}
+
+.au-row__status--off {
+	color: var(--color-text-tertiary, var(--color-text-secondary));
+}
+
+.au-empty {
+	margin: var(--space-2, var(--space-2)) 0;
+	color: var(--color-text-secondary);
+}
+
+
+.au-runs {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1, var(--space-1));
+}
+
+.au-section {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3, var(--space-3));
+}
+
+.au-toolbar {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--space-2, var(--space-2));
+}
+
+.au-status {
+	margin: 0;
+	color: var(--color-text-secondary);
+}
+
+.au-status--warn {
+	color: var(--warn);
+}
+
+.au-status--info {
+	color: var(--accent);
+}
+
+/* ── automation-host designation (11b.15) ───────────────────────── */
+
+.au-host {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-2);
+	padding: var(--space-2);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-md);
+	background: var(--bg-elev);
+}
+
+.au-host__face {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	min-width: 0;
+}
+
+.au-host__label {
+	color: var(--text);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.au-host--other .au-host__label {
+	color: var(--text-dim);
+}
+
+.au-host--self {
+	border-color: var(--accent-soft);
+}
+
+.au-host__claim {
+	flex-shrink: 0;
+}
+
+/* ── shared button ───────────────────────────────────────────── */
+
+/* Automations action buttons use the shared `.bs-btn` primitive (neutral ·
+ * ghost · data-bs-primary). */
+
+/* ── template gallery ────────────────────────────────────────── */
+
+.au-templates {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3, var(--space-3));
+	padding: var(--space-3, var(--space-3));
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+	background: color-mix(in srgb, currentColor 4%, transparent);
+}
+
+.au-templates__head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.au-templates__title {
+	margin: 0;
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-semibold);
+	color: var(--color-text-primary);
+}
+
+.au-templates__grid {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	gap: var(--space-2, var(--space-2));
+}
+
+.au-template {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1, var(--space-1));
+	padding: var(--space-3, var(--space-3));
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-sm);
+	background: var(--color-surface-default, color-mix(in srgb, currentColor 4%, transparent));
+}
+
+.au-template__name {
+	font-weight: var(--text-weight-semibold);
+	color: var(--color-text-primary);
+}
+
+.au-template__desc {
+	margin: 0;
+	color: var(--color-text-secondary);
+	font-size: var(--text-size-sm);
+}
+
+.au-template__trigger {
+	color: var(--color-text-tertiary, var(--color-text-secondary));
+	font-size: var(--text-size-xs);
+}
+
+.au-template .bs-btn {
+	align-self: flex-start;
+	margin-top: var(--space-1, var(--space-1));
+}
+
+/* ── reminders quick-capture ─────────────────────────────────── */
+
+.au-capture {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2, var(--space-2));
+	align-items: center;
+}
+
+.au-capture__subject {
+	flex: 1 1 200px;
+	min-width: 160px;
+	padding: var(--space-2, var(--space-2)) var(--space-3, var(--space-3));
+	border-radius: var(--radius-sm);
+	border: var(--border-width) solid var(--color-border-subtle);
+	background: var(--color-surface-default, color-mix(in srgb, currentColor 4%, transparent));
+	color: var(--color-text-primary);
+	font: inherit;
+}
+
+.au-capture__repeat {
+	flex: 0 0 auto;
+	padding: var(--space-2, var(--space-2)) var(--space-3, var(--space-3));
+	border-radius: var(--radius-sm);
+	border: var(--border-width) solid var(--color-border-subtle);
+	background: var(--color-surface-default, color-mix(in srgb, currentColor 4%, transparent));
+	color: var(--color-text-primary);
+	font: inherit;
+}
+
+/* The due picker (F-229): a date trigger + quarter-hour <SelectMenu> + clear,
+ * never a native datetime-local. The trigger borrows the field chrome so it
+ * reads as a peer of the subject input / repeat button. */
+.au-capture__due {
+	flex: 0 0 auto;
+	display: flex;
+	align-items: center;
+	gap: var(--space-1, var(--space-1));
+}
+
+.au-capture__due-trigger {
+	flex: 0 0 auto;
+	padding: var(--space-2, var(--space-2)) var(--space-3, var(--space-3));
+	border-radius: var(--radius-sm);
+	border: var(--border-width) solid var(--color-border-subtle);
+	background: var(--color-surface-default, color-mix(in srgb, currentColor 4%, transparent));
+	color: var(--color-text-primary);
+	font: inherit;
+}
+
+.au-capture__due-text[data-empty="true"] {
+	color: var(--color-text-secondary);
+}
+
+.au-capture__due-clear {
+	appearance: none;
+	flex: 0 0 auto;
+	width: var(--space-5);
+	height: var(--space-5);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	border: none;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--color-text-secondary);
+	font: inherit;
+	cursor: pointer;
+}
+
+.au-capture__due-clear:hover {
+	color: var(--color-text-primary);
+	background: var(--color-surface-default, color-mix(in srgb, currentColor 8%, transparent));
+}
+
+.au-capture__due-clear:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 1px;
+}
+
+/* The recurrence picker is a fancy-menus trigger (never a native <select>) —
+ * it borrows the input chrome above so it reads as a peer field. */
+.au-menu-button {
+	appearance: none;
+	text-align: left;
+	cursor: pointer;
+}
+
+.au-menu-button:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 1px;
+}
+
+/* The trailing row ⋯ overflow reveals on row hover / focus-within (the same
+ * shared `.bs-object-menu__more` chrome every other app uses), and stays
+ * visible while its menu is open (`aria-expanded`). */
+.au-row__more {
+	flex: 0 0 auto;
+	opacity: 0;
+	transition: opacity var(--motion-duration-fast, 120ms) ease;
+}
+
+.au-row:hover .au-row__more,
+.au-row:focus-within .au-row__more,
+.au-row__more:focus-visible,
+.au-row__more[aria-expanded="true"] {
+	opacity: 1;
+}
+
+/* The submit shares the row's input height, not the compact toolbar height. */
+.au-capture .bs-btn {
+	margin-block: var(--space-1, var(--space-1));
+}
+
+.au-capture__subject:focus-visible,
+.au-capture__due-trigger:focus-visible,
+.au-capture__repeat:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 1px;
+}
+
+/* ── status pills (reminders + runs + steps) ─────────────────── */
+
+.au-pill {
+	flex: 0 0 auto;
+	padding: 0 var(--space-2, var(--space-2));
+	border-radius: var(--radius-full);
+	font-size: var(--text-size-xs);
+	color: var(--color-text-secondary);
+	background: color-mix(in srgb, currentColor 6%, transparent);
+}
+
+.au-pill--overdue,
+.au-pill--failed,
+.au-pill--timed-out {
+	color: var(--color-state-error);
+	background: color-mix(in srgb, var(--color-state-error) 16%, transparent);
+}
+
+.au-pill--succeeded {
+	color: var(--color-state-success);
+	background: var(--color-accent-subtle);
+}
+
+.au-pill--snoozed,
+.au-pill--running,
+.au-pill--queued {
+	color: var(--color-accent-text);
+	background: var(--color-accent-subtle);
+}
+
+/* ── runs view ───────────────────────────────────────────────── */
+
+.au-run {
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-sm);
+	overflow: hidden;
+}
+
+.au-run__head {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3, var(--space-3));
+	padding: var(--space-2, var(--space-2)) var(--space-3, var(--space-3));
+}
+
+.au-run__head .au-row__meta {
+	margin-left: auto;
+}
+
+.au-run__detail {
+	padding: var(--space-2, var(--space-2)) var(--space-3, var(--space-3));
+	border-top: var(--border-width) solid var(--color-border-subtle);
+	background: color-mix(in srgb, currentColor 4%, transparent);
+}
+
+.au-run__error {
+	margin: 0 0 var(--space-2, var(--space-2));
+	color: var(--color-state-error);
+}
+
+.au-steps {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1, var(--space-1));
+}
+
+.au-step {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2, var(--space-2));
+	padding-left: calc(var(--au-step-depth, 0) * var(--space-4, var(--space-4)));
+}
+
+.au-step__kind {
+	color: var(--color-text-primary);
+	font-family: var(--text-family-code, monospace);
+}
+
+.au-step__dur {
+	color: var(--color-text-tertiary, var(--color-text-secondary));
+	font-size: var(--text-size-xs);
+}
+
+/* ── 11b.11 workflow builder ──────────────────────────────────── */
+
+.au-builder {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4, var(--space-4));
+}
+
+.au-builder__section {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2, var(--space-2));
+	padding-top: var(--space-3, var(--space-3));
+	border-top: var(--border-width) solid var(--color-border-subtle);
+}
+
+.au-builder__section-title {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	font-weight: var(--text-weight-medium);
+	color: var(--color-text-secondary);
+}
+
+.au-builder__steps-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-2, var(--space-2));
+}
+
+.au-builder__steps-empty,
+.au-builder__caps-empty {
+	margin: 0;
+	color: var(--color-text-tertiary, var(--color-text-secondary));
+	font-size: var(--text-size-sm);
+}
+
+.au-field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1, var(--space-1));
+}
+
+.au-field__label {
+	font-size: var(--text-size-sm);
+	color: var(--color-text-secondary);
+}
+
+.au-input {
+	width: 100%;
+	padding: var(--space-2, var(--space-2)) var(--space-3, var(--space-3));
+	border-radius: var(--radius-sm);
+	border: var(--border-width) solid var(--color-border-subtle);
+	background: var(--color-surface-default, color-mix(in srgb, currentColor 4%, transparent));
+	color: var(--color-text-primary);
+	font: inherit;
+}
+
+.au-input:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 1px;
+}
+
+.au-binding {
+	display: flex;
+	gap: var(--space-2, var(--space-2));
+	align-items: center;
+}
+
+.au-binding__expr {
+	flex: 1 1 auto;
+	font-family: var(--text-family-code, ui-monospace, monospace);
+	font-size: var(--text-size-sm);
+}
+
+.au-binding__unbound {
+	margin: 0;
+	color: var(--color-state-error);
+	font-size: var(--text-size-xs);
+}
+
+.au-input--multiline {
+	resize: vertical;
+	min-height: 4.5rem;
+	line-height: 1.5;
+}
+
+.au-tools {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.au-tool {
+	display: flex;
+	gap: var(--space-2);
+	align-items: center;
+}
+
+.au-bsteps {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2, var(--space-2));
+}
+
+.au-bstep {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2, var(--space-2));
+	padding: var(--space-3, var(--space-3));
+	border-radius: var(--radius-sm);
+	border: var(--border-width) solid var(--color-border-subtle);
+	background: var(--color-surface-default, color-mix(in srgb, currentColor 3%, transparent));
+}
+
+.au-bstep__head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-2, var(--space-2));
+}
+
+.au-bstep__kind {
+	font-weight: var(--text-weight-medium);
+	color: var(--color-text-primary);
+}
+
+.au-bstep__ops {
+	display: flex;
+	gap: var(--space-1, var(--space-1));
+}
+
+.au-bstep__body {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2, var(--space-2));
+}
+
+.au-caps {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1, var(--space-1));
+}
+
+.au-cap {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-2, var(--space-2));
+	padding: var(--space-1, var(--space-1)) var(--space-2, var(--space-2));
+	border-radius: var(--radius-sm);
+}
+
+.au-cap__name {
+	font-family: var(--text-family-code, ui-monospace, monospace);
+	font-size: var(--text-size-sm);
+	color: var(--color-text-primary);
+}
+
+.au-cap__state {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-secondary);
+}
+
+.au-cap--missing {
+	background: var(--color-accent-subtle);
+}
+
+.au-cap--missing .au-cap__state {
+	color: var(--color-state-error);
+}
+
+.au-cap--granted .au-cap__state {
+	color: var(--color-state-success, var(--color-text-secondary));
+}
+
+.au-builder__footer {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2, var(--space-2));
+	width: 100%;
+}
+
+.au-builder__issues {
+	list-style: disc;
+	margin: 0;
+	padding-left: var(--space-4, var(--space-4));
+	color: var(--color-state-error);
+	font-size: var(--text-size-sm);
+}
+
+.au-builder__actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--space-2, var(--space-2));
+}

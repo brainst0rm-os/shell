@@ -1,0 +1,95 @@
+/* Block-gutter + action-menu + drop-indicator + slash-menu visuals for
+ * the shared editor plugins. Class names use the `bs-editor__` prefix
+ * so they don't collide with app chrome. Tokens (`--bg`, `--accent`,
+ * etc.) come from the host app's theme; the editor pkg never declares
+ * its own palette.
+ */
+
+/* ── Gutter ─────────────────────────────────────────────────────── */
+.bs-editor__block-gutter {
+	position: fixed;
+	z-index: 50;
+	display: flex;
+	align-items: flex-start;
+	gap: var(--space-0_5);
+	padding-top: var(--space-0_5);
+	opacity: 1;
+	animation: bs-editor-gutter-in 120ms ease;
+}
+
+@keyframes bs-editor-gutter-in {
+	from {
+		opacity: 0;
+	}
+}
+
+.bs-editor__block-gutter-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	padding: 0;
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text-faint);
+	cursor: pointer;
+	transition: background var(--motion-duration-fast) ease, color var(--motion-duration-fast) ease;
+}
+
+.bs-editor__block-gutter-btn:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.bs-editor__block-gutter-btn:focus-visible {
+	outline: 2px solid color-mix(in srgb, var(--accent) 50%, transparent);
+	outline-offset: 1px;
+}
+
+.bs-editor__block-gutter--dragging .bs-editor__block-gutter-btn--grip {
+	cursor: grabbing;
+	background: var(--hover);
+	color: var(--text);
+}
+
+/* ── Drop indicator ────────────────────────────────────────────── */
+.bs-editor__drop-indicator {
+	position: fixed;
+	z-index: 49;
+	height: 2px;
+	background: var(--accent);
+	border-radius: var(--radius-xs);
+	pointer-events: none;
+}
+
+.bs-editor__drop-indicator::before,
+.bs-editor__drop-indicator::after {
+	content: "";
+	position: absolute;
+	top: 50%;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--accent);
+	transform: translateY(-50%);
+}
+
+.bs-editor__drop-indicator::before {
+	inset-inline-start: -4px;
+}
+
+.bs-editor__drop-indicator::after {
+	inset-inline-end: -4px;
+}
+
+/* The block action menu now renders through the shared fancy-menus runtime
+ * (`openBlockActionMenu` → `@brainstorm/sdk/menus`); its chrome lives in the
+ * SDK menu theme, so the old hand-rolled `.bs-editor__action-menu*` rules are
+ * gone. */
+
+/* The slash menu now renders through the shared controlled-list typeahead
+ * runtime (`@brainstorm/sdk/menus` `openTypeaheadMenu`); its chrome + the
+ * caption/name row layout live in the SDK menu theme (`.bs-typeahead-row`), so
+ * the old hand-rolled `.bs-editor__slash-menu*` rules are gone. */

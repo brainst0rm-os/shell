@@ -1,0 +1,1088 @@
+/* Brainstorm — Preview first-party app (9.20.1.5 preview drop).
+ *
+ * Shell-theme aliasing follows the same pattern as apps/journal +
+ * apps/calendar: shell pushes flattened tokens; local vars alias them;
+ * dark fallbacks cover the boot-before-tokens window.
+ */
+/* Theming is the shell's job, not the app's. The shell preload injects
+ * the active theme tokens AND the alias layer (--accent / --bg / --text /
+ * --bg-stage / …) + base type + component styles via a single stylesheet
+ * — packages/shell/src/preload/app-theme.ts, the single source of truth.
+ * This app declares ZERO theme values. Don't reintroduce a :root alias
+ * block or root font/colour here. */
+:root {
+	color-scheme: light dark;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	overflow: hidden;
+}
+
+/* #root holds the fixed app-header + the preview surface; it fills the
+ * viewport so the surface sits below the 44px header rather than floating
+ * over a void. */
+#root {
+	display: flex;
+	flex-direction: column;
+	height: 100vh;
+	min-height: 0;
+}
+
+button {
+	font: inherit;
+	color: inherit;
+	background: transparent;
+	border: var(--border-width) solid transparent;
+	cursor: pointer;
+}
+
+/* Header chrome (flex skeleton, left/right groups, drag region, skin) is the
+ * shared `.app-header` rule in `@brainstorm/sdk/app-theme.css`. */
+
+
+/* ── App layout ──────────────────────────────────────────────────────── */
+
+.preview {
+	flex: 1;
+	min-height: 0;
+	display: grid;
+	/* Left library sidebar (auto — its own fixed width, 0 when collapsed) +
+	 * the main column (stage/inspector over the filmstrip). */
+	grid-template-columns: auto minmax(0, 1fr);
+	grid-template-rows: 1fr;
+	overflow: hidden;
+}
+
+/* Main column: the stage/inspector body over the filmstrip — the original
+ * two-row layout, now nested beside the sidebar. */
+.preview__main {
+	min-width: 0;
+	min-height: 0;
+	display: grid;
+	grid-template-rows: 1fr auto;
+	overflow: hidden;
+}
+
+/* ── Left library sidebar ────────────────────────────────────────────────
+ * Recency-sorted list of the vault's previewable files + a filter box, so
+ * opening Preview standalone lands on something browsable. */
+.preview__sidebar {
+	width: 260px;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	background: var(--bg-elev);
+	border-right: var(--border-width) solid var(--color-border-subtle);
+	overflow: hidden;
+}
+
+.preview--sidebar-collapsed .preview__sidebar {
+	display: none;
+}
+
+/* Search box sits on the shared 44px panel-header baseline with a 1px subtle
+ * bottom border (the stacked-panel-header convention). */
+.preview__sidebar-search {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	min-height: 44px;
+	padding: 0 var(--space-3);
+	border-bottom: var(--border-width) solid var(--color-border-subtle);
+	flex-shrink: 0;
+}
+
+.preview__sidebar-search-icon {
+	display: inline-flex;
+	color: var(--text-faint);
+	flex-shrink: 0;
+}
+
+.preview__sidebar-input {
+	flex: 1;
+	min-width: 0;
+	height: var(--control-height-sm, 24px);
+	border: none;
+	background: transparent;
+	color: var(--text);
+	font: inherit;
+	font-size: var(--text-size-sm);
+}
+
+.preview__sidebar-input::placeholder {
+	color: var(--text-faint);
+}
+
+.preview__sidebar-input:focus {
+	outline: none;
+}
+
+.preview__sidebar-list {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	margin: 0;
+	padding: var(--space-2);
+	list-style: none;
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+}
+
+.preview__sidebar-row {
+	margin: 0;
+}
+
+.preview__sidebar-item {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	width: 100%;
+	height: 32px;
+	padding: 0 var(--space-2);
+	border: none;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text);
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+}
+
+.preview__sidebar-item:hover {
+	background: var(--hover);
+}
+
+.preview__sidebar-item--active {
+	background: var(--accent-soft);
+	color: var(--text);
+}
+
+.preview__sidebar-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	flex-shrink: 0;
+	border-radius: var(--radius-sm);
+	background: var(--bg-stage);
+	color: var(--text-dim);
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+	letter-spacing: 0.02em;
+}
+
+.preview__sidebar-name {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: var(--text-size-sm);
+}
+
+.preview__sidebar-empty {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: var(--space-5) var(--space-4);
+	text-align: center;
+	color: var(--text-faint);
+	font-size: var(--text-size-sm);
+}
+
+.preview__sidebar-empty p {
+	margin: 0;
+}
+
+/* ── Header chrome (nav · filename · inspector toggle live in the shared
+ *    `.app-header`, so there is no second toolbar bar) ────────────────── */
+
+.preview__nav {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+}
+
+.preview__counter {
+	font-size: var(--text-size-sm);
+	color: var(--text-faint);
+	font-variant-numeric: tabular-nums;
+	min-width: 56px;
+	text-align: center;
+}
+
+/* Title face comes from the shared `.app-header__title`; the
+ * `.preview__filename` class remains in markup as a test hook. */
+
+.preview__source-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	height: 22px;
+	padding: 0 var(--space-2);
+	border-radius: var(--radius-lg);
+	background: var(--bg-elev);
+	border: var(--border-width) solid var(--border);
+	color: var(--text-dim);
+	font-size: var(--text-size-sm);
+	max-width: 220px;
+	flex-shrink: 1;
+	min-width: 0;
+}
+
+.preview__source-chip[hidden] {
+	display: none;
+}
+
+.preview__source-chip-icon {
+	display: inline-block;
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: var(--accent);
+	flex-shrink: 0;
+}
+
+.preview__source-chip-label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
+}
+
+/* The inspector toggle is the shared `.bs-panel-toggle`
+ * (`@brainstorm/sdk/panel-toggle`) — no app-local toggle chrome. */
+
+/* ── Body: stage + inspector ─────────────────────────────────────────── */
+
+/* Inspector is a glass overlay that floats ABOVE the right edge of the
+ * stage (like Notes/Database) — the body is a single-column track, the
+ * inspector is absolutely positioned and slides in/out via
+ * `transform: translateX`. The stage keeps a stable, symmetric padding so
+ * opening the inspector never reflows or re-centers the preview; the glass
+ * panel simply glides over it on a GPU transform. */
+.preview__body {
+	position: relative;
+	display: grid;
+	grid-template-columns: 1fr;
+	min-height: 0;
+	background: var(--bg-stage);
+	overflow: hidden;
+}
+
+.preview__stage {
+	min-width: 0;
+	min-height: 0;
+	overflow: auto;
+	padding: var(--space-5);
+	display: grid;
+	place-items: center;
+}
+
+/* React-owned ref boundary; the imperative renderer mounts inside. Fills the
+ * stage so a renderer's own 100%-height surface has a sized parent. */
+.preview__render-host {
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+	display: flex;
+}
+
+.preview__render-surface {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.preview__unavailable {
+	color: var(--text-faint);
+	text-align: center;
+	max-width: 320px;
+}
+
+.preview__unavailable p {
+	margin: 0 0 var(--space-1);
+}
+
+.preview__unavailable-detail {
+	font-size: var(--text-size-sm);
+	color: var(--text-faint);
+}
+
+/* The first-impression empty state ("Nothing to preview") renders through the
+ * shared `@brainstorm/sdk/empty-state` (Hero tone). `.preview__stage`'s
+ * `place-items: center` + the surface's own `width/min-height: 100%` keep the
+ * card centered in the full stage. */
+
+/* When there's nothing to preview, soften the toolbar chrome — keep the
+ * inspector toggle (it still controls the panel), but hide the counter
+ * (always "0 of 0") + dim the disabled nav buttons. */
+.preview--empty .preview__counter {
+	visibility: hidden;
+}
+
+/* ── Inspector ──────────────────────────────────────────────────────── */
+
+/* Glass overlay (`.glass--strong` on the element supplies the translucent
+ * background + blur); floats above the stage without reserving space. It HOSTS
+ * the shared `<PropertiesPanel>` content (`.bs-props` header + rows) — pinned
+ * top-to-bottom so the panel's `.bs-props__inner` (`height: 100%`) gets a
+ * definite height and its body scrolls. */
+.preview__inspector {
+	position: absolute;
+	top: 0;
+	inset-inline-end: 0;
+	bottom: 0;
+	width: 320px;
+	border-inline-start: var(--border-width) solid var(--color-glass-border, var(--border));
+	box-shadow: var(--shadow-xl, 0 12px 32px -8px rgba(0, 0, 0, 0.4));
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	transform: translateX(0);
+	transition: transform var(--motion-duration-normal, 200ms) var(--motion-easing-standard, ease);
+	z-index: 2;
+}
+
+/* The active panel (Properties or Comments) fills below the tab strip; the
+ * strip itself (`.bs-panel-tabs`) is the shared `@brainstorm/editor`
+ * CommentsRightPanel chrome (mirrors Journal's `.journal__props` rule). */
+.preview__inspector > :not(.bs-panel-tabs) {
+	flex: 1 1 0;
+	min-height: 0;
+}
+
+.preview--inspector-collapsed .preview__inspector {
+	transform: translateX(calc(100% + 1px));
+	box-shadow: none;
+	border-inline-start-color: transparent;
+}
+
+/* ── Filmstrip ──────────────────────────────────────────────────────── */
+
+.preview__filmstrip {
+	display: flex;
+	align-items: stretch;
+	gap: var(--space-2);
+	padding: var(--space-2);
+	overflow-x: auto;
+	border-top: var(--border-width) solid var(--border);
+	background: var(--bg);
+}
+
+/* A single-file context still wants the slot reserved (so the body
+ * doesn't reflow when navigating into a multi-item context), but the
+ * strip itself is empty — collapse padding so it reads as a thin rule
+ * instead of a giant empty band. */
+.preview__filmstrip--empty {
+	padding: 0;
+	min-height: 0;
+}
+
+.preview__filmstrip-item {
+	display: inline-flex;
+	flex-direction: column;
+	align-items: stretch;
+	gap: var(--space-1);
+	padding: var(--space-1);
+	border-radius: var(--radius-md);
+	color: var(--text-dim);
+	border: var(--border-width) solid var(--border);
+	background: var(--bg-elev);
+	width: 96px;
+	flex-shrink: 0;
+}
+
+.preview__filmstrip-item:hover {
+	color: var(--text);
+	border-color: var(--border-strong);
+}
+
+.preview__filmstrip-item--active {
+	color: var(--text);
+	border-color: var(--accent);
+	background: var(--accent-dim);
+}
+
+/* Square-ish thumbnail tile. For images we paint the actual bytes via
+ * an inner <img>; for non-image kinds we render a tinted-neutral swatch
+ * carrying the kind's typed glyph (Im / Vi / Au / …) — the glyph, not a
+ * per-kind hue, is the distinguishing signal, so one surface token
+ * replaces the seven bespoke gradients (theme-driven, DRY). */
+.preview__filmstrip-thumb {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	aspect-ratio: 4 / 3;
+	border-radius: var(--radius-sm);
+	overflow: hidden;
+	background: var(--bg-subtle);
+	flex-shrink: 0;
+}
+
+.preview__filmstrip-image {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+.preview__filmstrip-glyph {
+	font-size: var(--text-size-xs);
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	color: var(--text-dim);
+	text-transform: uppercase;
+}
+
+.preview__filmstrip-name {
+	font-size: var(--text-size-sm);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
+	padding: 0 var(--space-0_5);
+}
+
+/* ── Image renderer ─────────────────────────────────────────────────── */
+
+.preview-stage--image {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+}
+
+/* Clipping viewport — the image is centred here and moved/scaled by a
+   single GPU transform (translate + scale + EXIF orientation). Pan
+   never reflows; per [[feedback_animate_transform_not_width]]. */
+.preview-image-viewport {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	cursor: default;
+	outline: none;
+	touch-action: none;
+}
+
+.preview-image-viewport--pannable {
+	cursor: grab;
+}
+
+.preview-image-viewport--grabbing,
+.preview-image-viewport--pannable.preview-image-viewport--grabbing {
+	cursor: grabbing;
+}
+
+.preview-image {
+	display: block;
+	width: auto;
+	height: auto;
+	max-width: none;
+	max-height: none;
+	/* Honour the embedded EXIF orientation so phone photos aren't shown
+	   sideways. This is Chromium's default, but pin it so a global reset
+	   stylesheet can't flip it to `none` and break rotated JPEGs. */
+	image-orientation: from-image;
+	transform-origin: center center;
+	will-change: transform;
+	user-select: none;
+	-webkit-user-drag: none;
+	border-radius: var(--radius-xs);
+	background: var(--bg-elev);
+}
+
+/* Floating zoom HUD — bottom-centre, fades to ambient until hovered. */
+.preview-image-hud {
+	position: absolute;
+	/* PHYSICAL-AXIS INTENTIONAL: symmetric centring */
+	left: 50%;
+	bottom: 16px;
+	transform: translateX(-50%);
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	padding: var(--space-1);
+	border-radius: var(--radius-lg);
+	background: var(--bg-elev);
+	border: var(--border-width) solid var(--border);
+	box-shadow: var(--shadow-popover);
+	opacity: 0.55;
+	transition: opacity 120ms ease;
+}
+
+.preview-stage--image:hover .preview-image-hud,
+.preview-image-hud:focus-within {
+	opacity: 1;
+}
+
+.preview-image-hud__btn {
+	min-width: 28px;
+	height: var(--control-height-sm, 24px);
+	padding: 0 var(--space-2);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border: none;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text);
+	font: inherit;
+	font-size: var(--text-size-md);
+	cursor: pointer;
+}
+
+.preview-image-hud__btn:hover {
+	background: var(--hover, rgba(127, 127, 127, 0.16));
+}
+
+.preview-image-hud__btn:focus-visible {
+	outline: 2px solid var(--accent, #6c8cff);
+	outline-offset: -2px;
+}
+
+.preview-image-hud__pct {
+	min-width: 48px;
+	text-align: center;
+	font-size: var(--text-size-sm);
+	color: var(--text-dim, var(--text-faint));
+	font-variant-numeric: tabular-nums;
+	user-select: none;
+}
+
+.preview-image-hud__fit {
+	margin-inline-start: var(--space-1);
+	border-inline-start: var(--border-width) solid var(--border);
+	border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+	padding-inline-start: var(--space-2);
+}
+
+/* ── PDF renderer (9.20.5) ──────────────────────────────────────────── */
+
+.preview-stage--pdf {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+}
+
+/* Scroll viewport — when the page is zoomed past the pane it scrolls rather
+   than reflowing. The canvas is centred while it fits. */
+.preview-pdf-viewport {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: flex-start;
+	justify-content: center;
+	overflow: auto;
+	padding: var(--space-2);
+	outline: none;
+}
+
+/* Page host: shrink-wraps the canvas + carries the link overlay so the
+   absolutely positioned link hotspots sit exactly over the rendered page. */
+.preview-pdf-page {
+	position: relative;
+	margin: auto;
+}
+
+.preview-pdf-canvas {
+	display: block;
+	border-radius: var(--radius-xs);
+	background: #fff;
+	box-shadow: var(--shadow-popover);
+}
+
+/* Clickable link annotations over the rasterized page — the layer is
+   click-through; only the link hotspots take clicks. */
+.preview-pdf-links {
+	position: absolute;
+	top: 0;
+	left: 0;
+	pointer-events: none;
+}
+
+.preview-pdf-link {
+	position: absolute;
+	pointer-events: auto;
+	cursor: pointer;
+	border-radius: 2px;
+	transition: background-color var(--motion-duration-fast, 120ms) ease;
+}
+
+.preview-pdf-link:hover,
+.preview-pdf-link:focus-visible {
+	outline: var(--border-width) solid var(--accent);
+	background: var(--accent-soft);
+}
+
+.preview-stage--pdf:hover .preview-pdf-hud,
+.preview-pdf-hud:focus-within {
+	opacity: 1;
+}
+
+.preview-pdf-hud__counter {
+	min-width: 56px;
+}
+
+.preview-image-hud__btn:disabled {
+	opacity: 0.35;
+	cursor: default;
+}
+
+/* ── 3D model renderer (9.20.10) ────────────────────────────────────── */
+
+.preview-stage--model {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+}
+
+.preview-model-canvas {
+	display: block;
+	width: 100%;
+	height: 100%;
+	/* OrbitControls grabs pointer drags; show the grab affordance. */
+	cursor: grab;
+	touch-action: none;
+}
+
+.preview-stage--model:hover .preview-model-hud,
+.preview-model-hud:focus-within {
+	opacity: 1;
+}
+
+/* ── Office documents renderer (9.20.9) ─────────────────────────────── */
+
+.preview-stage--office {
+	width: 100%;
+	height: 100%;
+	overflow: auto;
+	display: flex;
+	flex-direction: column;
+	background: var(--bg-elev);
+}
+
+/* DOCX: a readable centred prose column. */
+.preview-office-doc {
+	max-width: 720px;
+	width: 100%;
+	margin: 0 auto;
+	padding: var(--space-5) var(--space-4);
+	line-height: 1.6;
+	color: var(--text);
+}
+
+.preview-office-doc img {
+	max-width: 100%;
+	height: auto;
+}
+
+.preview-office-doc table {
+	border-collapse: collapse;
+	margin: var(--space-3) 0;
+}
+
+.preview-office-doc td,
+.preview-office-doc th {
+	border: var(--border-width) solid var(--border);
+	padding: var(--space-1);
+}
+
+/* XLSX: sticky sheet tablist over a scrolling grid. */
+.preview-office-tabs {
+	display: flex;
+	gap: var(--space-1);
+	padding: var(--space-1);
+	border-bottom: var(--border-width) solid var(--color-border-subtle);
+	overflow-x: auto;
+	flex-shrink: 0;
+}
+
+.preview-office-tab {
+	appearance: none;
+	border: none;
+	background: transparent;
+	color: var(--text-dim);
+	padding: var(--space-1);
+	border-radius: var(--radius-sm);
+	font-size: var(--text-size-sm);
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+.preview-office-tab[aria-selected="true"] {
+	background: var(--accent-soft);
+	color: var(--accent);
+}
+
+.preview-office-sheet {
+	overflow: auto;
+	padding: var(--space-2);
+}
+
+.preview-office-table {
+	border-collapse: collapse;
+	font-size: var(--text-size-sm);
+}
+
+.preview-office-table td {
+	border: var(--border-width) solid var(--border);
+	padding: var(--space-1);
+	white-space: nowrap;
+	color: var(--text);
+}
+
+/* PPTX: a per-slide text outline. */
+.preview-office-deck {
+	max-width: 720px;
+	width: 100%;
+	margin: 0 auto;
+	padding: var(--space-4);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+}
+
+.preview-office-slide {
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+	padding: var(--space-3);
+	color: var(--text);
+}
+
+.preview-office-slide__num {
+	font-size: var(--text-size-sm);
+	color: var(--text-dim);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	margin: 0 0 var(--space-2);
+}
+
+.preview-office-empty {
+	margin: auto;
+	padding: var(--space-5);
+	color: var(--text-dim);
+	text-align: center;
+}
+
+/* ── Text renderer ──────────────────────────────────────────────────── */
+
+.preview-stage--text {
+	width: 100%;
+	height: 100%;
+	display: block;
+}
+
+/* ── Code renderer (9.20.4) ───────────────────────────────────────────
+   Source needs column fidelity, so — unlike plain text — it does NOT
+   wrap; the viewport scrolls in both axes and the line-number gutter is
+   pinned to the left while the code scrolls sideways. Gutter and body
+   share one line-height so row N lines up with line N. */
+.preview-stage--code {
+	width: 100%;
+	height: 100%;
+	display: block;
+}
+
+.preview-code {
+	--preview-code-line-height: 1.6;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: flex-start;
+	overflow: auto;
+	background: var(--bg-elev);
+	border-radius: var(--radius-sm);
+	font-family: var(
+		--text-family-code,
+		ui-monospace,
+		"SF Mono",
+		"Cascadia Mono",
+		"Roboto Mono",
+		"Menlo",
+		monospace
+	);
+	font-size: var(--text-size-md);
+	line-height: var(--preview-code-line-height);
+}
+
+.preview-code__gutter {
+	position: sticky;
+	inset-inline-start: 0;
+	z-index: 1;
+	flex: none;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	padding: var(--space-4) var(--space-2);
+	background: var(--bg-elev);
+	border-inline-end: var(--border-width) solid var(--color-border-subtle, rgba(127, 127, 127, 0.2));
+	color: var(--text-dim);
+	user-select: none;
+	text-align: end;
+}
+
+.preview-code__lineno {
+	display: block;
+	font-variant-numeric: tabular-nums;
+}
+
+.preview-code__body {
+	margin: 0;
+	flex: 1;
+	min-width: 0;
+	padding: var(--space-4);
+	color: var(--text);
+	white-space: pre;
+	tab-size: 4;
+}
+
+.preview-code__body code {
+	font: inherit;
+}
+
+.preview-text {
+	margin: 0;
+	width: 100%;
+	height: 100%;
+	overflow: auto;
+	white-space: pre-wrap;
+	word-break: break-word;
+	color: var(--text);
+	font-family: var(
+		--text-family-code,
+		ui-monospace,
+		"SF Mono",
+		"Cascadia Mono",
+		"Roboto Mono",
+		"Menlo",
+		monospace
+	);
+	font-size: var(--text-size-md);
+	line-height: 1.6;
+	background: var(--bg-elev);
+	border-radius: var(--radius-sm);
+	padding: var(--space-4);
+	tab-size: 4;
+}
+
+/* ── Markdown renderer ──────────────────────────────────────────────── */
+
+.preview-stage--markdown {
+	width: 100%;
+	height: 100%;
+	overflow: auto;
+	padding: 0 var(--space-5);
+}
+
+.preview-markdown__doc {
+	max-width: 720px;
+	margin: 0 auto;
+	color: var(--text);
+}
+
+.preview-markdown__heading {
+	margin: var(--space-5) 0 var(--space-2);
+	line-height: 1.25;
+	color: var(--text);
+}
+
+.preview-markdown__doc h1 {
+	font-size: var(--text-size-3xl);
+	font-weight: 700;
+}
+.preview-markdown__doc h2 {
+	font-size: var(--text-size-2xl);
+	font-weight: 600;
+}
+.preview-markdown__doc h3 {
+	font-size: var(--text-size-xl);
+	font-weight: 600;
+}
+.preview-markdown__doc h4 {
+	font-size: var(--text-size-lg);
+	font-weight: 600;
+}
+
+.preview-markdown__paragraph {
+	margin: var(--space-2) 0;
+	color: var(--text-dim);
+	line-height: 1.65;
+}
+
+.preview-markdown__doc strong {
+	color: var(--text);
+	font-weight: 600;
+}
+.preview-markdown__doc em {
+	color: var(--text-dim);
+	font-style: italic;
+}
+
+.preview-markdown__inline-code,
+.preview-markdown__doc code {
+	font-family: var(--text-family-code, ui-monospace, "SF Mono", "Cascadia Mono", monospace);
+	font-size: 0.92em;
+	background: var(--bg-elev);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-xs);
+	padding: var(--space-0_5);
+}
+
+.preview-markdown__code {
+	margin: var(--space-3) 0;
+	background: var(--bg-elev);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-md);
+	padding: var(--space-2);
+	overflow-x: auto;
+}
+
+.preview-markdown__code code {
+	background: transparent;
+	border: none;
+	padding: 0;
+	font-size: 0.95em;
+	line-height: 20px;
+	color: var(--text);
+	white-space: pre;
+}
+
+.preview-markdown__list {
+	margin: var(--space-2) 0;
+	padding-inline-start: 1.5em;
+	color: var(--text-dim);
+}
+
+.preview-markdown__list li {
+	margin: var(--space-1) 0;
+}
+
+.preview-markdown__link {
+	color: var(--accent);
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+
+.preview-markdown__doc hr {
+	border: 0;
+	border-top: var(--border-width) solid var(--border);
+	margin: var(--space-4) 0;
+}
+
+/* ── Media renderers (video + audio, 9.20.3) ────────────────────────── */
+
+.preview-stage--media {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	padding: var(--space-4);
+}
+
+.preview-video {
+	max-width: 100%;
+	max-height: 100%;
+	/* Letterbox rather than stretch — a portrait clip keeps its ratio.
+	   The bars use the deepest surface token (not raw black) so they
+	   track the active theme. */
+	object-fit: contain;
+	background: var(--bg-canvas);
+	border-radius: var(--radius-md);
+	outline: none;
+}
+
+.preview-media__pip {
+	position: absolute;
+	top: var(--space-3);
+	inset-inline-end: var(--space-3);
+	padding: var(--space-1);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-full);
+	background: var(--bg-elev);
+	color: var(--text);
+	font: inherit;
+	font-size: var(--text-size-xs);
+	cursor: pointer;
+	opacity: 0;
+	transition: opacity 0.15s ease;
+}
+
+.preview-stage--video:hover .preview-media__pip,
+.preview-media__pip:focus-visible {
+	opacity: 1;
+}
+
+.preview-media__pip:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -2px;
+}
+
+.preview-audio__card {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-3);
+	min-width: 280px;
+	max-width: 420px;
+	width: 100%;
+	padding: var(--space-5);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-lg);
+	background: var(--bg);
+}
+
+.preview-audio__art {
+	width: 96px;
+	height: 96px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	color: var(--accent);
+	background: var(--accent-soft, rgba(127, 127, 127, 0.14));
+}
+
+.preview-audio__name {
+	font-size: var(--text-size-md);
+	color: var(--text);
+	text-align: center;
+	max-width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.preview-audio__format {
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	letter-spacing: 0.06em;
+}
+
+.preview-audio__player {
+	width: 100%;
+	margin-top: var(--space-1);
+}

@@ -1,0 +1,135 @@
+/* Feedback-1 — bug-report dialog. Mirrors the segmented + field
+ * patterns from `settings/network-egress-panel.css` so Privacy →
+ * Network → Feedback chrome stays consistent across both surfaces. */
+
+.feedback-dialog {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	min-width: 480px;
+}
+
+.feedback-dialog__banner {
+	margin: 0;
+	padding: var(--space-2) var(--space-2);
+	border-radius: var(--radius-sm);
+	background: var(--color-surface-subtle);
+	color: var(--color-text-secondary);
+	font-size: var(--text-size-sm);
+}
+
+/* Bordered inputs / textarea live on the shared `<TextField>` /
+ * `<TextArea>` primitive (renderer/ui/text-field.css). The dialog only
+ * owns the segmented controls, log preview, and footer chrome. */
+
+.feedback-dialog__field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1-5);
+	border: none;
+	padding: 0;
+	margin: 0;
+}
+
+.feedback-dialog__legend {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	gap: var(--space-2);
+	padding: 0;
+	margin: 0;
+	font-size: var(--text-size-md);
+	color: var(--color-text-secondary);
+}
+
+/* Feedback's segmented controls span the full dialog width — push the
+ * shared `.segmented` to fill via the .--fill modifier on the host wrapper.
+ * SDK CSS specificity beats app CSS by load order ([[feedback_sdk_css_cascade_trap]]);
+ * use a compound selector with higher specificity than `.segmented {…}`. */
+.feedback-dialog__segmented-host {
+	display: flex;
+}
+
+.feedback-dialog__segmented-host .segmented {
+	display: flex;
+	width: 100%;
+}
+
+.feedback-dialog__segmented-host .segmented__item {
+	flex: 1;
+}
+
+.feedback-dialog__hint {
+	color: var(--color-text-tertiary);
+	font-size: var(--text-size-xs);
+}
+
+.feedback-dialog__log {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1-5);
+	padding: var(--space-2) var(--space-2);
+	border-radius: var(--radius-sm);
+	background: var(--color-surface-subtle);
+}
+
+.feedback-dialog__log-toggle {
+	align-self: flex-start;
+	background: transparent;
+	border: none;
+	padding: 0;
+	color: var(--color-accent-default);
+	font-family: inherit;
+	font-size: var(--text-size-md);
+	cursor: pointer;
+}
+
+.feedback-dialog__log-toggle:hover {
+	text-decoration: underline;
+}
+
+.feedback-dialog__log-toggle:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 2px;
+	border-radius: var(--radius-xs);
+}
+
+.feedback-dialog__log-preview {
+	margin: 0;
+	max-height: 12rem;
+	overflow-y: auto;
+	padding: var(--space-2);
+	border-radius: var(--radius-sm);
+	background: var(--color-surface);
+	color: var(--color-text-secondary);
+	font-family: var(--font-mono);
+	font-size: var(--text-size-xs);
+	white-space: pre-wrap;
+	word-break: break-word;
+	border: var(--border-width) solid var(--color-border-subtle);
+}
+
+.feedback-dialog__error {
+	margin: 0;
+	padding: var(--space-2) var(--space-2);
+	border-radius: var(--radius-sm);
+	background: var(--color-state-error-subtle, var(--color-surface-subtle));
+	color: var(--color-state-error, var(--color-text-primary));
+	font-size: var(--text-size-sm);
+}
+
+.feedback-dialog__success {
+	margin: 0;
+	padding: var(--space-2) var(--space-2);
+	border-radius: var(--radius-sm);
+	background: var(--color-state-success-subtle, var(--color-surface-subtle));
+	color: var(--color-state-success, var(--color-text-primary));
+	font-size: var(--text-size-sm);
+}
+
+.feedback-dialog__footer {
+	display: flex;
+	gap: var(--space-2);
+	justify-content: flex-end;
+	margin-top: var(--space-2);
+}

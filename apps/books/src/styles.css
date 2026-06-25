@@ -1,0 +1,1207 @@
+/**
+ * Books reader styling for the 9.21.1.5 preview drop. Only references real
+ * theme tokens (the `--color-*`/`--space-*` values) and the app-theme
+ * aliases (`--text`, `--bg`, `--accent`, …) — no phantom vars. The
+ * `.app-header` chrome itself is owned by @brainstorm/sdk/app-theme.css;
+ * this file styles only the reader body + header deltas.
+ *
+ * The `--reader-*` vars are scoped to `.books` (the reading surface) so the
+ * footer chrome follows the READING theme, not the app theme — a dark app
+ * theme must not paint a dark bar under a sepia page. Popover content
+ * mounts at `document.body`, outside `.books`, so popover rules only use
+ * app-theme tokens.
+ */
+
+/* Base resets every app carries. `border-box` keeps the header's 1px
+ * bottom border INSIDE the shared 44px height (content-box measured 45px —
+ * F-203); the body flex column makes the reading stage fill the window with
+ * the footer pinned to the bottom edge (F-202). */
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	height: 100%;
+}
+
+/* `body` stays a plain block — NEVER a flex container. The fancy-menus
+ * runtime + `mountMenuHost()` portal their menus straight into `document.body`;
+ * a `display: flex` body coerces those portaled menu nodes into flex items,
+ * which breaks the menu's hit-testing so hover/click never reach the rows (the
+ * dead overflow ⋯ menu). The flex column lives on `#root`. */
+body {
+	margin: 0;
+	padding: 0;
+	overflow: hidden;
+}
+
+/* React root + app shell — header on top, the three-region layout below
+ * (library track · reading surface · the fixed `.bs-props` overlay). The root
+ * fills the viewport via height; the shell flexes inside it. */
+#root {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-height: 0;
+}
+
+.books-shell {
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+	min-height: 0;
+}
+
+/* The library is a track, so collapsing it animates the layout the same way
+ * Notes/Journal do: the grid column width transitions while the absolutely-
+ * positioned `.books__library` slides out on `transform`. A fixed-width
+ * absolute nav (rather than an in-track flex item) is what keeps the shelf
+ * content from reflowing/squishing mid-animation. */
+.books__layout {
+	position: relative;
+	display: grid;
+	grid-template-columns: 260px minmax(0, 1fr);
+	/* Pin the single row to the container height — an `auto` row grows to its
+	 * content, so the PDF reader's measure→size→remeasure loop can latch the
+	 * row onto an over-tall canvas, pushing the footer past the clipped
+	 * overflow (footer gone + pages cropped, worst in two-page spread). */
+	grid-template-rows: minmax(0, 1fr);
+	transition: grid-template-columns var(--motion-duration-normal, 180ms) ease;
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.books__layout[data-library-open="false"] {
+	grid-template-columns: 0 minmax(0, 1fr);
+}
+
+.books__content {
+	position: relative;
+	grid-column: 2 / 3;
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	min-height: 0;
+}
+
+/* Status / empty-state notice painted over the (empty) reading stage. */
+.books__placeholder {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: var(--space-6);
+	text-align: center;
+	background: var(--bg);
+}
+
+.books__notice-text {
+	margin: 0;
+	font-size: var(--text-size-md);
+	color: var(--text-dim);
+}
+
+/* Header slot the reflow reader's imperative controls (Aa / highlights)
+ * mount into — React owns the span, the reader owns its children. */
+.books__reader-controls {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+}
+
+/* ============================================================
+ * Library — the left shelf track (left nav IS a track, per the
+ * right-panel rule; only the right inspector floats).
+ * ============================================================ */
+.books__library {
+	position: absolute;
+	top: 0;
+	inset-inline-start: 0;
+	bottom: 0;
+	width: 260px;
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	border-inline-end: var(--border-width) solid var(--color-border-subtle);
+	overflow: hidden;
+	z-index: 90;
+	transition: transform var(--motion-duration-normal, 180ms) ease;
+	will-change: transform;
+}
+
+.books__library--closed {
+	transform: translateX(-100%);
+	border-color: transparent;
+}
+
+/* 44px header on the shared panel-header baseline. */
+.books__library-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-2);
+	height: 44px;
+	flex: 0 0 44px;
+	padding: 0 var(--space-2) 0 var(--space-4);
+	border-bottom: var(--border-width) solid var(--color-border-subtle);
+}
+
+.books__library-title {
+	margin: 0;
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-semibold);
+	color: var(--text);
+}
+
+/* The search row mirrors the Notes sidebar search exactly: a 44px toolbar
+   row with a 1px bottom divider, holding the borderless shared Searchbar
+   (transparent field, accent focus ring) — NOT a boxed/filled input. */
+.books__library-tools {
+	display: flex;
+	align-items: center;
+	flex: none;
+	height: 44px;
+	padding: 0 var(--space-2);
+	border-bottom: var(--border-width) solid var(--color-border-subtle);
+}
+
+:root .books__library-tools > .bs-searchbar {
+	flex: 1;
+	min-width: 0;
+}
+
+/* Import failure banner — a failed import used to vanish into a console
+   warning; this keeps it visible (and dismissable) so the user always knows. */
+.books__import-error {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--space-2);
+	margin: 0 var(--space-3) var(--space-2);
+	padding: var(--space-2) var(--space-2);
+	border: var(--border-width) solid var(--danger-border);
+	border-radius: var(--radius-md);
+	background: var(--danger-bg);
+}
+
+.books__import-error-text {
+	flex: 1 1 auto;
+	min-width: 0;
+	font-size: var(--text-size-sm);
+	line-height: 1.4;
+	color: var(--text);
+}
+
+/* Scroll container for the recency-grouped shelf (Notes-style). Holds one
+   `.books__library-group` per section. */
+.books__library-list {
+	margin: 0;
+	padding: var(--space-1) var(--space-2) var(--space-3);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow-y: auto;
+	/* Reserve the scrollbar gutter so filtering (which adds/removes rows and
+	   thus the scrollbar) never reflows the row content — the panel width
+	   stayed put but the list jumped sideways without this. */
+	scrollbar-gutter: stable;
+}
+
+.books__library-group {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+}
+
+/* Quiet xs-uppercase section caption — mirrors the Notes sidebar date headers
+   (the sanctioned small-font use). */
+.books__library-section {
+	margin: 0;
+	padding: var(--space-2) var(--space-2) var(--space-1);
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--text-faint);
+}
+
+.books__library-section-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+}
+
+.books__row {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--space-2);
+	width: 100%;
+	padding: var(--space-2);
+	border: 0;
+	border-radius: var(--radius-md);
+	background: transparent;
+	color: var(--text);
+	text-align: start;
+	cursor: pointer;
+	transition: background-color var(--motion-duration-fast, 120ms) ease;
+}
+
+.books__row:hover {
+	background: var(--hover);
+}
+
+.books__row--active {
+	background: var(--accent-soft);
+}
+
+.books__row:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}
+
+.books__row-icon {
+	flex: 0 0 auto;
+	display: inline-flex;
+}
+
+.books__row-icon:empty {
+	display: none;
+}
+
+.books__row-text {
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.books__row-title {
+	font-size: var(--text-size-md);
+	color: var(--text);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* Secondary line under the title — the sanctioned small-font use. */
+.books__row-author {
+	font-size: var(--text-size-sm);
+	color: var(--text-dim);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.books__row-progress {
+	flex: 0 0 auto;
+	font-size: var(--text-size-sm);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-dim);
+}
+
+.books__library-blank {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	padding: var(--space-5) var(--space-4);
+}
+
+.books__library-blank-title {
+	margin: 0;
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-semibold);
+	color: var(--text);
+}
+
+.books__library-blank-hint {
+	margin: 0 0 var(--space-3);
+	font-size: var(--text-size-sm);
+	line-height: 1.5;
+	color: var(--text-dim);
+}
+
+.books__library-noresults {
+	padding: var(--space-2);
+}
+
+/* Empty-shelf CTAs — the shared `.bs-btn` primitive owns the face (primary
+   gloss / secondary). The app supplies only layout: a full-width stacked
+   column so the two actions read as one tidy block. */
+.books__library-import-cta,
+.books__library-sample {
+	width: 100%;
+}
+
+.books__library-sample {
+	margin-top: var(--space-2);
+}
+
+/* ============================================================
+ * Inspector extras — cover band + table of contents inside the shared
+ * `.bs-props` panel body.
+ * ============================================================ */
+
+/* Cover host inside a column flex scroll body — MUST NOT compress (the
+ * band's only height is aspect-ratio × width). */
+.books__cover {
+	flex-shrink: 0;
+	border-radius: var(--radius-md);
+	overflow: hidden;
+}
+
+/* Book properties are all single-line facts (author / format / pages /
+ * progress) — center each label against its value so the label no longer
+ * floats above a taller value cell (the shared panel's `align-items: start`
+ * is tuned for multi-line vault properties; Books has none). This is the
+ * fix for the progress bar reading lower than its "Progress" label. */
+:root .books__props .bs-props__row {
+	align-items: center;
+}
+:root .books__props .bs-props__row-label {
+	padding-top: 0;
+}
+
+/* Separate the table of contents from the property rows with the same 1px
+   divider the meta footer uses, so CONTENTS reads as its own section. */
+.books__toc {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	margin-top: var(--space-3);
+	padding-top: var(--space-3);
+	border-top: var(--border-width) solid var(--border);
+}
+
+/* xs-uppercase section label — the sanctioned small-font use. */
+.books__toc-title {
+	margin: 0;
+	font-size: var(--text-size-xs);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--color-text-tertiary);
+}
+
+.books__toc-empty {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--text-dim);
+}
+
+.books__toc-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.books__toc-link {
+	width: 100%;
+	padding: var(--space-1);
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text);
+	font-size: var(--text-size-md);
+	text-align: start;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	cursor: pointer;
+	transition: background-color var(--motion-duration-fast, 120ms) ease;
+}
+
+.books__toc-link:hover {
+	background: var(--hover);
+}
+
+.books__toc-link:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}
+
+.books {
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+	min-height: 0;
+	background: var(--reader-bg, var(--bg));
+	color: var(--reader-text, var(--text));
+	--reader-font-family: var(--text-family-body, var(--text-family-ui));
+	--reader-font-size: 18px;
+	--reader-leading: 1.6;
+	--reader-measure: 65ch;
+	--reader-border: var(--color-border-subtle);
+	--reader-dim: var(--text-dim);
+	--reader-hover: var(--hover);
+}
+
+.books--theme-light {
+	--reader-bg: #ffffff;
+	--reader-text: #1a1a1a;
+	--reader-border: rgba(26, 26, 26, 0.12);
+	--reader-dim: rgba(26, 26, 26, 0.55);
+	--reader-hover: rgba(26, 26, 26, 0.06);
+}
+
+.books--theme-sepia {
+	--reader-bg: #f4ecd8;
+	--reader-text: #5b4636;
+	--reader-border: rgba(91, 70, 54, 0.18);
+	--reader-dim: rgba(91, 70, 54, 0.62);
+	--reader-hover: rgba(91, 70, 54, 0.08);
+}
+
+.books--theme-dark {
+	--reader-bg: #1a1a1a;
+	--reader-text: #d8d8d8;
+	--reader-border: rgba(216, 216, 216, 0.14);
+	--reader-dim: rgba(216, 216, 216, 0.55);
+	--reader-hover: rgba(216, 216, 216, 0.08);
+}
+
+.books__preview-badge {
+	font-size: var(--text-size-xs);
+	font-weight: var(--text-weight-medium);
+	color: var(--accent);
+	background: var(--accent-soft);
+	padding: var(--space-0_5);
+	border-radius: var(--radius-full);
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+/* Header toggles ride the shared `.bs-panel-toggle` chrome; these buttons
+ * open popover dialogs (aria-haspopup="dialog"), so the open state is
+ * `aria-expanded` — mirror the panel-toggle's pressed treatment for it. */
+.app-header .bs-panel-toggle[aria-expanded="true"]:not(:disabled) {
+	background: var(--accent-soft);
+	color: var(--accent);
+}
+
+.books__type-btn {
+	font-weight: var(--text-weight-medium);
+	letter-spacing: 0.01em;
+}
+
+/* F-222 — small header controls sit on the shared control scale (sm, 24px). */
+.books__type-btn,
+.books__hl-btn,
+.books__view-btn {
+	width: var(--control-height-sm, 24px);
+	height: var(--control-height-sm, 24px);
+}
+
+/* PDF view button (the fixed-layout analog of the reflow Aa control): a glyph
+ * trigger opening the zoom + tint popover. */
+.books__view-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.books__stage {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow: hidden;
+	display: flex;
+	justify-content: center;
+	padding: var(--space-6) var(--space-4);
+}
+
+.books__page {
+	width: 100%;
+	max-width: var(--reader-measure);
+	overflow: hidden;
+	color: var(--reader-text, var(--text));
+	font-family: var(--reader-font-family);
+	font-size: var(--reader-font-size);
+	line-height: var(--reader-leading);
+}
+
+.books__heading {
+	font-size: 1.4em;
+	font-weight: var(--text-weight-semibold);
+	margin: 0 0 var(--space-4);
+	color: var(--reader-text, var(--text));
+}
+
+.books__paragraph {
+	margin: 0 0 var(--space-4);
+}
+
+.books__empty {
+	color: var(--reader-dim);
+	text-align: center;
+}
+
+.books__notice {
+	margin: auto;
+}
+
+/* PDF reading mode (9.21.5): the page is a canvas centered in the stage;
+ * the engine sizes it to fit, the hairline + shadow read as a paper sheet
+ * over the reading background. */
+.books__stage--pdf {
+	align-items: center;
+}
+
+/* One page (single) or two facing pages (spread) centered in the stage. The
+ * engine sizes each canvas to fit its share of the row; this just lays them
+ * out and provides the gutter between a spread's two pages. */
+.books__pdf-pages {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-5);
+	max-width: 100%;
+	max-height: 100%;
+}
+
+/* Page host: shrink-wraps the canvas so the link overlay (absolute, sized to
+   the canvas box) sits exactly on top of the rendered page. */
+.books__pdf-page {
+	position: relative;
+	display: flex;
+	max-width: 100%;
+	max-height: 100%;
+}
+
+.books__pdf-canvas {
+	max-width: 100%;
+	max-height: 100%;
+	border: var(--border-width) solid var(--reader-border);
+	border-radius: var(--radius-sm);
+	background: #ffffff;
+	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
+	transition: filter var(--motion-duration-fast, 120ms) ease;
+}
+
+/* Zoomed past fit: the page renders larger than the stage, so let the stage
+ * scroll. `safe` keeps the page reachable at the top-left when it overflows
+ * (plain flex centering would clip the start). The fit caps are lifted so the
+ * enlarged canvas keeps its rendered size instead of snapping back to 100%. */
+.books--pdf-zoomed .books__stage--pdf {
+	overflow: auto;
+	justify-content: safe center;
+	align-items: safe center;
+}
+
+.books--pdf-zoomed .books__pdf-pages,
+.books--pdf-zoomed .books__pdf-canvas {
+	max-width: none;
+	max-height: none;
+}
+
+/* Page tint — applied as a canvas filter so a fixed-layout PDF still gets the
+ * reading-comfort modes (sepia warm-shift, dark invert) the reflow reader has.
+ * Light is the no-filter default. */
+.books--pdf-tint-sepia .books__pdf-canvas {
+	filter: sepia(0.45) saturate(0.9) brightness(0.97);
+}
+
+.books--pdf-tint-dark .books__pdf-canvas {
+	filter: invert(0.92) hue-rotate(180deg);
+}
+
+/* Clickable link annotations layered over the rasterized page. The layer is
+   click-through (`pointer-events: none`); only the link hotspots take clicks,
+   so the rest of the page stays selectable for paging gestures. */
+.books__pdf-links {
+	position: absolute;
+	top: 0;
+	left: 0;
+	pointer-events: none;
+}
+
+.books__pdf-link {
+	position: absolute;
+	pointer-events: auto;
+	cursor: pointer;
+	border-radius: 2px;
+	transition: background-color var(--motion-duration-fast, 120ms) ease;
+}
+
+.books__pdf-link:hover,
+.books__pdf-link:focus-visible {
+	outline: var(--border-width) solid var(--accent);
+	background: var(--accent-soft);
+}
+
+/* Footer is part of the reading surface — transparent over the page
+ * background, hairline top border in the reading theme's ink. Height +
+ * border mirror the 44px panel-header baseline. */
+.books__footer {
+	flex: 0 0 auto;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+	height: 44px;
+	padding: 0 var(--space-2);
+	border-top: var(--border-width) solid var(--reader-border);
+}
+
+.books__footer-info {
+	display: flex;
+	align-items: center;
+	min-width: 0;
+}
+
+.books__status {
+	font-size: var(--text-size-md);
+	color: var(--reader-text, var(--text));
+	white-space: nowrap;
+}
+
+.books__progress {
+	font-size: var(--text-size-md);
+	color: var(--reader-dim);
+	white-space: nowrap;
+}
+
+.books__progress::before {
+	content: "·";
+	margin: 0 var(--space-3);
+}
+
+.books__nav-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	border: var(--border-width) solid var(--reader-border);
+	border-radius: var(--radius-md);
+	background: transparent;
+	color: var(--reader-text, var(--text));
+	cursor: pointer;
+	transition:
+		background-color var(--motion-duration-fast, 120ms) ease,
+		border-color var(--motion-duration-fast, 120ms) ease,
+		opacity var(--motion-duration-fast, 120ms) ease;
+}
+
+.books__nav-btn:hover:not(:disabled) {
+	background: var(--reader-hover);
+}
+
+.books__nav-btn:disabled {
+	opacity: 0.35;
+	cursor: default;
+}
+
+.books__nav-btn:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}
+
+/* ============================================================
+ * Typography popover — settings-style form: stacked sections carry an
+ * xs-uppercase section label (the settings section-title treatment);
+ * inline rows pair an md label with their control. Mounted in the shared
+ * SDK popover at document.body — app-theme tokens only.
+ * ============================================================ */
+.books__type-panel {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-5);
+}
+
+.books__type-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-4);
+}
+
+.books__type-row--stacked {
+	flex-direction: column;
+	align-items: stretch;
+	gap: var(--space-2);
+}
+
+.books__type-label {
+	font-size: var(--text-size-md);
+	color: var(--text);
+}
+
+.books__type-row--stacked .books__type-label {
+	font-size: var(--text-size-xs);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--color-text-tertiary);
+}
+
+.books__type-segmented {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: var(--space-1);
+}
+
+.books__type-seg {
+	min-height: 28px;
+	padding: var(--space-1);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-md);
+	background: transparent;
+	color: var(--text);
+	font-size: var(--text-size-md);
+	cursor: pointer;
+	transition:
+		background-color var(--motion-duration-fast, 120ms) ease,
+		border-color var(--motion-duration-fast, 120ms) ease,
+		color var(--motion-duration-fast, 120ms) ease;
+}
+
+/* Each family segment previews its typeface (generic CSS families — the
+ * exact stacks live in logic/typography.ts and apply to the page itself). */
+.books__type-seg--serif {
+	font-family: serif;
+}
+
+.books__type-seg--mono {
+	font-family: monospace;
+}
+
+.books__type-seg:hover {
+	background: var(--hover);
+}
+
+.books__type-seg--active {
+	border-color: var(--accent);
+	background: var(--accent-soft);
+	color: var(--accent);
+}
+
+.books__type-seg:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}
+
+.books__type-stepper {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+
+.books__type-step {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-md);
+	background: transparent;
+	color: var(--text);
+	font-size: var(--text-size-md);
+	cursor: pointer;
+	transition: background-color var(--motion-duration-fast, 120ms) ease;
+}
+
+.books__type-step:hover {
+	background: var(--hover);
+}
+
+.books__type-step:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}
+
+.books__type-value {
+	min-width: 3.5rem;
+	text-align: center;
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium);
+	font-variant-numeric: tabular-nums;
+	color: var(--text);
+}
+
+/* Reading-theme picker — the settings swatch pattern: fill tile + label
+ * below, accent border + ring when selected, lift on hover. */
+.books__type-swatches {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: var(--space-2);
+}
+
+.books__type-swatch {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	padding: 0;
+	border: 0;
+	background: transparent;
+	cursor: pointer;
+	border-radius: var(--radius-md);
+}
+
+.books__type-swatch-fill {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 44px;
+	border-radius: var(--radius-md);
+	border: var(--border-width) solid var(--border);
+	font-size: var(--text-size-lg);
+	font-weight: var(--text-weight-medium);
+	transition:
+		transform var(--motion-duration-fast, 120ms) ease,
+		box-shadow var(--motion-duration-fast, 120ms) ease,
+		border-color var(--motion-duration-fast, 120ms) ease;
+}
+
+.books__type-swatch--theme .books__type-swatch-fill {
+	background: var(--bg);
+	color: var(--text);
+}
+
+.books__type-swatch--light .books__type-swatch-fill {
+	background: #ffffff;
+	color: #1a1a1a;
+}
+
+.books__type-swatch--sepia .books__type-swatch-fill {
+	background: #f4ecd8;
+	color: #5b4636;
+}
+
+.books__type-swatch--dark .books__type-swatch-fill {
+	background: #1a1a1a;
+	color: #d8d8d8;
+}
+
+.books__type-swatch:hover .books__type-swatch-fill {
+	transform: scale(1.03);
+}
+
+.books__type-swatch--active .books__type-swatch-fill {
+	border-color: var(--accent);
+	box-shadow: 0 0 0 1px var(--accent);
+}
+
+.books__type-swatch:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 2px;
+}
+
+.books__type-swatch-label {
+	font-size: var(--text-size-sm);
+	color: var(--text-dim);
+}
+
+/* Highlight authoring (9.21.4). The five colours read against any reading
+   theme — translucent tints over the page text. */
+.books {
+	--books-hl-yellow: rgba(250, 204, 21, 0.4);
+	--books-hl-green: rgba(74, 222, 128, 0.4);
+	--books-hl-blue: rgba(96, 165, 250, 0.4);
+	--books-hl-pink: rgba(244, 114, 182, 0.4);
+	--books-hl-purple: rgba(167, 139, 250, 0.4);
+}
+
+/* The highlight popovers mount outside `.books`, so the palette is also
+ * declared on the popover bodies themselves. */
+.books__hl-menu,
+.books__hl-panel {
+	--books-hl-yellow: rgba(250, 204, 21, 0.4);
+	--books-hl-green: rgba(74, 222, 128, 0.4);
+	--books-hl-blue: rgba(96, 165, 250, 0.4);
+	--books-hl-pink: rgba(244, 114, 182, 0.4);
+	--books-hl-purple: rgba(167, 139, 250, 0.4);
+}
+
+.books__mark {
+	border-radius: var(--radius-sm);
+	padding: 0.05em 0;
+	background: var(--books-hl, var(--books-hl-yellow));
+	color: inherit;
+	cursor: pointer;
+}
+
+.books__mark--yellow,
+.books__hl-swatch--yellow,
+.books__hl-quote--yellow {
+	--books-hl: var(--books-hl-yellow);
+}
+.books__mark--green,
+.books__hl-swatch--green,
+.books__hl-quote--green {
+	--books-hl: var(--books-hl-green);
+}
+.books__mark--blue,
+.books__hl-swatch--blue,
+.books__hl-quote--blue {
+	--books-hl: var(--books-hl-blue);
+}
+.books__mark--pink,
+.books__hl-swatch--pink,
+.books__hl-quote--pink {
+	--books-hl: var(--books-hl-pink);
+}
+.books__mark--purple,
+.books__hl-swatch--purple,
+.books__hl-quote--purple {
+	--books-hl: var(--books-hl-purple);
+}
+
+/* Declared on :root, NOT .books — the highlight dialog/panel mount into
+ * `document.body` via the shared popover, outside `.books`. Scoping these
+ * to `.books` left every swatch background unresolved there, which is what
+ * rendered the create-Highlight dialog completely empty (F-201). */
+:root {
+	--books-hl-yellow: rgba(250, 204, 21, 0.4);
+	--books-hl-green: rgba(74, 222, 128, 0.4);
+	--books-hl-blue: rgba(96, 165, 250, 0.4);
+	--books-hl-pink: rgba(244, 114, 182, 0.4);
+	--books-hl-purple: rgba(167, 139, 250, 0.4);
+}
+
+.books__mark {
+	background: var(--books-hl, var(--books-hl-yellow));
+}
+
+.books__hl-menu {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	min-width: 16rem;
+	max-width: 22rem;
+}
+
+.books__hl-preview {
+	margin: 0;
+	padding: var(--space-2) var(--space-2);
+	border-left: 3px solid var(--accent);
+	border-radius: var(--radius-sm);
+	background: var(--bg-elev);
+	color: var(--text);
+	font-size: var(--text-size-sm);
+	line-height: var(--text-line-height-normal);
+	max-height: 7.5em;
+	overflow: hidden;
+}
+
+.books__hl-actions {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: var(--space-2);
+}
+
+.books__hl-cancel,
+.books__hl-confirm {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	height: 28px;
+	padding: 0 var(--space-2);
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-md);
+	background: transparent;
+	color: var(--text);
+	font-size: var(--text-size-sm);
+	font-weight: var(--text-weight-medium);
+	cursor: pointer;
+}
+
+.books__hl-cancel:hover {
+	background: var(--hover);
+}
+
+.books__hl-confirm {
+	border-color: transparent;
+	background: var(--accent);
+	color: var(--accent-fg);
+}
+
+.books__hl-confirm:hover {
+	background: var(--accent-strong);
+}
+
+/* Secondary description under the popover title — the sanctioned small-font
+ * use. */
+.books__hl-hint {
+	margin: 0;
+	font-size: var(--text-size-sm);
+	color: var(--text-dim);
+	text-align: center;
+}
+
+.books__hl-swatches,
+.books__hl-recolor {
+	display: inline-flex;
+	gap: var(--space-2);
+}
+
+.books__hl-swatches {
+	justify-content: center;
+}
+
+.books__hl-swatch {
+	width: 24px;
+	height: 24px;
+	border-radius: var(--radius-full);
+	border: var(--border-width) solid transparent;
+	background: var(--books-hl, var(--books-hl-yellow));
+	cursor: pointer;
+	transition:
+		transform var(--motion-duration-fast, 120ms) ease,
+		border-color var(--motion-duration-fast, 120ms) ease,
+		box-shadow var(--motion-duration-fast, 120ms) ease;
+}
+
+.books__hl-swatch:hover {
+	transform: scale(1.08);
+}
+
+.books__hl-swatch--active {
+	border-color: var(--accent);
+	box-shadow: 0 0 0 1px var(--accent);
+}
+
+.books__hl-swatch:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 1px;
+}
+
+/* Highlights list panel — settings-style: xs-uppercase count caption,
+ * cards on the raised surface tone, md body text. */
+.books__hl-panel {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+}
+
+.books__hl-count {
+	margin: 0;
+	font-size: var(--text-size-xs);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--color-text-tertiary);
+}
+
+.books__hl-empty {
+	margin: 0;
+	font-size: var(--text-size-md);
+	color: var(--text-dim);
+}
+
+.books__hl-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	max-height: 60vh;
+	overflow-y: auto;
+}
+
+.books__hl-item {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	padding: var(--space-2);
+	border: var(--border-width) solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+	background: var(--color-surface-default);
+	transition: border-color var(--motion-duration-fast, 120ms) ease;
+}
+
+.books__hl-item--active {
+	border-color: var(--accent);
+}
+
+.books__hl-head {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--space-2);
+}
+
+.books__hl-quote {
+	flex: 1 1 auto;
+	text-align: left;
+	border: none;
+	background: var(--books-hl, var(--books-hl-yellow));
+	color: var(--text);
+	border-radius: var(--radius-sm);
+	padding: var(--space-1);
+	font-size: var(--text-size-md);
+	line-height: 1.45;
+	cursor: pointer;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 3;
+	overflow: hidden;
+	transition: box-shadow var(--motion-duration-fast, 120ms) ease;
+}
+
+.books__hl-quote:hover {
+	box-shadow: 0 0 0 1px var(--border-strong);
+}
+
+.books__hl-quote:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 1px;
+}
+
+.books__hl-remove {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	height: 26px;
+	padding: 0;
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text-dim);
+	font-size: var(--text-size-lg);
+	cursor: pointer;
+	transition:
+		background-color var(--motion-duration-fast, 120ms) ease,
+		color var(--motion-duration-fast, 120ms) ease;
+}
+
+.books__hl-remove:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+.books__hl-remove:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}
+
+.books__hl-note {
+	width: 100%;
+	resize: vertical;
+	border: var(--border-width) solid var(--border);
+	border-radius: var(--radius-md);
+	background: var(--color-surface-default);
+	color: var(--text);
+	font-family: inherit;
+	font-size: var(--text-size-md);
+	padding: var(--space-2);
+	transition: border-color var(--motion-duration-fast, 120ms) ease;
+}
+
+.books__hl-note:focus {
+	border-color: var(--accent);
+	outline: none;
+}
+
+.books__hl-note::placeholder {
+	color: var(--text-dim);
+}

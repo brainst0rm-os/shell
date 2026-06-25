@@ -1,0 +1,10 @@
+/**
+ * `BookmarksRepository` — the storage contract the app's data layer is
+ * written against. Implemented by `createEntitiesRepository` (the shared
+ * `entities.db` store); the renderer call sites depend only on this type.
+ */
+
+import type { SingleEntityRepository } from "@brainstorm/sdk/storage-repository";
+import type { Bookmark } from "../types/bookmark";
+
+export type BookmarksRepository = SingleEntityRepository<Bookmark>;

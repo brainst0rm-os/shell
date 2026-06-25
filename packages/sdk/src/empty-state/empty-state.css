@@ -1,0 +1,73 @@
+/**
+ * Shared empty-state chrome. Imported once per app
+ * (`import "@brainstorm/sdk/empty-state.css"`). Tokens are the app-theme
+ * aliases every app already loads via `app-theme.css`.
+ */
+
+.bs-empty-state {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-2);
+	width: 100%;
+	min-height: 100%;
+	padding: var(--space-6) var(--space-4);
+	box-sizing: border-box;
+	text-align: center;
+	color: var(--text-dim);
+}
+
+.bs-empty-state__glyph {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+/* Hero — a large accent-tinted chip so the affordance reads at a glance
+ * against a bare stage (a flat glyph nearly vanishes on dark themes). */
+.bs-empty-state--hero .bs-empty-state__glyph {
+	width: 88px;
+	height: 88px;
+	margin-bottom: var(--space-2);
+	border-radius: var(--radius-xl);
+	background: color-mix(in srgb, var(--accent) 12%, transparent);
+	color: var(--accent);
+	border: var(--border-width) solid color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+/* Compact — a small dim glyph for an empty nested inside other chrome. */
+.bs-empty-state--compact {
+	gap: var(--space-1);
+}
+
+.bs-empty-state--compact .bs-empty-state__glyph {
+	color: var(--text-dim);
+	opacity: 0.7;
+}
+
+.bs-empty-state__title {
+	margin: 0;
+	color: var(--text);
+	font-size: var(--text-size-lg);
+	font-weight: var(--text-weight-semibold);
+}
+
+.bs-empty-state--compact .bs-empty-state__title {
+	font-size: var(--text-size-md);
+}
+
+.bs-empty-state__hint {
+	margin: 0;
+	max-width: 42ch;
+	color: var(--text-dim);
+	font-size: var(--text-size-sm);
+	line-height: 18px;
+}
+
+.bs-empty-state__action {
+	margin-top: var(--space-3);
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+}

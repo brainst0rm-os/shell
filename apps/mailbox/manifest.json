@@ -1,0 +1,133 @@
+{
+  "id": "io.brainstorm.mailbox",
+  "name": "Mailbox",
+  "version": "0.1.0",
+  "sdk": "1",
+  "description": "Email client with IMAP, JMAP and SMTP, messages as vault entities, and sandboxed HTML rendering.",
+  "icon": "icon.svg",
+  "entry": "dist/index.html",
+  "capabilities": [
+    "mail.manage",
+    "intents.dispatch:send",
+    "entities.read:brainstorm/Email/v1",
+    "entities.write:brainstorm/Email/v1",
+    "entities.read:brainstorm/MailFolder/v1",
+    "entities.write:brainstorm/MailFolder/v1",
+    "entities.read:brainstorm/MailAccount/v1",
+    "entities.write:brainstorm/MailAccount/v1",
+    "entities.write:brainstorm/Connector/v1",
+    "entities.write:brainstorm/ConnectorAccount/v1",
+    "entities.read:*"
+  ],
+  "registrations": {
+    "entityTypes": [
+      {
+        "id": "brainstorm/MailAccount/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/mailbox/mail-account/v1.json",
+        "schema": {
+          "type": "object",
+          "required": ["address", "protocol", "authKind", "syncWindow", "enabled"],
+          "properties": {
+            "address": { "type": "string" },
+            "displayName": { "type": "string" },
+            "protocol": { "type": "string", "enum": ["imap", "jmap", "gmail-api", "ms-graph"] },
+            "authKind": { "type": "string", "enum": ["oauth2", "app-password", "basic"] },
+            "incoming": { "type": ["object", "null"] },
+            "outgoing": { "type": ["object", "null"] },
+            "syncWindow": { "type": "string", "enum": ["30d", "90d", "1y", "all"] },
+            "enabled": { "type": "boolean" },
+            "connectorAccountRef": { "type": "string" }
+          }
+        }
+      },
+      {
+        "id": "brainstorm/Connector/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/connector/connector/v1.json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "connectorAppId",
+            "displayName",
+            "enabled",
+            "egressOrigins",
+            "apiBaseUrl",
+            "defaultSyncInterval"
+          ],
+          "properties": {
+            "connectorAppId": { "type": "string" },
+            "displayName": { "type": "string" },
+            "enabled": { "type": "boolean" },
+            "egressOrigins": { "type": "array", "items": { "type": "string" } },
+            "apiBaseUrl": { "type": "string" },
+            "defaultSyncInterval": { "type": "number" },
+            "oauth": { "type": "object" }
+          }
+        }
+      },
+      {
+        "id": "brainstorm/ConnectorAccount/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/connector/account/v1.json",
+        "schema": {
+          "type": "object",
+          "required": ["connectorRef", "externalAccountLabel", "scopesGranted", "authState"],
+          "properties": {
+            "connectorRef": { "type": "string" },
+            "externalAccountLabel": { "type": "string" },
+            "scopesGranted": { "type": "array", "items": { "type": "string" } },
+            "authState": { "type": "string", "enum": ["active", "expired", "revoked"] },
+            "lastAuthAt": { "type": "string" }
+          }
+        }
+      },
+      {
+        "id": "brainstorm/MailFolder/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/mailbox/mail-folder/v1.json",
+        "schema": {
+          "type": "object",
+          "required": ["accountRef", "path", "role"],
+          "properties": {
+            "accountRef": { "type": "string" },
+            "path": { "type": "string" },
+            "role": {
+              "type": "string",
+              "enum": ["inbox", "sent", "drafts", "archive", "trash", "spam", "custom"]
+            },
+            "unreadCount": { "type": "number" }
+          }
+        }
+      },
+      {
+        "id": "brainstorm/Email/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/mailbox/email/v1.json",
+        "schema": {
+          "type": "object",
+          "required": ["accountRef", "folderRefs", "messageId", "from", "receivedAt"],
+          "properties": {
+            "accountRef": { "type": "string" },
+            "folderRefs": { "type": "array", "items": { "type": "string" } },
+            "messageId": { "type": "string" },
+            "threadKey": { "type": "string" },
+            "from": { "type": "array" },
+            "to": { "type": "array" },
+            "cc": { "type": "array" },
+            "subject": { "type": "string" },
+            "receivedAt": { "type": "number" },
+            "bodyText": { "type": "string" },
+            "bodyHtmlSafe": { "type": "string" },
+            "attachments": { "type": "array", "items": { "type": "string" } },
+            "flags": { "type": "array", "items": { "type": "string" } },
+            "tags": { "type": "array", "items": { "type": "string" } },
+            "submissionId": { "type": "string" }
+          }
+        }
+      }
+    ],
+    "openers": [{ "kind": "primary", "entityType": "brainstorm/Email/v1" }],
+    "intents": [
+      { "verb": "open", "entityType": "brainstorm/Email/v1", "priority": "primary" },
+      { "verb": "compose", "entityType": "brainstorm/Email/v1", "priority": "primary" },
+      { "verb": "reply", "entityType": "brainstorm/Email/v1", "priority": "primary" },
+      { "verb": "forward", "entityType": "brainstorm/Email/v1", "priority": "primary" }
+    ]
+  }
+}

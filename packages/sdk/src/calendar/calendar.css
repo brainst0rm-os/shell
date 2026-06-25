@@ -1,0 +1,351 @@
+/**
+ * Calendar — shared visual style for `createMonthGrid` + `createMiniCalendar`.
+ *
+ * Lifted from the four near-duplicate copies that lived in app stylesheets
+ * (`.cal-month*`, `.cal-mini*`, `.dbv-cal*`, `.dbv-cal__mini-*`). Token-
+ * driven everywhere — no hardcoded sizes, no hardcoded colors. Loaded via
+ * `app-theme.css` like `date-pager.css` / `searchbar.css`, so the side-
+ * effect tree-shaking trap from `[[project_workspace_css_subpath_export]]`
+ * doesn't bite.
+ *
+ * Selectors are `:root`-prefixed so a per-app `.cal-month__cell` declared
+ * at (0,1,0) loading after this sheet can't strip the SDK chrome by
+ * cascade (per `[[feedback_sdk_css_cascade_trap]]`). Compact + Full
+ * variants share the chrome and override sizing.
+ */
+
+/* ── Month grid (full density) ─────────────────────────────────────── */
+
+:root .bs-cal-month {
+	display: grid;
+	grid-template-rows: auto 1fr;
+	height: 100%;
+	min-height: 0;
+}
+
+:root .bs-cal-month__weekdays {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	border-bottom: var(--border-width) solid var(--border);
+	background: var(--bg);
+}
+
+:root .bs-cal-month__weekday {
+	padding: var(--space-2);
+	font-size: var(--text-size-xs);
+	color: var(--text-faint);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	text-align: center;
+}
+
+:root .bs-cal-month__grid {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	grid-template-rows: repeat(6, 1fr);
+	min-height: 0;
+}
+
+:root .bs-cal-month__cell {
+	border-inline-end: var(--border-width) solid var(--border);
+	border-bottom: var(--border-width) solid var(--border);
+	padding: var(--space-1);
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+	overflow: hidden;
+}
+
+:root .bs-cal-month__cell:nth-child(7n) {
+	border-inline-end: none;
+}
+
+:root .bs-cal-month__cell--weekend {
+	background: var(--bg-subtle);
+}
+
+:root .bs-cal-month__cell--other-month {
+	color: var(--text-faint);
+	background: var(--bg-canvas);
+}
+
+:root .bs-cal-month__cell--today {
+	background: var(--today-tint, color-mix(in srgb, var(--accent) 8%, transparent));
+}
+
+:root .bs-cal-month__cell--selected {
+	box-shadow: inset 0 0 0 1.5px var(--accent);
+}
+
+:root .bs-cal-month__date {
+	align-self: flex-start;
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: var(--control-height-sm, 24px);
+	height: var(--control-height-sm, 24px);
+	padding: 0 var(--space-1);
+	font-size: var(--text-size-xs);
+	line-height: 1;
+	color: var(--text-dim);
+	border-radius: var(--radius-xs);
+	background: transparent;
+	border: 0;
+	transition: background-color 80ms ease;
+	cursor: default;
+}
+
+:root button.bs-cal-month__date {
+	cursor: pointer;
+}
+
+:root .bs-cal-month__cell--today .bs-cal-month__date {
+	background: var(--accent);
+	color: var(--accent-fg);
+	font-weight: var(--text-weight-medium, 500);
+}
+
+:root .bs-cal-month__cell--other-month .bs-cal-month__date {
+	color: var(--text-faint);
+	opacity: 0.6;
+}
+
+:root button.bs-cal-month__date:hover {
+	background: var(--hover);
+}
+
+:root button.bs-cal-month__date:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}
+
+:root .bs-cal-month__content {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-0_5);
+	min-height: 0;
+	overflow: hidden;
+}
+
+/* ── Month grid (compact / mini density) ──────────────────────────── */
+
+:root .bs-cal-month--compact {
+	display: grid;
+	grid-template-rows: auto auto;
+	gap: var(--space-0_5);
+	height: auto;
+}
+
+:root .bs-cal-month--compact .bs-cal-month__weekdays {
+	border-bottom: 0;
+	background: transparent;
+	gap: var(--space-0_5);
+}
+
+:root .bs-cal-month--compact .bs-cal-month__weekday {
+	padding: var(--space-0_5) 0;
+	font-size: var(--text-size-xs);
+	color: var(--text-faint);
+	letter-spacing: 0;
+	text-transform: none;
+}
+
+:root .bs-cal-month--compact .bs-cal-month__grid {
+	grid-template-rows: repeat(6, auto);
+	gap: var(--space-0_5);
+}
+
+:root .bs-cal-month--compact .bs-cal-month__cell {
+	border: 0;
+	padding: 0;
+	min-height: 0;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	position: relative;
+	gap: 0;
+}
+
+:root .bs-cal-month--compact .bs-cal-month__cell--weekend,
+:root .bs-cal-month--compact .bs-cal-month__cell--other-month,
+:root .bs-cal-month--compact .bs-cal-month__cell--today {
+	background: transparent;
+}
+
+:root .bs-cal-month--compact .bs-cal-month__cell--selected {
+	box-shadow: none;
+}
+
+:root .bs-cal-month--compact .bs-cal-month__date {
+	flex: 0 0 auto;
+	min-width: 0;
+	width: 22px;
+	height: 22px;
+	padding: 0;
+	font-size: var(--text-size-xs);
+	color: var(--text-dim);
+	border-radius: 50%;
+	/* Reserve the 1.5px ring on every cell so the today-ring doesn't
+	 * jitter glyphs by half a pixel when it appears. */
+	border: 1.5px solid transparent;
+	background: transparent;
+}
+
+:root .bs-cal-month--compact button.bs-cal-month__date:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+:root .bs-cal-month--compact .bs-cal-month__cell--other-month .bs-cal-month__date {
+	color: var(--text-faint);
+	opacity: 0.55;
+}
+
+:root .bs-cal-month--compact .bs-cal-month__cell--today .bs-cal-month__date {
+	color: var(--accent);
+	font-weight: var(--text-weight-medium, 500);
+	background: transparent;
+	border-color: var(--accent);
+}
+
+:root .bs-cal-month--compact .bs-cal-month__cell--selected .bs-cal-month__date {
+	background: var(--selected, color-mix(in srgb, var(--accent) 18%, transparent));
+	color: var(--text);
+}
+
+:root
+	.bs-cal-month--compact
+	.bs-cal-month__cell--selected.bs-cal-month__cell--today
+	.bs-cal-month__date {
+	background: var(--accent);
+	color: var(--accent-fg);
+	border-color: var(--accent);
+}
+
+:root .bs-cal-month--compact .bs-cal-month__content {
+	display: none;
+}
+
+/* When the host opts back into content slots inside compact (year-tile
+ * dots), they re-show the slot themselves: `.bs-cal-month--compact
+ * .bs-cal-month__content { display: ... }` lives in the host stylesheet,
+ * or pass `density: Full` and rely on size overrides. */
+
+/* ── Mini calendar ─────────────────────────────────────────────────── */
+
+:root .bs-cal-mini {
+	padding: var(--space-3) var(--space-2) var(--space-1);
+}
+
+/* `today | ‹ | ›` cluster (`@brainstorm/sdk/date-pager`) followed by the
+ * month label — the buttons follow the inline axis, the label trails. */
+:root .bs-cal-mini__header {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	flex-wrap: wrap;
+	margin-bottom: var(--space-2);
+}
+
+:root .bs-cal-mini__title {
+	margin-inline-start: var(--space-2);
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium, 500);
+	color: var(--text);
+}
+
+/* Clickable title (month/year jump): reads as the label but offers a hover +
+ * focus affordance so it's discoverable as a jump target. */
+:root .bs-cal-mini__title--button {
+	margin-inline-start: var(--space-1);
+	padding: var(--space-0_5);
+	border: var(--border-width) solid transparent;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	cursor: pointer;
+}
+:root .bs-cal-mini__title--button:hover {
+	background: var(--hover);
+}
+:root .bs-cal-mini__title--button:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}
+
+:root .bs-cal-mini__body {
+	display: block;
+}
+
+/* Square day cells — the canonical mini-calendar look: a rounded-square
+ * button per day with the number centred and room beneath for a host-
+ * supplied presence dot, instead of the round date chip full month views
+ * use. Scoped to `.bs-cal-mini` so the Database calendar view's compact
+ * grid keeps its own treatment. */
+:root .bs-cal-mini .bs-cal-month--compact .bs-cal-month__weekday {
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--text-faint);
+}
+
+:root .bs-cal-mini .bs-cal-month--compact .bs-cal-month__cell {
+	min-height: 30px;
+}
+
+:root .bs-cal-mini .bs-cal-month--compact .bs-cal-month__date {
+	width: 100%;
+	height: 100%;
+	min-height: 30px;
+	border-radius: var(--radius-sm);
+	border: var(--border-width) solid transparent;
+	font-size: var(--text-size-sm);
+	font-weight: var(--text-weight-medium, 500);
+	color: var(--text);
+}
+
+:root .bs-cal-mini .bs-cal-month--compact button.bs-cal-month__date:hover {
+	background: var(--hover);
+	color: var(--text);
+}
+
+:root .bs-cal-mini .bs-cal-month--compact .bs-cal-month__cell--other-month .bs-cal-month__date {
+	color: var(--text-faint);
+	opacity: 0.6;
+}
+
+:root .bs-cal-mini .bs-cal-month--compact .bs-cal-month__cell--today .bs-cal-month__date {
+	color: var(--text);
+	font-weight: var(--text-weight-medium, 500);
+	background: transparent;
+	border-color: var(--accent);
+}
+
+:root .bs-cal-mini .bs-cal-month--compact .bs-cal-month__cell--selected .bs-cal-month__date,
+:root
+	.bs-cal-mini
+	.bs-cal-month--compact
+	.bs-cal-month__cell--selected.bs-cal-month__cell--today
+	.bs-cal-month__date {
+	background: var(--accent-dim, color-mix(in srgb, var(--accent) 18%, transparent));
+	color: var(--text);
+	border-color: var(--accent);
+}
+
+/* ── Anchored date-picker popover ──────────────────────────────────── */
+/* The themed `openCalendarPopover` surface — a floating glass panel that
+ * hosts a `.bs-cal-mini`, replacing native `<input type="date">` pickers.
+ * `glass--strong` (app-theme) paints the frosted background + border; this
+ * rule only owns layout + elevation. */
+:root .bs-cal-popover {
+	position: fixed;
+	z-index: 1000;
+	min-width: 248px;
+	padding: var(--space-1);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-popover, var(--shadow-lg, 0 8px 24px rgba(0, 0, 0, 0.2)));
+}
+
+:root .bs-cal-popover .bs-cal-mini {
+	padding: var(--space-2);
+}

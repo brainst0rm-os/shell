@@ -1,0 +1,44 @@
+{
+  "id": "io.brainstorm.form-designer",
+  "name": "Form Designer",
+  "version": "0.1.0",
+  "sdk": "1",
+  "description": "Designer for forms and documents — composes reusable Layout entities (forms) and renders billing documents (invoices) to PDF.",
+  "icon": "icon.svg",
+  "capabilities": [
+    "entities.read:brainstorm/Layout/v1",
+    "entities.write:brainstorm/Layout/v1",
+    "entities.read:*",
+    "entities.write:*",
+    "properties.read",
+    "export.print-to-pdf",
+    "files.write"
+  ],
+  "registrations": {
+    "entityTypes": [
+      {
+        "id": "io.brainstorm.form-designer/Invoice/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/form-designer/invoice/v1.json",
+        "schema": {
+          "type": "object",
+          "required": ["number", "issueDate", "currency", "status"],
+          "properties": {
+            "number": { "type": "string" },
+            "issueDate": { "type": "string" },
+            "dueDate": { "type": ["string", "null"] },
+            "currency": { "type": "string" },
+            "from": { "type": "object" },
+            "billTo": { "type": "object" },
+            "billToRef": { "type": ["string", "null"] },
+            "lineItems": { "type": "array", "items": { "type": "object" } },
+            "taxRatePct": { "type": "number" },
+            "notes": { "type": "string" },
+            "status": { "type": "string", "enum": ["draft", "sent", "paid"] },
+            "total": { "type": "number" }
+          }
+        }
+      }
+    ]
+  },
+  "entry": "dist/index.html"
+}

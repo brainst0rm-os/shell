@@ -1,0 +1,1006 @@
+{
+	"format": "brainstorm/help-corpus/v1",
+	"sections": [
+		{
+			"id": "getting-started",
+			"titleKey": "shell.help.section.gettingStarted",
+			"title": "Getting started",
+			"kind": "getting-started"
+		},
+		{
+			"id": "concepts",
+			"titleKey": "shell.help.section.concepts",
+			"title": "Concepts",
+			"kind": "guide"
+		},
+		{
+			"id": "app-notes",
+			"titleKey": "shell.help.section.app.notes",
+			"title": "Notes",
+			"kind": "app",
+			"appId": "io.brainstorm.notes"
+		},
+		{
+			"id": "app-tasks",
+			"titleKey": "shell.help.section.app.tasks",
+			"title": "Tasks",
+			"kind": "app",
+			"appId": "io.brainstorm.tasks"
+		},
+		{
+			"id": "app-files",
+			"titleKey": "shell.help.section.app.files",
+			"title": "Files",
+			"kind": "app",
+			"appId": "io.brainstorm.files"
+		},
+		{
+			"id": "app-calendar",
+			"titleKey": "shell.help.section.app.calendar",
+			"title": "Calendar",
+			"kind": "app",
+			"appId": "io.brainstorm.calendar"
+		},
+		{
+			"id": "app-journal",
+			"titleKey": "shell.help.section.app.journal",
+			"title": "Journal",
+			"kind": "app",
+			"appId": "io.brainstorm.journal"
+		},
+		{
+			"id": "app-database",
+			"titleKey": "shell.help.section.app.database",
+			"title": "Database",
+			"kind": "app",
+			"appId": "io.brainstorm.database"
+		},
+		{
+			"id": "app-graph",
+			"titleKey": "shell.help.section.app.graph",
+			"title": "Graph",
+			"kind": "app",
+			"appId": "io.brainstorm.graph"
+		},
+		{
+			"id": "app-whiteboard",
+			"titleKey": "shell.help.section.app.whiteboard",
+			"title": "Whiteboard",
+			"kind": "app",
+			"appId": "io.brainstorm.whiteboard"
+		},
+		{
+			"id": "app-bookmarks",
+			"titleKey": "shell.help.section.app.bookmarks",
+			"title": "Bookmarks",
+			"kind": "app",
+			"appId": "io.brainstorm.bookmarks"
+		},
+		{
+			"id": "app-code-editor",
+			"titleKey": "shell.help.section.app.codeEditor",
+			"title": "Code Editor",
+			"kind": "app",
+			"appId": "io.brainstorm.code-editor"
+		},
+		{
+			"id": "customising",
+			"titleKey": "shell.help.section.customising",
+			"title": "Customising",
+			"kind": "guide"
+		},
+		{
+			"id": "privacy",
+			"titleKey": "shell.help.section.privacy",
+			"title": "Privacy",
+			"kind": "guide"
+		}
+	],
+	"articles": [
+		{
+			"topicId": "guide/getting-started/getting-started/welcome",
+			"sectionId": "getting-started",
+			"title": "Welcome to Brainstorm",
+			"slug": "getting-started/welcome",
+			"markdown": "Brainstorm is a workspace for your notes, files, tasks, and everything else you want to keep in one place. It runs on your machine, your data lives in a folder you control, and it works offline.\n\nYou'll spend most of your time in three places:\n\n- The **dashboard** — the home screen. It shows your pinned things, the apps you have installed, and the launcher.\n- An **app** — Notes, Tasks, Files, and so on. Each app handles one shape of thing, but they share your data.\n- The **launcher** — `Cmd+Space` (macOS) or `Ctrl+Space` (Windows/Linux). Type to jump anywhere.\n\nIf you're brand new, start with [Create your first vault](./first-vault.md), then take the [dashboard tour](./dashboard-tour.md). Once you're set up, learn how [vaults](../concepts/vaults.md), [entities](../concepts/entities.md), [links](../concepts/links-and-mentions.md), and [collections](../concepts/collections.md) fit together.\n\nHelp is always one keystroke away — press `Shift+?` from anywhere.\n",
+			"plaintext": "Brainstorm is a workspace for your notes, files, tasks, and everything else you want to keep in one place. It runs on your machine, your data lives in a folder you control, and it works offline. You'll spend most of your time in three places: - The dashboard — the home screen. It shows your pinned things, the apps you have installed, and the launcher. - An app — Notes, Tasks, Files, and so on. Each app handles one shape of thing, but they share your data. - The launcher — Cmd+Space (macOS) or Ctrl+Space (Windows/Linux). Type to jump anywhere. If you're brand new, start with Create your first vault, then take the dashboard tour. Once you're set up, learn how vaults, entities, links, and collections fit together. Help is always one keystroke away — press Shift+? from anywhere.",
+			"headings": [],
+			"relPath": "getting-started/welcome.md"
+		},
+		{
+			"topicId": "guide/getting-started/getting-started/first-vault",
+			"sectionId": "getting-started",
+			"title": "Create your first vault",
+			"slug": "getting-started/first-vault",
+			"markdown": "A **vault** is where all your work lives — notes, tasks, files, settings, every entity an app saves. One vault is one workspace. You can have several.\n\n## Create a vault\n\n1. Open Brainstorm. If you don't have any vaults yet, the welcome screen asks you to make one.\n2. Pick a folder on your disk where the vault should live. An external drive works; a synced folder (iCloud, Dropbox) is not recommended — sync conflicts can corrupt the vault. Use [device pairing](../concepts/sync-across-devices.md) instead.\n3. Give the vault a name and a passphrase. The passphrase encrypts your data at rest. You can't recover it — write it down somewhere safe.\n\nThat's it. The vault opens and you land on the dashboard.\n\n## Switching vaults\n\nThe vault name lives in the top-left of the dashboard. Click it to switch to another vault or create a new one.\n\n## Where's my data?\n\nInside the folder you picked. You don't normally need to look in there — Brainstorm manages it. If you do peek, you'll see a few SQLite files and a binary store for documents. Don't edit those by hand.\n\nTo back up a vault, copy the whole folder while Brainstorm is closed. To move it, copy the folder, point Brainstorm at the new location, and the old one can be deleted.\n\n## Per-vault settings\n\nSome preferences travel with the vault — themes, keyboard shortcuts you've rebound, the apps you've installed. Others are per-device — window size, last open vault. Open **Settings** from the dashboard header to see them all.\n",
+			"plaintext": "A vault is where all your work lives — notes, tasks, files, settings, every entity an app saves. One vault is one workspace. You can have several. Create a vault 1. Open Brainstorm. If you don't have any vaults yet, the welcome screen asks you to make one. 2. Pick a folder on your disk where the vault should live. An external drive works; a synced folder (iCloud, Dropbox) is not recommended — sync conflicts can corrupt the vault. Use device pairing instead. 3. Give the vault a name and a passphrase. The passphrase encrypts your data at rest. You can't recover it — write it down somewhere safe. That's it. The vault opens and you land on the dashboard. Switching vaults The vault name lives in the top-left of the dashboard. Click it to switch to another vault or create a new one. Where's my data? Inside the folder you picked. You don't normally need to look in there — Brainstorm manages it. If you do peek, you'll see a few SQLite files and a binary store for documents. Don't edit those by hand. To back up a vault, copy the whole folder while Brainstorm is closed. To move it, copy the folder, point Brainstorm at the new location, and the old one can be deleted. Per-vault settings Some preferences travel with the vault — themes, keyboard shortcuts you've rebound, the apps you've installed. Others are per-device — window size, last open vault. Open Settings from the dashboard header to see them all.",
+			"headings": [
+				{
+					"depth": 2,
+					"text": "Create a vault",
+					"anchor": "create-a-vault"
+				},
+				{
+					"depth": 2,
+					"text": "Switching vaults",
+					"anchor": "switching-vaults"
+				},
+				{
+					"depth": 2,
+					"text": "Where's my data?",
+					"anchor": "wheres-my-data"
+				},
+				{
+					"depth": 2,
+					"text": "Per-vault settings",
+					"anchor": "per-vault-settings"
+				}
+			],
+			"relPath": "getting-started/first-vault.md"
+		},
+		{
+			"topicId": "guide/getting-started/getting-started/dashboard-tour",
+			"sectionId": "getting-started",
+			"title": "The dashboard",
+			"slug": "getting-started/dashboard-tour",
+			"markdown": "The dashboard is what you see when no app is in focus. It's home base.\n\n## The launcher\n\nPress `Cmd+Space` (macOS) or `Ctrl+Space` (Windows/Linux) and start typing. The launcher searches across every app — notes, tasks, files, bookmarks, people, anything you've added. Press `Enter` to open the top hit, or use arrow keys to pick one. See [Search](../concepts/search.md) for filters and scope.\n\n## Pins\n\nDrag anything onto the dashboard to pin it. Pins give you one-click access to the entities you reach for most — a notes folder, today's project, an important file. Right-click a pin to remove it. See [Pinning](../concepts/pinning.md).\n\n## The app row\n\nApps you've installed sit along the dock. Click one to open it. Right-click for app actions (new note, new task, etc.). New apps come from the **Marketplace** — open it from the dashboard header.\n\n## Tray and indicators\n\nThe tray shows running apps with badges (unread, in-progress sync, etc.). Click an icon to bring its window forward; right-click to close or send to background.\n\n## Wallpaper\n\nChange the wallpaper from **Settings → Appearance**. Pick a bundled image, a solid colour, or upload your own.\n\n## Settings\n\nThe gear icon in the dashboard header opens **Settings**. Vault data, appearance, [themes](../concepts/themes.md), [keyboard shortcuts](../keyboard.md), installed apps, sync — all live there.\n",
+			"plaintext": "The dashboard is what you see when no app is in focus. It's home base. The launcher Press Cmd+Space (macOS) or Ctrl+Space (Windows/Linux) and start typing. The launcher searches across every app — notes, tasks, files, bookmarks, people, anything you've added. Press Enter to open the top hit, or use arrow keys to pick one. See Search for filters and scope. Pins Drag anything onto the dashboard to pin it. Pins give you one-click access to the entities you reach for most — a notes folder, today's project, an important file. Right-click a pin to remove it. See Pinning. The app row Apps you've installed sit along the dock. Click one to open it. Right-click for app actions (new note, new task, etc.). New apps come from the Marketplace — open it from the dashboard header. Tray and indicators The tray shows running apps with badges (unread, in-progress sync, etc.). Click an icon to bring its window forward; right-click to close or send to background. Wallpaper Change the wallpaper from Settings → Appearance. Pick a bundled image, a solid colour, or upload your own. Settings The gear icon in the dashboard header opens Settings. Vault data, appearance, themes, keyboard shortcuts, installed apps, sync — all live there.",
+			"headings": [
+				{
+					"depth": 2,
+					"text": "The launcher",
+					"anchor": "the-launcher"
+				},
+				{
+					"depth": 2,
+					"text": "Pins",
+					"anchor": "pins"
+				},
+				{
+					"depth": 2,
+					"text": "The app row",
+					"anchor": "the-app-row"
+				},
+				{
+					"depth": 2,
+					"text": "Tray and indicators",
+					"anchor": "tray-and-indicators"
+				},
+				{
+					"depth": 2,
+					"text": "Wallpaper",
+					"anchor": "wallpaper"
+				},
+				{
+					"depth": 2,
+					"text": "Settings",
+					"anchor": "settings"
+				}
+			],
+			"relPath": "getting-started/dashboard-tour.md"
+		},
+		{
+			"topicId": "guide/getting-started/getting-started/install-an-app",
+			"sectionId": "getting-started",
+			"title": "Install an app",
+			"slug": "getting-started/install-an-app",
+			"markdown": "Brainstorm ships with the core apps — Notes, Tasks, Files, Calendar, Journal, Database, Graph, Whiteboard, Bookmarks, Code Editor. To add more, open the **Marketplace** from the dashboard header.\n\n## Browse and install\n\nThe Marketplace lists every app available to your vault. Each listing shows:\n\n- What the app does, with screenshots.\n- Who made it.\n- What [permissions](../privacy-and-security.md) it asks for.\n\nClick **Install** to add an app. The first time you install, Brainstorm asks you to confirm the permissions — read, write, access the network, and so on. You can deny anything you're unsure about; the app still installs but won't be able to do the things you said no to.\n\n## Where new apps appear\n\nAfter install, the app shows up in the dock and is searchable from the [launcher](./dashboard-tour.md). Right-click its dock icon for its **New** action.\n\n## Uninstall\n\nOpen **Settings → Apps** and click the app you want to remove. Choose **Uninstall**. The app is removed, but the data it created (notes, files, tasks, etc.) stays in your vault. You can reinstall later and the data comes back.\n\n## Themes are also installable\n\nThemes live in the Marketplace too. Installing one adds it to **Settings → Appearance** — you can then switch between themes without uninstalling. See [Themes](../concepts/themes.md).\n",
+			"plaintext": "Brainstorm ships with the core apps — Notes, Tasks, Files, Calendar, Journal, Database, Graph, Whiteboard, Bookmarks, Code Editor. To add more, open the Marketplace from the dashboard header. Browse and install The Marketplace lists every app available to your vault. Each listing shows: - What the app does, with screenshots. - Who made it. - What permissions it asks for. Click Install to add an app. The first time you install, Brainstorm asks you to confirm the permissions — read, write, access the network, and so on. You can deny anything you're unsure about; the app still installs but won't be able to do the things you said no to. Where new apps appear After install, the app shows up in the dock and is searchable from the launcher. Right-click its dock icon for its New action. Uninstall Open Settings → Apps and click the app you want to remove. Choose Uninstall. The app is removed, but the data it created (notes, files, tasks, etc.) stays in your vault. You can reinstall later and the data comes back. Themes are also installable Themes live in the Marketplace too. Installing one adds it to Settings → Appearance — you can then switch between themes without uninstalling. See Themes.",
+			"headings": [
+				{
+					"depth": 2,
+					"text": "Browse and install",
+					"anchor": "browse-and-install"
+				},
+				{
+					"depth": 2,
+					"text": "Where new apps appear",
+					"anchor": "where-new-apps-appear"
+				},
+				{
+					"depth": 2,
+					"text": "Uninstall",
+					"anchor": "uninstall"
+				},
+				{
+					"depth": 2,
+					"text": "Themes are also installable",
+					"anchor": "themes-are-also-installable"
+				}
+			],
+			"relPath": "getting-started/install-an-app.md"
+		},
+		{
+			"topicId": "guide/concepts/vaults",
+			"sectionId": "concepts",
+			"title": "Vaults",
+			"slug": "concepts/vaults",
+			"markdown": "A **vault** is one workspace. One folder on disk holds everything in it — your notes, your tasks, your files, the apps you've installed, the themes you've picked, the shortcuts you've rebound.\n\n## One vault, many vaults\n\nMost people use one vault for personal work and maybe a second for a job or a project. There's no limit. Switch between them from the vault name in the top-left of the dashboard.\n\nVaults don't share data. A note in your personal vault isn't visible from your work vault. The two are independent workspaces that happen to use the same app.\n\n## Encrypted at rest\n\nEverything in your vault is encrypted on disk with a passphrase you chose when you created it. If someone copies the folder off your machine without your passphrase, they get noise.\n\nIf you forget the passphrase, your data is unrecoverable. Write it down somewhere safe.\n\n## Moving and backing up\n\nTo back up: close Brainstorm, copy the vault folder somewhere safe. That's it.\n\nTo move to a new machine or drive: copy the folder, then in Brainstorm pick **Open vault** and point at the new location.\n\nDon't put a vault inside a synced folder (iCloud, Dropbox, Google Drive). Those services don't understand the file format and can corrupt the vault by syncing mid-write. For multi-device, use [device pairing](./sync-across-devices.md) — it's designed for this.\n\n## What's inside\n\nYou don't normally need to look. If you do, you'll find a few SQLite database files and a folder of document data. The shape is documented and stable, but the on-disk format isn't a user-facing surface — don't edit it by hand.\n",
+			"plaintext": "A vault is one workspace. One folder on disk holds everything in it — your notes, your tasks, your files, the apps you've installed, the themes you've picked, the shortcuts you've rebound. One vault, many vaults Most people use one vault for personal work and maybe a second for a job or a project. There's no limit. Switch between them from the vault name in the top-left of the dashboard. Vaults don't share data. A note in your personal vault isn't visible from your work vault. The two are independent workspaces that happen to use the same app. Encrypted at rest Everything in your vault is encrypted on disk with a passphrase you chose when you created it. If someone copies the folder off your machine without your passphrase, they get noise. If you forget the passphrase, your data is unrecoverable. Write it down somewhere safe. Moving and backing up To back up: close Brainstorm, copy the vault folder somewhere safe. That's it. To move to a new machine or drive: copy the folder, then in Brainstorm pick Open vault and point at the new location. Don't put a vault inside a synced folder (iCloud, Dropbox, Google Drive). Those services don't understand the file format and can corrupt the vault by syncing mid-write. For multi-device, use device pairing — it's designed for this. What's inside You don't normally need to look. If you do, you'll find a few SQLite database files and a folder of document data. The shape is documented and stable, but the on-disk format isn't a user-facing surface — don't edit it by hand.",
+			"headings": [
+				{
+					"depth": 2,
+					"text": "One vault, many vaults",
+					"anchor": "one-vault-many-vaults"
+				},
+				{
+					"depth": 2,
+					"text": "Encrypted at rest",
+					"anchor": "encrypted-at-rest"
+				},
+				{
+					"depth": 2,
+					"text": "Moving and backing up",
+					"anchor": "moving-and-backing-up"
+				},
+				{
+					"depth": 2,
+					"text": "What's inside",
+					"anchor": "whats-inside"
+				}
+			],
+			"relPath": "concepts/vaults.md"
+		},
+		{
+			"topicId": "guide/concepts/apps",
+			"sectionId": "concepts",
+			"title": "Apps",
+			"slug": "concepts/apps",
+			"markdown": "An **app** in Brainstorm is a self-contained tool — Notes, Tasks, Files, Calendar, and so on. Each one handles a particular shape of work, but they all share your vault.\n\n## They speak a common language\n\nNotes doesn't know what Tasks is. Tasks doesn't know about Files. But because every app stores its work as [entities](./entities.md) of typed properties, they can read each other's data without coordination.\n\nThat's why you can:\n\n- Drop a file from **Files** into a note.\n- `@`-mention a task inside a note and have it [link](./links-and-mentions.md) two-ways.\n- See every entity that references a project in the [Graph](../apps/graph.md).\n- Build a [Database](../apps/database.md) view that lists every note tagged with a particular dictionary entry, regardless of which app created the note.\n\n## They run sandboxed\n\nEach app runs in its own isolated process. It can only access the parts of your vault you've granted it. When you install an app it declares what permissions it needs (\"read your notes\", \"use the network\"). You can review and revoke those any time in **Settings → Apps**.\n\nThis means an app can't snoop on another app's data unless you explicitly grant it that access. It also means a buggy or malicious app can't break out and read your filesystem.\n\n## First-party vs third-party\n\nThe apps that ship with Brainstorm are written and signed by us. Anything installed from the Marketplace by another developer is third-party — the same sandbox rules apply, but always check what an unfamiliar app is asking for before you install. See [Privacy and security](../privacy-and-security.md).\n",
+			"plaintext": "An app in Brainstorm is a self-contained tool — Notes, Tasks, Files, Calendar, and so on. Each one handles a particular shape of work, but they all share your vault. They speak a common language Notes doesn't know what Tasks is. Tasks doesn't know about Files. But because every app stores its work as entities of typed properties, they can read each other's data without coordination. That's why you can: - Drop a file from Files into a note. - @-mention a task inside a note and have it link two-ways. - See every entity that references a project in the Graph. - Build a Database view that lists every note tagged with a particular dictionary entry, regardless of which app created the note. They run sandboxed Each app runs in its own isolated process. It can only access the parts of your vault you've granted it. When you install an app it declares what permissions it needs (\"read your notes\", \"use the network\"). You can review and revoke those any time in Settings → Apps. This means an app can't snoop on another app's data unless you explicitly grant it that access. It also means a buggy or malicious app can't break out and read your filesystem. First-party vs third-party The apps that ship with Brainstorm are written and signed by us. Anything installed from the Marketplace by another developer is third-party — the same sandbox rules apply, but always check what an unfamiliar app is asking for before you install. See Privacy and security.",
+			"headings": [
+				{
+					"depth": 2,
+					"text": "They speak a common language",
+					"anchor": "they-speak-a-common-language"
+				},
+				{
+					"depth": 2,
+					"text": "They run sandboxed",
+					"anchor": "they-run-sandboxed"
+				},
+				{
+					"depth": 2,
+					"text": "First-party vs third-party",
+					"anchor": "first-party-vs-third-party"
+				}
+			],
+			"relPath": "concepts/apps.md"
+		},
+		{
+			"topicId": "guide/concepts/entities",
+			"sectionId": "concepts",
+			"title": "Entities",
+			"slug": "concepts/entities",
+			"markdown": "An **entity** is one thing in your vault — a note, a task, a file, a calendar event, a bookmark, a person. Apps create entities; the rest of Brainstorm reads them.\n\nEvery entity has three parts:\n\n- A **type** — `Note`, `Task`, `File`, `Bookmark`, and so on. The type controls what shape the entity has.\n- **Properties** — typed metadata. A task has a status and a due date; a bookmark has a URL and a title; a file has a size and a mime type. See [Properties](./properties.md).\n- A **body** (optional) — the long-form content. A note's body is its rich text. A bookmark's body is the captured page text. A task has no body.\n\n## Renaming, deleting, restoring\n\nRight-click any entity for **Rename**, **Delete**, **Duplicate**, **Pin to dashboard**, and other actions. The same menu shows up in every app — it's the same entity underneath.\n\nDeleted entities go to the **Bin**. They sit there until you empty it, so a delete you regret is recoverable. Open the Bin from the dashboard header.\n\n## Cross-app reach\n\nBecause the type and properties are stable, any app can read any entity. The [Database](../apps/database.md) can show you a grid of every entity matching a filter — Notes from this week, Files over 10 MB, Tasks due tomorrow. The [Graph](../apps/graph.md) draws the network of [links and mentions](./links-and-mentions.md) between them.\n\n## Defining your own types\n\nYou're not stuck with the built-in types. In **Settings → Data** you can define new entity types — a `Recipe`, a `Book`, a `Habit` — with their own properties. Apps that work on generic entities (Database, Graph, Files) pick them up automatically.\n",
+			"plaintext": "An entity is one thing in your vault — a note, a task, a file, a calendar event, a bookmark, a person. Apps create entities; the rest of Brainstorm reads them. Every entity has three parts: - A type — Note, Task, File, Bookmark, and so on. The type controls what shape the entity has. - Properties — typed metadata. A task has a status and a due date; a bookmark has a URL and a title; a file has a size and a mime type. See Properties. - A body (optional) — the long-form content. A note's body is its rich text. A bookmark's body is the captured page text. A task has no body. Renaming, deleting, restoring Right-click any entity for Rename, Delete, Duplicate, Pin to dashboard, and other actions. The same menu shows up in every app — it's the same entity underneath. Deleted entities go to the Bin. They sit there until you empty it, so a delete you regret is recoverable. Open the Bin from the dashboard header. Cross-app reach Because the type and properties are stable, any app can read any entity. The Database can show you a grid of every entity matching a filter — Notes from this week, Files over 10 MB, Tasks due tomorrow. The Graph draws the network of links and mentions between them. Defining your own types You're not stuck with the built-in types. In Settings → Data you can define new entity types — a Recipe, a Book, a Habit — with their own properties. Apps that work on generic entities (Database, Graph, Files) pick them up automatically.",
+			"headings": [
+				{
+					"depth": 2,
+					"text": "Renaming, deleting, restoring",
+					"anchor": "renaming-deleting-restoring"
+				},
+				{
+					"depth": 2,
+					"text": "Cross-app reach",
+					"anchor": "cross-app-reach"
+				},
+				{
+					"depth": 2,
+					"text": "Defining your own types",
+					"anchor": "defining-your-own-types"
+				}
+			],
+			"relPath": "concepts/entities.md"
+		},
+		{
+			"topicId": "guide/concepts/links-and-mentions",
+			"sectionId": "concepts",
+			"title": "Links and mentions",
+			"slug": "concepts/links-and-mentions",
+			"markdown": "Brainstorm tracks the connections between [entities](./entities.md). You make those connections two ways: by mentioning another entity inline, or by adding it as a property.\n\n## `@` mentions\n\nType `@` anywhere in a [note](../apps/notes.md) and a typeahead opens. Search for the entity you want — a task, another note, a file, anyone. Hit `Enter` to insert.\n\nA mention is a live link, not a copy of the title. If you later rename the mentioned entity, the mention text updates everywhere. Click it to jump to the entity in its app.\n\n## Property links\n\nSome [properties](./properties.md) hold entity references — for example, a task's `Project` property points at a project entity. These work like mentions: rename-safe, click-to-navigate.\n\n## The link survives the rename\n\nThis is the whole point. Inside Brainstorm you never have to fix broken references — drag, copy, rename, move between vaults, the links keep working as long as the target entity exists.\n\n## Backlinks\n\nEvery entity has a list of what mentions it. Open an entity's inspector (right side of the app window) to see incoming links. Open the [Graph app](../apps/graph.md) to see the whole network at once.\n\n## External links\n\nPlain web URLs — `https://…` — work like everywhere else. Type or paste one and it becomes clickable. Brainstorm doesn't treat external URLs as entities; if you want to keep one around, save it to [Bookmarks](../apps/bookmarks.md) and reference the bookmark.\n",
+			"plaintext": "Brainstorm tracks the connections between entities. You make those connections two ways: by mentioning another entity inline, or by adding it as a property. @ mentions Type @ anywhere in a note and a typeahead opens. Search for the entity you want — a task, another note, a file, anyone. Hit Enter to insert. A mention is a live link, not a copy of the title. If you later rename the mentioned entity, the mention text updates everywhere. Click it to jump to the entity in its app. Property links Some properties hold entity references — for example, a task's Project property points at a project entity. These work like mentions: rename-safe, click-to-navigate. The link survives the rename This is the whole point. Inside Brainstorm you never have to fix broken references — drag, copy, rename, move between vaults, the links keep working as long as the target entity exists. Backlinks Every entity has a list of what mentions it. Open an entity's inspector (right side of the app window) to see incoming links. Open the Graph app to see the whole network at once. External links Plain web URLs — https://… — work like everywhere else. Type or paste one and it becomes clickable. Brainstorm doesn't treat external URLs as entities; if you want to keep one around, save it to Bookmarks and reference the bookmark.",
+			"headings": [
+				{
+					"depth": 2,
+					"text": "@ mentions",
+					"anchor": "mentions"
+				},
+				{
+					"depth": 2,
+					"text": "Property links",
+					"anchor": "property-links"
+				},
+				{
+					"depth": 2,
+					"text": "The link survives the rename",
+					"anchor": "the-link-survives-the-rename"
+				},
+				{
+					"depth": 2,
+					"text": "Backlinks",
+					"anchor": "backlinks"
+				},
+				{
+					"depth": 2,
+					"text": "External links",
+					"anchor": "external-links"
+				}
+			],
+			"relPath": "concepts/links-and-mentions.md"
+		},
+		{
+			"topicId": "guide/concepts/collections",
+			"sectionId": "concepts",
+			"title": "Collections",
+			"slug": "concepts/collections",
+			"markdown": "A **collection** is a named group of [entities](./entities.md). Use it for a project, a topic, an area of your life, a reading list, anything you want to keep together.\n\n## How they work\n\nA collection is itself an entity — it has a name, a description, an icon. What makes it a collection is membership: it points at the entities that belong to it.\n\nAn entity can live in many collections at once. A note about wine pairing can be in `Cooking`, `Travel: France`, and `Holiday-2026` simultaneously.\n\n## Create one\n\nFrom the dashboard launcher, type the collection name and pick **Create collection**. Or in any app, right-click an entity and choose **Add to collection** → **New collection**.\n\n## Add and remove\n\n- Drag an entity onto a collection in the sidebar.\n- Right-click → **Add to collection**.\n- Open the collection and use **Add** at the top.\n\nRemoving an entity from a collection doesn't delete the entity — it just leaves the collection.\n\n## Collection views\n\nOpen a collection and you see its members. The default view is a grid; switch to list, gallery, board, calendar, or timeline using the view picker. Filter, sort, and group from the toolbar. The [Database app](../apps/database.md) is built on this — every Database view is a view over a collection.\n\n## Smart collections\n\nA smart collection has its members defined by a filter, not by hand. \"All tasks due this week\", \"All notes tagged `idea`\". As entities match or stop matching the filter, the collection updates automatically. Create one from **New collection → Smart**.\n",
+			"plaintext": "A collection is a named group of entities. Use it for a project, a topic, an area of your life, a reading list, anything you want to keep together. How they work A collection is itself an entity — it has a name, a description, an icon. What makes it a collection is membership: it points at the entities that belong to it. An entity can live in many collections at once. A note about wine pairing can be in Cooking, Travel: France, and Holiday-2026 simultaneously. Create one From the dashboard launcher, type the collection name and pick Create collection. Or in any app, right-click an entity and choose Add to collection → New collection. Add and remove - Drag an entity onto a collection in the sidebar. - Right-click → Add to collection. - Open the collection and use Add at the top. Removing an entity from a collection doesn't delete the entity — it just leaves the collection. Collection views Open a collection and you see its members. The default view is a grid; switch to list, gallery, board, calendar, or timeline using the view picker. Filter, sort, and group from the toolbar. The Database app is built on this — every Database view is a view over a collection. Smart collections A smart collection has its members defined by a filter, not by hand. \"All tasks due this week\", \"All notes tagged idea\". As entities match or stop matching the filter, the collection updates automatically. Create one from New collection → Smart.",
+			"headings": [
+				{
+					"depth": 2,
+					"text": "How they work",
+					"anchor": "how-they-work"
+				},
+				{
+					"depth": 2,
+					"text": "Create one",
+					"anchor": "create-one"
+				},
+				{
+					"depth": 2,
+					"text": "Add and remove",
+					"anchor": "add-and-remove"
+				},
+				{
+					"depth": 2,
+					"text": "Collection views",
+					"anchor": "collection-views"
+				},
+				{
+					"depth": 2,
+					"text": "Smart collections",
+					"anchor": "smart-collections"
+				}
+			],
+			"relPath": "concepts/collections.md"
+		},
+		{
+			"topicId": "guide/concepts/properties",
+			"sectionId": "concepts",
+			"title": "Properties",
+			"slug": "concepts/properties",
+			"markdown": "A **property** is typed metadata on an [entity](./entities.md). A task has `status`, `due`, `priority`, `project`. A bookmark has `url`, `title`, `tags`. A note has `created`, `updated`, and whatever else you've added.\n\n## What types are there\n\nThe built-in types cover most needs:\n\n- **Text** — plain or formatted (URL, email, phone).\n- **Number** — integer, decimal, currency, percent.\n- **Boolean** — yes/no, checked/unchecked.\n- **Date** — date, date + time, range.\n- **Select** — one value from a [dictionary](./properties.md#dictionaries).\n- **Multi-select** — many values from a dictionary.\n- **Entity reference** — link to another entity (a project, a person, a file).\n- **Rich text** — a small body inside a property (notes-on-a-task).\n\nYou don't pick a flat list of \"kinds\" — you pick a base type and add modifiers. URL is **text** with a `URL format`. A status field is **text** with a `vocabulary` of `Todo / Doing / Done` and `single value`.\n\n## Define your own\n\nOpen **Settings → Data → Entity types**, pick the type you want to extend (or create a new one), and add the property. Every entity of that type gets the new field. Existing entities show it as empty until you fill it in.\n\n## Dictionaries\n\nA **dictionary** is a reusable list of choices — `Status: Todo / Doing / Done`, `Priority: Low / Medium / High / Urgent`. Each entry can have a label, a colour, and a sort order. Multiple properties on different entity types can share a dictionary: your `Task.priority` and `Bug.severity` can use the same dictionary.\n\nManage dictionaries in **Settings → Data → Dictionaries**. Renaming an entry updates it everywhere it's used.\n\n## Filtering and grouping\n\nOnce you have properties, the [Database app](../apps/database.md) lets you filter and group on them. \"Tasks where priority is High and status is not Done\", \"Files grouped by mime type, sorted by size\".\n",
+			"plaintext": "A property is typed metadata on an entity. A task has status, due, priority, project. A bookmark has url, title, tags. A note has created, updated, and whatever else you've added. What types are there The built-in types cover most needs: - Text — plain or formatted (URL, email, phone). - Number — integer, decimal, currency, percent. - Boolean — yes/no, checked/unchecked. - Date — date, date + time, range. - Select — one value from a dictionary. - Multi-select — many values from a dictionary. - Entity reference — link to another entity (a project, a person, a file). - Rich text — a small body inside a property (notes-on-a-task). You don't pick a flat list of \"kinds\" — you pick a base type and add modifiers. URL is text with a URL format. A status field is text with a vocabulary of Todo / Doing / Done and single value. Define your own Open Settings → Data → Entity types, pick the type you want to extend (or create a new one), and add the property. Every entity of that type gets the new field. Existing entities show it as empty until you fill it in. Dictionaries A dictionary is a reusable list of choices — Status: Todo / Doing / Done, Priority: Low / Medium / High / Urgent. Each entry can have a label, a colour, and a sort order. Multiple properties on different entity types can share a dictionary: your Task.priority and Bug.severity can use the same dictionary. Manage dictionaries in Settings → Data → Dictionaries. Renaming an entry updates it everywhere it's used. Filtering and grouping Once you have properties, the Database app lets you filter and group on them. \"Tasks where priority is High and status is not Done\", \"Files grouped by mime type, sorted by size\".",
+			"headings": [
+				{
+					"depth": 2,
+					"text": "What types are there",
+					"anchor": "what-types-are-there"
+				},
+				{
+					"depth": 2,
+					"text": "Define your own",
+					"anchor": "define-your-own"
+				},
+				{
+					"depth": 2,
+					"text": "Dictionaries",
+					"anchor": "dictionaries"
+				},
+				{
+					"depth": 2,
+					"text": "Filtering and grouping",
+					"anchor": "filtering-and-grouping"
+				}
+			],
+			"relPath": "concepts/properties.md"
+		},
+		{
+			"topicId": "guide/concepts/search",
+			"sectionId": "concepts",
+			"title": "Search",
+			"slug": "concepts/search",
+			"markdown": "Brainstorm has one search that reaches everywhere in your vault, and a per-app search that's scoped to what you're looking at.\n\n## The launcher\n\n`Cmd+Space` (macOS) or `Ctrl+Space` (Windows/Linux) opens the launcher from anywhere. Start typing and hits stream in across every app — notes, tasks, files, bookmarks, calendar events, people, anything stored in your vault.\n\nThe launcher searches:\n\n- Entity **titles** and **names**.\n- Entity **body text** (note content, captured page text, code-file content).\n- Selected **properties** — tag names, dictionary entries.\n\nUse arrow keys to move through hits. `Enter` opens the top hit; `Cmd/Ctrl+1..9` opens the Nth hit. Holding modifiers opens in a new window or pins it.\n\n## Filters\n\nNarrow the launcher with prefixes:\n\n- `note: meeting` — only notes.\n- `task: urgent` — only tasks.\n- `file: report.pdf` — only files.\n- `in:Project-X` — only entities in a collection called `Project-X`.\n- `tag:idea` — only entities with the `idea` tag.\n\nYou can combine: `task: in:Project-X tag:urgent`.\n\n## Per-app search\n\nEach app has its own search box for the work shown in that window. Notes searches within your note titles and bodies. Files searches by name and path. The [Database app](../apps/database.md) filters the current view.\n\nApp-scoped search is faster (smaller index) and lets you narrow without leaving the app.\n\n## Indexing\n\nBrainstorm builds a search index as you work. New content is searchable within a second or two of being saved. If something feels missing, **Settings → Data → Rebuild index** forces a full rebuild.\n",
+			"plaintext": "Brainstorm has one search that reaches everywhere in your vault, and a per-app search that's scoped to what you're looking at. The launcher Cmd+Space (macOS) or Ctrl+Space (Windows/Linux) opens the launcher from anywhere. Start typing and hits stream in across every app — notes, tasks, files, bookmarks, calendar events, people, anything stored in your vault. The launcher searches: - Entity titles and names. - Entity body text (note content, captured page text, code-file content). - Selected properties — tag names, dictionary entries. Use arrow keys to move through hits. Enter opens the top hit; Cmd/Ctrl+1..9 opens the Nth hit. Holding modifiers opens in a new window or pins it. Filters Narrow the launcher with prefixes: - note: meeting — only notes. - task: urgent — only tasks. - file: report.pdf — only files. - in:Project-X — only entities in a collection called Project-X. - tag:idea — only entities with the idea tag. You can combine: task: in:Project-X tag:urgent. Per-app search Each app has its own search box for the work shown in that window. Notes searches within your note titles and bodies. Files searches by name and path. The Database app filters the current view. App-scoped search is faster (smaller index) and lets you narrow without leaving the app. Indexing Brainstorm builds a search index as you work. New content is searchable within a second or two of being saved. If something feels missing, Settings → Data → Rebuild index forces a full rebuild.",
+			"headings": [
+				{
+					"depth": 2,
+					"text": "The launcher",
+					"anchor": "the-launcher"
+				},
+				{
+					"depth": 2,
+					"text": "Filters",
+					"anchor": "filters"
+				},
+				{
+					"depth": 2,
+					"text": "Per-app search",
+					"anchor": "per-app-search"
+				},
+				{
+					"depth": 2,
+					"text": "Indexing",
+					"anchor": "indexing"
+				}
+			],
+			"relPath": "concepts/search.md"
+		},
+		{
+			"topicId": "guide/concepts/pinning",
+			"sectionId": "concepts",
+			"title": "Pinning to the dashboard",
+			"slug": "concepts/pinning",
+			"markdown": "Pinning puts an [entity](./entities.md) on the dashboard for one-click access. Use it for the things you reach for every day — today's project notes, your inbox, an important file, a frequently-checked dashboard view.\n\n## How to pin\n\nThree ways, all equivalent:\n\n- **Drag** the entity from any app onto the dashboard.\n- **Right-click** the entity and choose **Pin to dashboard**.\n- Open the entity and click the **pin icon** in its header.\n\n## How to unpin\n\n- Right-click the pin on the dashboard and choose **Unpin**.\n- Right-click the entity anywhere and choose **Unpin from dashboard**.\n\n## What gets pinned\n\nAnything that can be opened as an entity. A note, a task, a project, a file, a collection, a Database view, a Whiteboard, an app's home view.\n\n## Arranging pins\n\nDrag pins around the dashboard to reorder. Drag one on top of another to group them. Right-click a group to rename or split it.\n\n## Pins survive renames and moves\n\nA pin points at the entity, not at its current title. Rename a pinned note and the pin updates. Move a file between folders and the pin keeps working.\n\nIf you delete the underlying entity, the pin doesn't disappear — it becomes a placeholder you can click to restore the entity from the [Bin](./entities.md#renaming-deleting-restoring), or right-click to remove the pin.\n",
+			"plaintext": "Pinning puts an entity on the dashboard for one-click access. Use it for the things you reach for every day — today's project notes, your inbox, an important file, a frequently-checked dashboard view. How to pin Three ways, all equivalent: - Drag the entity from any app onto the dashboard. - Right-click the entity and choose Pin to dashboard. - Open the entity and click the pin icon in its header. How to unpin - Right-click the pin on the dashboard and choose Unpin. - Right-click the entity anywhere and choose Unpin from dashboard. What gets pinned Anything that can be opened as an entity. A note, a task, a project, a file, a collection, a Database view, a Whiteboard, an app's home view. Arranging pins Drag pins around the dashboard to reorder. Drag one on top of another to group them. Right-click a group to rename or split it. Pins survive renames and moves A pin points at the entity, not at its current title. Rename a pinned note and the pin updates. Move a file between folders and the pin keeps working. If you delete the underlying entity, the pin doesn't disappear — it becomes a placeholder you can click to restore the entity from the Bin, or right-click to remove the pin.",
+			"headings": [
+				{
+					"depth": 2,
+					"text": "How to pin",
+					"anchor": "how-to-pin"
+				},
+				{
+					"depth": 2,
+					"text": "How to unpin",
+					"anchor": "how-to-unpin"
+				},
+				{
+					"depth": 2,
+					"text": "What gets pinned",
+					"anchor": "what-gets-pinned"
+				},
+				{
+					"depth": 2,
+					"text": "Arranging pins",
+					"anchor": "arranging-pins"
+				},
+				{
+					"depth": 2,
+					"text": "Pins survive renames and moves",
+					"anchor": "pins-survive-renames-and-moves"
+				}
+			],
+			"relPath": "concepts/pinning.md"
+		},
+		{
+			"topicId": "guide/concepts/sync-across-devices",
+			"sectionId": "concepts",
+			"title": "Sync across devices",
+			"slug": "concepts/sync-across-devices",
+			"markdown": "A [vault](./vaults.md) lives on one machine by default. If you want it on your laptop and your phone, or on two computers, pair the devices.\n\n## Pairing\n\nOn the first device, open **Settings → Devices** and click **Pair a new device**. You'll see a QR code and a short verification code.\n\nOn the second device, install Brainstorm and pick **Pair with an existing vault**. Scan the QR code (phones) or type the verification code (desktops). After a moment the two devices match codes — confirm on both, and they're paired.\n\n## How sync works\n\nYour data is encrypted end-to-end. The relay server (which moves bytes between your devices when they can't see each other on the LAN) only ever sees encrypted blobs — it can't read your notes, your tasks, your files. Decryption keys live only on your paired devices.\n\nWhen two devices are on the same network, they sync directly to each other. When they're not, they go through the relay.\n\n## Offline edits\n\nBoth devices can edit at the same time, including offline. When they reconnect, the edits merge. Two people typing into the same note end up with both their changes; two devices changing the same property keep the most recent.\n\nSync is **not** a substitute for backup. If you want a backup, copy the vault folder somewhere safe periodically — see [Vaults](./vaults.md).\n\n## Unpairing\n\nOpen **Settings → Devices** on either device and remove the one you no longer want. The removed device keeps its local copy of the data; the removal just stops future sync.\n\nIf a device is lost or stolen, remove it immediately. The other devices will rotate the shared keys so the lost device can't sync further changes.\n",
+			"plaintext": "A vault lives on one machine by default. If you want it on your laptop and your phone, or on two computers, pair the devices. Pairing On the first device, open Settings → Devices and click Pair a new device. You'll see a QR code and a short verification code. On the second device, install Brainstorm and pick Pair with an existing vault. Scan the QR code (phones) or type the verification code (desktops). After a moment the two devices match codes — confirm on both, and they're paired. How sync works Your data is encrypted end-to-end. The relay server (which moves bytes between your devices when they can't see each other on the LAN) only ever sees encrypted blobs — it can't read your notes, your tasks, your files. Decryption keys live only on your paired devices. When two devices are on the same network, they sync directly to each other. When they're not, they go through the relay. Offline edits Both devices can edit at the same time, including offline. When they reconnect, the edits merge. Two people typing into the same note end up with both their changes; two devices changing the same property keep the most recent. Sync is not a substitute for backup. If you want a backup, copy the vault folder somewhere safe periodically — see Vaults. Unpairing Open Settings → Devices on either device and remove the one you no longer want. The removed device keeps its local copy of the data; the removal just stops future sync. If a device is lost or stolen, remove it immediately. The other devices will rotate the shared keys so the lost device can't sync further changes.",
+			"headings": [
+				{
+					"depth": 2,
+					"text": "Pairing",
+					"anchor": "pairing"
+				},
+				{
+					"depth": 2,
+					"text": "How sync works",
+					"anchor": "how-sync-works"
+				},
+				{
+					"depth": 2,
+					"text": "Offline edits",
+					"anchor": "offline-edits"
+				},
+				{
+					"depth": 2,
+					"text": "Unpairing",
+					"anchor": "unpairing"
+				}
+			],
+			"relPath": "concepts/sync-across-devices.md"
+		},
+		{
+			"topicId": "guide/concepts/themes",
+			"sectionId": "concepts",
+			"title": "Themes",
+			"slug": "concepts/themes",
+			"markdown": "A **theme** controls how Brainstorm looks — colours, the typeface, icon style, accent. Change it from **Settings → Appearance**.\n\n## Built-in themes\n\nBrainstorm ships with a small set: **Light**, **Dark**, **System** (follows your OS), plus a few accent variants. Switching is instant — no restart.\n\n## Installing more\n\nThe [Marketplace](../getting-started/install-an-app.md) has additional themes from us and from third-party designers. Install a theme like you'd install an app; it shows up in **Settings → Appearance → Theme**.\n\nA theme can't change app behaviour or read your data — it only ships colours, fonts, and icons. So themes are safe to try.\n\n## What's themable\n\n- **Colours** — backgrounds, surfaces, text, accents, borders.\n- **Typography** — body font, monospace font, font size scale.\n- **Icons** — the icon pack used across the shell and apps.\n- **Wallpapers** — the dashboard background.\n\nApps inherit the theme — they don't ship their own. So switching themes affects every app uniformly.\n\n## Custom CSS\n\nIf a theme isn't quite right, **Settings → Appearance → Custom CSS** lets you write CSS overrides that apply on top of the active theme. This is for advanced users; bad CSS can hide buttons or break the layout. The editor warns you about obvious mistakes.\n\n## Theme editor\n\nBuilding a theme from scratch is coming. For now, the recommended path is: pick the closest built-in theme, then override what you don't like in custom CSS.\n",
+			"plaintext": "A theme controls how Brainstorm looks — colours, the typeface, icon style, accent. Change it from Settings → Appearance. Built-in themes Brainstorm ships with a small set: Light, Dark, System (follows your OS), plus a few accent variants. Switching is instant — no restart. Installing more The Marketplace has additional themes from us and from third-party designers. Install a theme like you'd install an app; it shows up in Settings → Appearance → Theme. A theme can't change app behaviour or read your data — it only ships colours, fonts, and icons. So themes are safe to try. What's themable - Colours — backgrounds, surfaces, text, accents, borders. - Typography — body font, monospace font, font size scale. - Icons — the icon pack used across the shell and apps. - Wallpapers — the dashboard background. Apps inherit the theme — they don't ship their own. So switching themes affects every app uniformly. Custom CSS If a theme isn't quite right, Settings → Appearance → Custom CSS lets you write CSS overrides that apply on top of the active theme. This is for advanced users; bad CSS can hide buttons or break the layout. The editor warns you about obvious mistakes. Theme editor Building a theme from scratch is coming. For now, the recommended path is: pick the closest built-in theme, then override what you don't like in custom CSS.",
+			"headings": [
+				{
+					"depth": 2,
+					"text": "Built-in themes",
+					"anchor": "built-in-themes"
+				},
+				{
+					"depth": 2,
+					"text": "Installing more",
+					"anchor": "installing-more"
+				},
+				{
+					"depth": 2,
+					"text": "What's themable",
+					"anchor": "whats-themable"
+				},
+				{
+					"depth": 2,
+					"text": "Custom CSS",
+					"anchor": "custom-css"
+				},
+				{
+					"depth": 2,
+					"text": "Theme editor",
+					"anchor": "theme-editor"
+				}
+			],
+			"relPath": "concepts/themes.md"
+		},
+		{
+			"topicId": "app/io.brainstorm.notes/apps/notes",
+			"sectionId": "app-notes",
+			"title": "Notes",
+			"slug": "apps/notes",
+			"markdown": "Notes is a rich-text editor for everything you'd write in a notebook — meeting notes, ideas, journals, drafts, anything long-form.\n\n## Block-based writing\n\nEach paragraph, heading, list, quote, image, or embed is a **block**. Hover the left margin and a `⋮⋮` handle appears — drag it to reorder, click it for the block menu.\n\n## Slash commands\n\nType `/` at the start of a line to open the block menu. Filter by typing — `/h1`, `/list`, `/image`, `/code`, `/quote`. Pick a block and the line converts.\n\nCommon ones:\n\n- `/h1`, `/h2`, `/h3` — headings.\n- `/list`, `/numbered`, `/todo` — lists (bulleted, numbered, checkable).\n- `/code` — a code block. Pick a language for syntax highlighting.\n- `/quote`, `/divider` — quote and horizontal rule.\n- `/image`, `/file` — drag to upload, or paste from clipboard.\n- `/embed` — embed another [entity](../concepts/entities.md).\n\n## Mentions and links\n\nType `@` and start a name to [mention](../concepts/links-and-mentions.md) another entity. Hit `Enter` to insert. The mention is live — if you rename the target later, the mention text updates.\n\nPaste a URL and it becomes a clickable link. Paste a Brainstorm entity link and it inlines as a mention.\n\n## Embedding\n\nEmbeds are richer than mentions — they render the target's content inline. Drop a file and it embeds as a preview. Mention a Database view and the view renders inside your note.\n\n## Drag images and files\n\nDrag from your desktop into a note to attach. Images preview inline; other files embed as a card with the icon, size, and a click-to-open.\n\n## Find and replace\n\n`Cmd+F` (macOS) or `Ctrl+F` (Windows/Linux) opens find within the current note. The find bar supports plain text and regular expressions; toggle the `.*` button. **Replace** is on the same bar.\n",
+			"plaintext": "Notes is a rich-text editor for everything you'd write in a notebook — meeting notes, ideas, journals, drafts, anything long-form. Block-based writing Each paragraph, heading, list, quote, image, or embed is a block. Hover the left margin and a ⋮⋮ handle appears — drag it to reorder, click it for the block menu. Slash commands Type / at the start of a line to open the block menu. Filter by typing — /h1, /list, /image, /code, /quote. Pick a block and the line converts. Common ones: - /h1, /h2, /h3 — headings. - /list, /numbered, /todo — lists (bulleted, numbered, checkable). - /code — a code block. Pick a language for syntax highlighting. - /quote, /divider — quote and horizontal rule. - /image, /file — drag to upload, or paste from clipboard. - /embed — embed another entity. Mentions and links Type @ and start a name to mention another entity. Hit Enter to insert. The mention is live — if you rename the target later, the mention text updates. Paste a URL and it becomes a clickable link. Paste a Brainstorm entity link and it inlines as a mention. Embedding Embeds are richer than mentions — they render the target's content inline. Drop a file and it embeds as a preview. Mention a Database view and the view renders inside your note. Drag images and files Drag from your desktop into a note to attach. Images preview inline; other files embed as a card with the icon, size, and a click-to-open. Find and replace Cmd+F (macOS) or Ctrl+F (Windows/Linux) opens find within the current note. The find bar supports plain text and regular expressions; toggle the . button. Replace** is on the same bar.",
+			"headings": [
+				{
+					"depth": 2,
+					"text": "Block-based writing",
+					"anchor": "block-based-writing"
+				},
+				{
+					"depth": 2,
+					"text": "Slash commands",
+					"anchor": "slash-commands"
+				},
+				{
+					"depth": 2,
+					"text": "Mentions and links",
+					"anchor": "mentions-and-links"
+				},
+				{
+					"depth": 2,
+					"text": "Embedding",
+					"anchor": "embedding"
+				},
+				{
+					"depth": 2,
+					"text": "Drag images and files",
+					"anchor": "drag-images-and-files"
+				},
+				{
+					"depth": 2,
+					"text": "Find and replace",
+					"anchor": "find-and-replace"
+				}
+			],
+			"relPath": "apps/notes.md"
+		},
+		{
+			"topicId": "app/io.brainstorm.tasks/apps/tasks",
+			"sectionId": "app-tasks",
+			"title": "Tasks",
+			"slug": "apps/tasks",
+			"markdown": "Tasks tracks the things you need to do. Each task is one [entity](../concepts/entities.md) with a status, an optional due date, an optional project, and any other [properties](../concepts/properties.md) you've added.\n\n## Surfaces\n\nThe left sidebar has four built-in surfaces:\n\n- **Inbox** — tasks without a project. Triage them from here.\n- **Today** — anything due today plus anything overdue.\n- **Upcoming** — the next seven days.\n- **Projects** — your projects, each with its own task list.\n\nClick a surface to focus the main pane on its tasks.\n\n## Creating a task\n\nClick **New task** or press `N`. Type the title. Press `Tab` to set due date with a natural-language input (`tomorrow`, `next mon`, `25 dec`). Press `Enter` to save.\n\nYou can capture from anywhere with the global shortcut — **Settings → Keyboard** has the binding.\n\n## Properties\n\nEach task has:\n\n- **Status** — Todo / Doing / Done by default. Customise the dictionary in **Settings → Data → Dictionaries**.\n- **Due** — date or date-and-time.\n- **Project** — links to a project entity. Tasks group by project in views.\n- **Priority** — Low / Medium / High / Urgent.\n\nAdd your own properties (estimate, energy, context, anything) the same way you would on any entity.\n\n## Recurrence\n\nSet a task to repeat — daily, weekly on specific days, monthly on a date or weekday, yearly, or with a custom rule. When you mark a recurring task done, the next occurrence is generated automatically.\n\n## Views\n\nThe main pane defaults to a list grouped by date. Switch to **Board** to see kanban columns by status, or **Calendar** to see tasks placed on their due dates. Filtering and grouping work the same way as in the [Database app](./database.md).\n",
+			"plaintext": "Tasks tracks the things you need to do. Each task is one entity with a status, an optional due date, an optional project, and any other properties you've added. Surfaces The left sidebar has four built-in surfaces: - Inbox — tasks without a project. Triage them from here. - Today — anything due today plus anything overdue. - Upcoming — the next seven days. - Projects — your projects, each with its own task list. Click a surface to focus the main pane on its tasks. Creating a task Click New task or press N. Type the title. Press Tab to set due date with a natural-language input (tomorrow, next mon, 25 dec). Press Enter to save. You can capture from anywhere with the global shortcut — Settings → Keyboard has the binding. Properties Each task has: - Status — Todo / Doing / Done by default. Customise the dictionary in Settings → Data → Dictionaries. - Due — date or date-and-time. - Project — links to a project entity. Tasks group by project in views. - Priority — Low / Medium / High / Urgent. Add your own properties (estimate, energy, context, anything) the same way you would on any entity. Recurrence Set a task to repeat — daily, weekly on specific days, monthly on a date or weekday, yearly, or with a custom rule. When you mark a recurring task done, the next occurrence is generated automatically. Views The main pane defaults to a list grouped by date. Switch to Board to see kanban columns by status, or Calendar to see tasks placed on their due dates. Filtering and grouping work the same way as in the Database app.",
+			"headings": [
+				{
+					"depth": 2,
+					"text": "Surfaces",
+					"anchor": "surfaces"
+				},
+				{
+					"depth": 2,
+					"text": "Creating a task",
+					"anchor": "creating-a-task"
+				},
+				{
+					"depth": 2,
+					"text": "Properties",
+					"anchor": "properties"
+				},
+				{
+					"depth": 2,
+					"text": "Recurrence",
+					"anchor": "recurrence"
+				},
+				{
+					"depth": 2,
+					"text": "Views",
+					"anchor": "views"
+				}
+			],
+			"relPath": "apps/tasks.md"
+		},
+		{
+			"topicId": "app/io.brainstorm.files/apps/files",
+			"sectionId": "app-files",
+			"title": "Files",
+			"slug": "apps/files",
+			"markdown": "Files is for any blob you'd otherwise store on your disk — PDFs, images, archives, spreadsheets, anything. Inside Brainstorm, each one becomes a [`File` entity](../concepts/entities.md) you can tag, link, search, and embed.\n\n## The folder tree\n\nA folder tree runs down the left side. Drag files between folders. Right-click a folder for **New folder**, **Rename**, **Delete**.\n\nFolders here are Brainstorm folders — they live inside your vault, not on your desktop. They're independent from your OS filesystem.\n\n## Adding files\n\n- **Drag** from your desktop or another app into the Files window.\n- Click **Upload** in the toolbar.\n- Drop into another app (Notes, Whiteboard) and Brainstorm files it in `/Inbox` for you to sort later.\n\n## Previewing\n\nClick a file to open the preview side panel. Common types preview inline:\n\n- **Images** — full-resolution view with zoom.\n- **PDFs** — paged viewer with text selection and search.\n- **Audio / video** — built-in player.\n- **Text / Markdown / code** — syntax-highlighted.\n\nAnything else gets a generic preview with **Open externally** to hand it to your OS default app.\n\n## Tagging and properties\n\nA file is an entity, so it carries [properties](../concepts/properties.md). Add `tags`, `project`, `status`, anything you want. Filter in the [Database app](./database.md) the same as any other entity type.\n\n## Search\n\nThe toolbar search filters by name. The dashboard [launcher](../concepts/search.md) searches across name, captured text (for PDFs / images via OCR if enabled), and properties.\n\n## Versioning\n\nBrainstorm keeps the last few versions of a file when you replace it. Open the inspector → **Versions** to roll back.\n",
+			"plaintext": "Files is for any blob you'd otherwise store on your disk — PDFs, images, archives, spreadsheets, anything. Inside Brainstorm, each one becomes a File entity you can tag, link, search, and embed. The folder tree A folder tree runs down the left side. Drag files between folders. Right-click a folder for New folder, Rename, Delete. Folders here are Brainstorm folders — they live inside your vault, not on your desktop. They're independent from your OS filesystem. Adding files - Drag from your desktop or another app into the Files window. - Click Upload in the toolbar. - Drop into another app (Notes, Whiteboard) and Brainstorm files it in /Inbox for you to sort later. Previewing Click a file to open the preview side panel. Common types preview inline: - Images — full-resolution view with zoom. - PDFs — paged viewer with text selection and search. - Audio / video — built-in player. - Text / Markdown / code — syntax-highlighted. Anything else gets a generic preview with Open externally to hand it to your OS default app. Tagging and properties A file is an entity, so it carries properties. Add tags, project, status, anything you want. Filter in the Database app the same as any other entity type. Search The toolbar search filters by name. The dashboard launcher searches across name, captured text (for PDFs / images via OCR if enabled), and properties. Versioning Brainstorm keeps the last few versions of a file when you replace it. Open the inspector → Versions to roll back.",
+			"headings": [
+				{
+					"depth": 2,
+					"text": "The folder tree",
+					"anchor": "the-folder-tree"
+				},
+				{
+					"depth": 2,
+					"text": "Adding files",
+					"anchor": "adding-files"
+				},
+				{
+					"depth": 2,
+					"text": "Previewing",
+					"anchor": "previewing"
+				},
+				{
+					"depth": 2,
+					"text": "Tagging and properties",
+					"anchor": "tagging-and-properties"
+				},
+				{
+					"depth": 2,
+					"text": "Search",
+					"anchor": "search"
+				},
+				{
+					"depth": 2,
+					"text": "Versioning",
+					"anchor": "versioning"
+				}
+			],
+			"relPath": "apps/files.md"
+		},
+		{
+			"topicId": "app/io.brainstorm.calendar/apps/calendar",
+			"sectionId": "app-calendar",
+			"title": "Calendar",
+			"slug": "apps/calendar",
+			"markdown": "Calendar shows time-bound entities — events, due tasks, scheduled notes — on a grid.\n\n## Views\n\nThe view picker in the toolbar switches between:\n\n- **Month** — six-week grid. Best for planning.\n- **Week** — seven days, hour-by-hour. Best for a workweek.\n- **Day** — one day, hour-by-hour. Best for a packed day.\n- **Agenda** — a chronological list. Best on small screens.\n\n`T` jumps to today; `←` / `→` step by view-period; `J` / `K` step by day.\n\n## What shows up\n\nCalendar reads anything with a date or date-range [property](../concepts/properties.md):\n\n- **Events** — entities of type `Event` with a `start` and optional `end`.\n- **Tasks** — entities with a `due` date. [Tasks](./tasks.md) shows these too.\n- **Anything else** — custom entity types you've defined with a date property show up automatically.\n\nFilter from the toolbar to hide categories you don't want.\n\n## Creating\n\nClick an empty slot to create an event at that time. Drag across multiple slots for a duration. The new event's defaults come from the calendar's preferences (default duration, default colour).\n\n## Editing\n\n- **Drag** to reschedule.\n- **Resize** the bottom edge to change duration.\n- **Right-click** for delete / duplicate / move-to-other-day.\n\n## All-day vs timed\n\nEvents without a time are all-day events; they sit at the top of the day column. Drag one into the timed area to give it a time.\n\n## Linking to other entities\n\nOpen an event's inspector to add properties or [`@`-mention](../concepts/links-and-mentions.md) related notes, tasks, or files. Click a mention to jump.\n",
+			"plaintext": "Calendar shows time-bound entities — events, due tasks, scheduled notes — on a grid. Views The view picker in the toolbar switches between: - Month — six-week grid. Best for planning. - Week — seven days, hour-by-hour. Best for a workweek. - Day — one day, hour-by-hour. Best for a packed day. - Agenda — a chronological list. Best on small screens. T jumps to today; ← / → step by view-period; J / K step by day. What shows up Calendar reads anything with a date or date-range property: - Events — entities of type Event with a start and optional end. - Tasks — entities with a due date. Tasks shows these too. - Anything else — custom entity types you've defined with a date property show up automatically. Filter from the toolbar to hide categories you don't want. Creating Click an empty slot to create an event at that time. Drag across multiple slots for a duration. The new event's defaults come from the calendar's preferences (default duration, default colour). Editing - Drag to reschedule. - Resize the bottom edge to change duration. - Right-click for delete / duplicate / move-to-other-day. All-day vs timed Events without a time are all-day events; they sit at the top of the day column. Drag one into the timed area to give it a time. Linking to other entities Open an event's inspector to add properties or @-mention related notes, tasks, or files. Click a mention to jump.",
+			"headings": [
+				{
+					"depth": 2,
+					"text": "Views",
+					"anchor": "views"
+				},
+				{
+					"depth": 2,
+					"text": "What shows up",
+					"anchor": "what-shows-up"
+				},
+				{
+					"depth": 2,
+					"text": "Creating",
+					"anchor": "creating"
+				},
+				{
+					"depth": 2,
+					"text": "Editing",
+					"anchor": "editing"
+				},
+				{
+					"depth": 2,
+					"text": "All-day vs timed",
+					"anchor": "all-day-vs-timed"
+				},
+				{
+					"depth": 2,
+					"text": "Linking to other entities",
+					"anchor": "linking-to-other-entities"
+				}
+			],
+			"relPath": "apps/calendar.md"
+		},
+		{
+			"topicId": "app/io.brainstorm.journal/apps/journal",
+			"sectionId": "app-journal",
+			"title": "Journal",
+			"slug": "apps/journal",
+			"markdown": "Journal gives you one [note](./notes.md) per day, automatically. Open the app and today's entry is waiting — already created if it didn't exist yet.\n\n## Navigating\n\n- `←` / `→` — previous / next day.\n- `Cmd+J` (macOS) / `Ctrl+J` (Windows/Linux) — jump to today.\n- Click the date header for a calendar picker.\n\nThe sidebar shows recent entries with their first-line preview. Click any entry to jump.\n\n## Writing\n\nThe body is a full Notes editor — slash commands, [`@`-mentions](../concepts/links-and-mentions.md), embeds, the works. See [Notes](./notes.md) for the editor reference.\n\n## Templates\n\nA daily template fills in section headings, prompts, or property defaults when a new entry is created. Set it up in **Settings → Journal → Template**.\n\nExamples:\n\n- A two-section \"Morning / Evening\" layout.\n- A \"What went well / what didn't / one thing\" prompt.\n- Auto-mentions of today's meetings (pulled from [Calendar](./calendar.md)).\n\nIf you don't configure a template, new entries are blank — write whatever you want.\n\n## Properties on a journal entry\n\nA journal entry is an [entity](../concepts/entities.md) of type `JournalEntry`. It carries the date as a property; add anything else — `mood`, `energy`, `weather`, `gratitude`, `weight`. The [Database app](./database.md) can chart those values over time.\n\n## Backfill and forward-date\n\nWant to journal about yesterday? Navigate back and write. Want to leave a note for next Monday? Navigate forward and write. There's no rule that says today's entry has to be written today.\n",
+			"plaintext": "Journal gives you one note per day, automatically. Open the app and today's entry is waiting — already created if it didn't exist yet. Navigating - ← / → — previous / next day. - Cmd+J (macOS) / Ctrl+J (Windows/Linux) — jump to today. - Click the date header for a calendar picker. The sidebar shows recent entries with their first-line preview. Click any entry to jump. Writing The body is a full Notes editor — slash commands, @-mentions, embeds, the works. See Notes for the editor reference. Templates A daily template fills in section headings, prompts, or property defaults when a new entry is created. Set it up in Settings → Journal → Template. Examples: - A two-section \"Morning / Evening\" layout. - A \"What went well / what didn't / one thing\" prompt. - Auto-mentions of today's meetings (pulled from Calendar). If you don't configure a template, new entries are blank — write whatever you want. Properties on a journal entry A journal entry is an entity of type JournalEntry. It carries the date as a property; add anything else — mood, energy, weather, gratitude, weight. The Database app can chart those values over time. Backfill and forward-date Want to journal about yesterday? Navigate back and write. Want to leave a note for next Monday? Navigate forward and write. There's no rule that says today's entry has to be written today.",
+			"headings": [
+				{
+					"depth": 2,
+					"text": "Navigating",
+					"anchor": "navigating"
+				},
+				{
+					"depth": 2,
+					"text": "Writing",
+					"anchor": "writing"
+				},
+				{
+					"depth": 2,
+					"text": "Templates",
+					"anchor": "templates"
+				},
+				{
+					"depth": 2,
+					"text": "Properties on a journal entry",
+					"anchor": "properties-on-a-journal-entry"
+				},
+				{
+					"depth": 2,
+					"text": "Backfill and forward-date",
+					"anchor": "backfill-and-forward-date"
+				}
+			],
+			"relPath": "apps/journal.md"
+		},
+		{
+			"topicId": "app/io.brainstorm.database/apps/database",
+			"sectionId": "app-database",
+			"title": "Database",
+			"slug": "apps/database",
+			"markdown": "Database is for working with sets of [entities](../concepts/entities.md) — tabular views, filters, grouping, batch edits. Think \"a spreadsheet over anything in your vault\".\n\n## A view is a layout over a source\n\nEvery Database **view** has two halves:\n\n- A **source** — what entities to show. A [collection](../concepts/collections.md), a type (\"all tasks\"), or a filter (\"all notes tagged `idea`\").\n- A **layout** — how to show them. One of six kinds.\n\n## The six layout kinds\n\n- **Grid** — rows and columns. Like a spreadsheet. Edit cells in place.\n- **List** — one entity per row, with a leading icon. Compact, scannable.\n- **Gallery** — cards with a hero image and a few properties. Good for visual content.\n- **Board** — kanban columns. Group by a `select` property (status, priority).\n- **Calendar** — entities placed on a date property. Switch between month / week / day.\n- **Timeline** — entities placed on a date or date-range. Zoomable horizontal axis.\n\nSwitch layouts from the view picker in the toolbar. The same data renders five other ways.\n\n## Filtering, sorting, grouping\n\nOpen the **Filter** menu in the toolbar to chain conditions: \"status is not Done **and** priority is High **or** assignee is me\". Combine `and` / `or` freely.\n\n**Sort** by any property, ascending or descending. Multi-key sort breaks ties.\n\n**Group** by any property to collapse the view into sections.\n\nFilters, sort, and grouping save with the view — they're the view, not transient state.\n\n## Saving and sharing views\n\nA view is itself an entity. Pin it to the dashboard, link to it from a note, drop it on a whiteboard. Make a \"My week\" view that filters tasks due in the next seven days plus events in [Calendar](./calendar.md), pin it, and your weekly planning surface is one click away.\n\n## Embedding a view\n\nInside a note, type `/embed` and pick a Database view. The view renders inline. Editing the underlying view (sort, filter, columns) updates the embed.\n",
+			"plaintext": "Database is for working with sets of entities — tabular views, filters, grouping, batch edits. Think \"a spreadsheet over anything in your vault\". A view is a layout over a source Every Database view has two halves: - A source — what entities to show. A collection, a type (\"all tasks\"), or a filter (\"all notes tagged idea\"). - A layout — how to show them. One of six kinds. The six layout kinds - Grid — rows and columns. Like a spreadsheet. Edit cells in place. - List — one entity per row, with a leading icon. Compact, scannable. - Gallery — cards with a hero image and a few properties. Good for visual content. - Board — kanban columns. Group by a select property (status, priority). - Calendar — entities placed on a date property. Switch between month / week / day. - Timeline — entities placed on a date or date-range. Zoomable horizontal axis. Switch layouts from the view picker in the toolbar. The same data renders five other ways. Filtering, sorting, grouping Open the Filter menu in the toolbar to chain conditions: \"status is not Done and priority is High or assignee is me\". Combine and / or freely. Sort by any property, ascending or descending. Multi-key sort breaks ties. Group by any property to collapse the view into sections. Filters, sort, and grouping save with the view — they're the view, not transient state. Saving and sharing views A view is itself an entity. Pin it to the dashboard, link to it from a note, drop it on a whiteboard. Make a \"My week\" view that filters tasks due in the next seven days plus events in Calendar, pin it, and your weekly planning surface is one click away. Embedding a view Inside a note, type /embed and pick a Database view. The view renders inline. Editing the underlying view (sort, filter, columns) updates the embed.",
+			"headings": [
+				{
+					"depth": 2,
+					"text": "A view is a layout over a source",
+					"anchor": "a-view-is-a-layout-over-a-source"
+				},
+				{
+					"depth": 2,
+					"text": "The six layout kinds",
+					"anchor": "the-six-layout-kinds"
+				},
+				{
+					"depth": 2,
+					"text": "Filtering, sorting, grouping",
+					"anchor": "filtering-sorting-grouping"
+				},
+				{
+					"depth": 2,
+					"text": "Saving and sharing views",
+					"anchor": "saving-and-sharing-views"
+				},
+				{
+					"depth": 2,
+					"text": "Embedding a view",
+					"anchor": "embedding-a-view"
+				}
+			],
+			"relPath": "apps/database.md"
+		},
+		{
+			"topicId": "app/io.brainstorm.graph/apps/graph",
+			"sectionId": "app-graph",
+			"title": "Graph",
+			"slug": "apps/graph",
+			"markdown": "Graph visualises the network of [links](../concepts/links-and-mentions.md) between your [entities](../concepts/entities.md). Each node is one entity; each edge is a link or mention.\n\n## Three view modes\n\n- **Full** — every entity, every link. Useful for a bird's-eye sense of your vault.\n- **Local** — focus on one entity and its neighbours, with adjustable hop depth. Drill into a project's surroundings.\n- **Path** — pick two entities, see the chain of links connecting them.\n\nSwitch from the mode picker in the toolbar.\n\n## Pattern filters\n\nPlain filtering (\"only show notes\") is in the toolbar. **Patterns** are richer — they ask for a structural shape.\n\nExamples:\n\n- \"Notes that mention a task that's still open\" — a two-hop pattern across types.\n- \"Files linked from a note that's pinned to the dashboard\" — a three-hop chain.\n- \"Entities that link to the same target as `Project-X`\" — a sibling pattern.\n\nPatterns are saved per-graph-view and shared with the [Database app](./database.md) — a pattern is a kind of source, just like a collection or a filter.\n\n## Navigation\n\n- **Drag** the canvas to pan; scroll to zoom.\n- **Click** a node to focus it. **Double-click** to open the entity in its app.\n- **Right-click** for the entity menu (pin, rename, delete, etc.) — the same one you see everywhere.\n- **Hover** an edge to see what kind of link it is (mention, property reference).\n\n## Layout\n\nNodes self-arrange by a force simulation — connected nodes pull together, unrelated ones drift apart. Drag a node to anchor it; right-click → **Free** to let it float again.\n\n## Time travel\n\nThe **history** slider replays your vault's connection graph back through time. Slide left to see what your network looked like a month ago. Useful for \"where did this idea come from?\".\n",
+			"plaintext": "Graph visualises the network of links between your entities. Each node is one entity; each edge is a link or mention. Three view modes - Full — every entity, every link. Useful for a bird's-eye sense of your vault. - Local — focus on one entity and its neighbours, with adjustable hop depth. Drill into a project's surroundings. - Path — pick two entities, see the chain of links connecting them. Switch from the mode picker in the toolbar. Pattern filters Plain filtering (\"only show notes\") is in the toolbar. Patterns are richer — they ask for a structural shape. Examples: - \"Notes that mention a task that's still open\" — a two-hop pattern across types. - \"Files linked from a note that's pinned to the dashboard\" — a three-hop chain. - \"Entities that link to the same target as Project-X\" — a sibling pattern. Patterns are saved per-graph-view and shared with the Database app — a pattern is a kind of source, just like a collection or a filter. Navigation - Drag the canvas to pan; scroll to zoom. - Click a node to focus it. Double-click to open the entity in its app. - Right-click for the entity menu (pin, rename, delete, etc.) — the same one you see everywhere. - Hover an edge to see what kind of link it is (mention, property reference). Layout Nodes self-arrange by a force simulation — connected nodes pull together, unrelated ones drift apart. Drag a node to anchor it; right-click → Free to let it float again. Time travel The history slider replays your vault's connection graph back through time. Slide left to see what your network looked like a month ago. Useful for \"where did this idea come from?\".",
+			"headings": [
+				{
+					"depth": 2,
+					"text": "Three view modes",
+					"anchor": "three-view-modes"
+				},
+				{
+					"depth": 2,
+					"text": "Pattern filters",
+					"anchor": "pattern-filters"
+				},
+				{
+					"depth": 2,
+					"text": "Navigation",
+					"anchor": "navigation"
+				},
+				{
+					"depth": 2,
+					"text": "Layout",
+					"anchor": "layout"
+				},
+				{
+					"depth": 2,
+					"text": "Time travel",
+					"anchor": "time-travel"
+				}
+			],
+			"relPath": "apps/graph.md"
+		},
+		{
+			"topicId": "app/io.brainstorm.whiteboard/apps/whiteboard",
+			"sectionId": "app-whiteboard",
+			"title": "Whiteboard",
+			"slug": "apps/whiteboard",
+			"markdown": "Whiteboard is an infinite canvas for thinking visually — sketches, diagrams, sticky notes, embedded [entities](../concepts/entities.md), arrows between them.\n\n## Tools\n\nThe toolbar runs along the top:\n\n- **Select** — pick and move things.\n- **Sticky note** — a coloured square with text. Drag to size.\n- **Text** — a plain text label.\n- **Shape** — rectangle, ellipse, arrow, line, polygon.\n- **Pen** — freehand drawing with pressure (if your input supports it).\n- **Connector** — an arrow that snaps between shapes and stays connected as you move them.\n- **Embed** — drop in any entity. The whiteboard renders a live card with the entity's icon, title, and a preview.\n\n`V` / `S` / `T` / `R` / `P` / `C` / `E` switch tools.\n\n## Navigation\n\n- **Drag** the canvas to pan, or use the space-bar.\n- **Scroll** to zoom; `Cmd/Ctrl + scroll` for finer steps.\n- `Z` then click to zoom into a region.\n- `F` to fit everything on screen.\n\n## Boards are entities\n\nEach whiteboard is one entity. Pin it to the dashboard, link to it from a note, mention it from anywhere. Have one whiteboard per project, or one massive workspace — both work.\n\n## Embedding live entities\n\nDrag any entity onto the canvas. The card stays live — editing the note from inside the whiteboard updates the underlying entity. Renaming the entity updates the card title. Deleting the entity turns the card into a placeholder.\n\n## Connectors\n\nDrag from one shape's edge to another to draw a connector. The connector follows both shapes as you move them. Label connectors by selecting one and typing.\n\n## Locking\n\nSelect something and press `L` to lock it. Locked items can't be moved or resized by accident. Press `L` again to unlock.\n\n## Export\n\n**File → Export** for PNG, SVG, or PDF. The export captures the visible canvas; zoom out to fit-all first if you want the whole board.\n",
+			"plaintext": "Whiteboard is an infinite canvas for thinking visually — sketches, diagrams, sticky notes, embedded entities, arrows between them. Tools The toolbar runs along the top: - Select — pick and move things. - Sticky note — a coloured square with text. Drag to size. - Text — a plain text label. - Shape — rectangle, ellipse, arrow, line, polygon. - Pen — freehand drawing with pressure (if your input supports it). - Connector — an arrow that snaps between shapes and stays connected as you move them. - Embed — drop in any entity. The whiteboard renders a live card with the entity's icon, title, and a preview. V / S / T / R / P / C / E switch tools. Navigation - Drag the canvas to pan, or use the space-bar. - Scroll to zoom; Cmd/Ctrl + scroll for finer steps. - Z then click to zoom into a region. - F to fit everything on screen. Boards are entities Each whiteboard is one entity. Pin it to the dashboard, link to it from a note, mention it from anywhere. Have one whiteboard per project, or one massive workspace — both work. Embedding live entities Drag any entity onto the canvas. The card stays live — editing the note from inside the whiteboard updates the underlying entity. Renaming the entity updates the card title. Deleting the entity turns the card into a placeholder. Connectors Drag from one shape's edge to another to draw a connector. The connector follows both shapes as you move them. Label connectors by selecting one and typing. Locking Select something and press L to lock it. Locked items can't be moved or resized by accident. Press L again to unlock. Export File → Export for PNG, SVG, or PDF. The export captures the visible canvas; zoom out to fit-all first if you want the whole board.",
+			"headings": [
+				{
+					"depth": 2,
+					"text": "Tools",
+					"anchor": "tools"
+				},
+				{
+					"depth": 2,
+					"text": "Navigation",
+					"anchor": "navigation"
+				},
+				{
+					"depth": 2,
+					"text": "Boards are entities",
+					"anchor": "boards-are-entities"
+				},
+				{
+					"depth": 2,
+					"text": "Embedding live entities",
+					"anchor": "embedding-live-entities"
+				},
+				{
+					"depth": 2,
+					"text": "Connectors",
+					"anchor": "connectors"
+				},
+				{
+					"depth": 2,
+					"text": "Locking",
+					"anchor": "locking"
+				},
+				{
+					"depth": 2,
+					"text": "Export",
+					"anchor": "export"
+				}
+			],
+			"relPath": "apps/whiteboard.md"
+		},
+		{
+			"topicId": "app/io.brainstorm.bookmarks/apps/bookmarks",
+			"sectionId": "app-bookmarks",
+			"title": "Bookmarks",
+			"slug": "apps/bookmarks",
+			"markdown": "Bookmarks saves web pages as [entities](../concepts/entities.md) — title, URL, captured preview, and the readable text — so you can search them, tag them, and link to them from notes.\n\n## Saving a page\n\nThree ways:\n\n- **Paste** a URL into the Bookmarks window or into the dashboard launcher and pick **Save as bookmark**.\n- **Drop** a URL onto the Bookmarks dock icon.\n- **Right-click** a link in [Notes](./notes.md) → **Save as bookmark**.\n\nBrainstorm fetches the page, extracts the title, the social-media preview image (OG image), and the article text. All of this is stored locally — the bookmark works offline once captured.\n\n## What's captured\n\n- **Title** — the page's HTML title, cleaned up.\n- **URL** — the canonical URL if the page declares one, otherwise the URL you saved.\n- **Preview image** — the OG image if present, falling back to the first image in the article.\n- **Readable text** — the article body, stripped of navigation, ads, comments, and other chrome.\n\nThe readable text is searchable from the [launcher](../concepts/search.md). Searching \"kubernetes\" finds every bookmark whose article body mentions it.\n\n## Tagging\n\nA bookmark is an entity with [properties](../concepts/properties.md). The defaults are `title`, `url`, `tags`, `read`, `archived`. Add your own — `priority`, `topic`, `for-project`, anything.\n\n## Views\n\nThe main window shows your bookmarks as a list with the preview image, title, source domain, and tags. Switch to **Gallery** for a card layout, or **List** for compact density.\n\nFilter by tag, by domain, by whether you've read it, by date. The [Database app](./database.md) gives you the full filter set.\n\n## Re-fetching\n\nIf a page changed and you want to update the captured copy, right-click the bookmark and choose **Refresh capture**. The new version replaces the old; the entity, its tags, and any mentions to it survive untouched.\n",
+			"plaintext": "Bookmarks saves web pages as entities — title, URL, captured preview, and the readable text — so you can search them, tag them, and link to them from notes. Saving a page Three ways: - Paste a URL into the Bookmarks window or into the dashboard launcher and pick Save as bookmark. - Drop a URL onto the Bookmarks dock icon. - Right-click a link in Notes → Save as bookmark. Brainstorm fetches the page, extracts the title, the social-media preview image (OG image), and the article text. All of this is stored locally — the bookmark works offline once captured. What's captured - Title — the page's HTML title, cleaned up. - URL — the canonical URL if the page declares one, otherwise the URL you saved. - Preview image — the OG image if present, falling back to the first image in the article. - Readable text — the article body, stripped of navigation, ads, comments, and other chrome. The readable text is searchable from the launcher. Searching \"kubernetes\" finds every bookmark whose article body mentions it. Tagging A bookmark is an entity with properties. The defaults are title, url, tags, read, archived. Add your own — priority, topic, for-project, anything. Views The main window shows your bookmarks as a list with the preview image, title, source domain, and tags. Switch to Gallery for a card layout, or List for compact density. Filter by tag, by domain, by whether you've read it, by date. The Database app gives you the full filter set. Re-fetching If a page changed and you want to update the captured copy, right-click the bookmark and choose Refresh capture. The new version replaces the old; the entity, its tags, and any mentions to it survive untouched.",
+			"headings": [
+				{
+					"depth": 2,
+					"text": "Saving a page",
+					"anchor": "saving-a-page"
+				},
+				{
+					"depth": 2,
+					"text": "What's captured",
+					"anchor": "whats-captured"
+				},
+				{
+					"depth": 2,
+					"text": "Tagging",
+					"anchor": "tagging"
+				},
+				{
+					"depth": 2,
+					"text": "Views",
+					"anchor": "views"
+				},
+				{
+					"depth": 2,
+					"text": "Re-fetching",
+					"anchor": "re-fetching"
+				}
+			],
+			"relPath": "apps/bookmarks.md"
+		},
+		{
+			"topicId": "app/io.brainstorm.code-editor/apps/code-editor",
+			"sectionId": "app-code-editor",
+			"title": "Code Editor",
+			"slug": "apps/code-editor",
+			"markdown": "Code Editor lets you edit text and code files alongside the rest of your work — config files, scripts, snippets, drafts of code, anything you'd open in a quick editor.\n\n## Opening a file\n\n- **Click** a code file in [Files](./files.md).\n- **Drag** a file from your desktop into the Code Editor window.\n- **Cmd+O** (macOS) / **Ctrl+O** (Windows/Linux) for the open dialog.\n\nRecently opened files appear in the sidebar.\n\n## Languages\n\nSyntax highlighting works out of the box for: JavaScript, TypeScript, Python, Go, Rust, C, C++, Java, Ruby, Swift, Kotlin, PHP, SQL, HTML, CSS, JSON, YAML, TOML, Markdown, Shell, and Dockerfile. The language is auto-detected from the extension; you can override it from the status bar.\n\n## Editing\n\nThe editor is a full code editor with:\n\n- **Find / replace** — `Cmd/Ctrl+F`, regex toggle.\n- **Multi-cursor** — `Alt+Click` to add cursors, `Cmd/Ctrl+D` to add a cursor at the next match.\n- **Block selection** — `Alt+Shift` drag.\n- **Smart indent** — auto-indent on paste; configurable tab width per file or per language.\n- **Bracket and quote pairing** — type one, the other inserts itself.\n\n## Themes\n\nThe editor's colour scheme follows your global [theme](../concepts/themes.md). Switching themes recolours the editor immediately.\n\n## File vs entity\n\nA file edited in Code Editor is still a [`File` entity](../concepts/entities.md). The editor reads and writes through the same vault store as [Files](./files.md); changes you make are visible there.\n\n## Not an IDE\n\nCode Editor is a text editor, not an integrated development environment. There's no project model, no language server, no build system integration. For serious development, use VS Code or a similar IDE and let Brainstorm hold your notes about the code.\n",
+			"plaintext": "Code Editor lets you edit text and code files alongside the rest of your work — config files, scripts, snippets, drafts of code, anything you'd open in a quick editor. Opening a file - Click a code file in Files. - Drag a file from your desktop into the Code Editor window. - Cmd+O (macOS) / Ctrl+O (Windows/Linux) for the open dialog. Recently opened files appear in the sidebar. Languages Syntax highlighting works out of the box for: JavaScript, TypeScript, Python, Go, Rust, C, C++, Java, Ruby, Swift, Kotlin, PHP, SQL, HTML, CSS, JSON, YAML, TOML, Markdown, Shell, and Dockerfile. The language is auto-detected from the extension; you can override it from the status bar. Editing The editor is a full code editor with: - Find / replace — Cmd/Ctrl+F, regex toggle. - Multi-cursor — Alt+Click to add cursors, Cmd/Ctrl+D to add a cursor at the next match. - Block selection — Alt+Shift drag. - Smart indent — auto-indent on paste; configurable tab width per file or per language. - Bracket and quote pairing — type one, the other inserts itself. Themes The editor's colour scheme follows your global theme. Switching themes recolours the editor immediately. File vs entity A file edited in Code Editor is still a File entity. The editor reads and writes through the same vault store as Files; changes you make are visible there. Not an IDE Code Editor is a text editor, not an integrated development environment. There's no project model, no language server, no build system integration. For serious development, use VS Code or a similar IDE and let Brainstorm hold your notes about the code.",
+			"headings": [
+				{
+					"depth": 2,
+					"text": "Opening a file",
+					"anchor": "opening-a-file"
+				},
+				{
+					"depth": 2,
+					"text": "Languages",
+					"anchor": "languages"
+				},
+				{
+					"depth": 2,
+					"text": "Editing",
+					"anchor": "editing"
+				},
+				{
+					"depth": 2,
+					"text": "Themes",
+					"anchor": "themes"
+				},
+				{
+					"depth": 2,
+					"text": "File vs entity",
+					"anchor": "file-vs-entity"
+				},
+				{
+					"depth": 2,
+					"text": "Not an IDE",
+					"anchor": "not-an-ide"
+				}
+			],
+			"relPath": "apps/code-editor.md"
+		},
+		{
+			"topicId": "guide/keyboard",
+			"sectionId": "customising",
+			"title": "Keyboard shortcuts",
+			"slug": "keyboard",
+			"markdown": "Brainstorm is meant to be driven from the keyboard. Every action has a shortcut, and you can rebind any of them.\n\n## The cheatsheet\n\nPress `Shift+?` from anywhere to open the cheatsheet. It lists every shortcut available in your current context — global ones, plus whatever the focused app has registered.\n\nFilter the cheatsheet by typing. Click any binding to jump to the action.\n\n## A few essentials\n\n- `Cmd+Space` / `Ctrl+Space` — open the [launcher](concepts/search.md).\n- `Cmd+,` / `Ctrl+,` — open Settings.\n- `Cmd+K` / `Ctrl+K` — global command palette.\n- `Cmd+F` / `Ctrl+F` — find within the current view.\n- `Cmd+W` / `Ctrl+W` — close window.\n- `Cmd+T` / `Ctrl+T` — new note (in Notes), new task (in Tasks), etc.\n- `Shift+?` — open the cheatsheet.\n- `Esc` — close the front-most popover / dialog.\n\nThese are defaults. The cheatsheet shows what they actually are on your system right now.\n\n## Rebinding\n\nOpen **Settings → Keyboard**. Each shortcut is one row. Click a row to record a new chord — press the keys you want and hit `Enter`. **Reset** restores the default.\n\nBindings travel with your [vault](concepts/vaults.md). Rebind once and your shortcuts follow you to every paired device.\n\n## Chords\n\nA shortcut can be a single key, a modifier-plus-key, or a **chord** — two presses in sequence. `Cmd+K Cmd+R` first presses `Cmd+K`, then `Cmd+R` while still holding `Cmd`. Use chords when you want a memorable namespace (\"`Cmd+K` for commands, `Cmd+K Cmd+R` for the reload action\").\n\n## Per-app shortcuts\n\nEach app adds its own shortcuts on top of the shell ones. They only fire while that app is focused. The cheatsheet shows them grouped by app.\n\n## Conflicts\n\nIf two shortcuts collide, the more-specific one wins — an app's `Cmd+B` overrides the shell's `Cmd+B` while the app has focus. **Settings → Keyboard** flags conflicts in red so you can resolve them.\n",
+			"plaintext": "Brainstorm is meant to be driven from the keyboard. Every action has a shortcut, and you can rebind any of them. The cheatsheet Press Shift+? from anywhere to open the cheatsheet. It lists every shortcut available in your current context — global ones, plus whatever the focused app has registered. Filter the cheatsheet by typing. Click any binding to jump to the action. A few essentials - Cmd+Space / Ctrl+Space — open the launcher. - Cmd+, / Ctrl+, — open Settings. - Cmd+K / Ctrl+K — global command palette. - Cmd+F / Ctrl+F — find within the current view. - Cmd+W / Ctrl+W — close window. - Cmd+T / Ctrl+T — new note (in Notes), new task (in Tasks), etc. - Shift+? — open the cheatsheet. - Esc — close the front-most popover / dialog. These are defaults. The cheatsheet shows what they actually are on your system right now. Rebinding Open Settings → Keyboard. Each shortcut is one row. Click a row to record a new chord — press the keys you want and hit Enter. Reset restores the default. Bindings travel with your vault. Rebind once and your shortcuts follow you to every paired device. Chords A shortcut can be a single key, a modifier-plus-key, or a chord — two presses in sequence. Cmd+K Cmd+R first presses Cmd+K, then Cmd+R while still holding Cmd. Use chords when you want a memorable namespace (\"Cmd+K for commands, Cmd+K Cmd+R for the reload action\"). Per-app shortcuts Each app adds its own shortcuts on top of the shell ones. They only fire while that app is focused. The cheatsheet shows them grouped by app. Conflicts If two shortcuts collide, the more-specific one wins — an app's Cmd+B overrides the shell's Cmd+B while the app has focus. Settings → Keyboard flags conflicts in red so you can resolve them.",
+			"headings": [
+				{
+					"depth": 2,
+					"text": "The cheatsheet",
+					"anchor": "the-cheatsheet"
+				},
+				{
+					"depth": 2,
+					"text": "A few essentials",
+					"anchor": "a-few-essentials"
+				},
+				{
+					"depth": 2,
+					"text": "Rebinding",
+					"anchor": "rebinding"
+				},
+				{
+					"depth": 2,
+					"text": "Chords",
+					"anchor": "chords"
+				},
+				{
+					"depth": 2,
+					"text": "Per-app shortcuts",
+					"anchor": "per-app-shortcuts"
+				},
+				{
+					"depth": 2,
+					"text": "Conflicts",
+					"anchor": "conflicts"
+				}
+			],
+			"relPath": "keyboard.md"
+		},
+		{
+			"topicId": "guide/privacy-and-security",
+			"sectionId": "privacy",
+			"title": "Privacy and security",
+			"slug": "privacy-and-security",
+			"markdown": "Brainstorm is built local-first. Your data lives on your devices; nothing leaves them unless you explicitly turn on a feature that needs to.\n\n## Local-first\n\nEverything you create — notes, tasks, files, every [entity](concepts/entities.md) — is stored on the machine that wrote it. You don't need an account, an internet connection, or a server. Brainstorm runs offline by default.\n\n## Encryption at rest\n\nEvery [vault](concepts/vaults.md) is encrypted on disk with a passphrase you chose at creation time. If your laptop is stolen, the vault folder on the drive is unreadable without the passphrase.\n\nThe encryption is AES-256-GCM, with the key derived from your passphrase via a memory-hard function. The passphrase itself never leaves your device.\n\n## Encryption in transit\n\nWhen you [pair devices](concepts/sync-across-devices.md), the two paired devices establish a shared key during pairing. Everything sent between them after that is encrypted with that key. The relay server that ferries traffic between them sees only encrypted bytes.\n\nIf you lose a device, remove it from **Settings → Devices** on another paired device. The remaining devices rotate the shared key so the lost device can't sync any further.\n\n## App permissions\n\nEvery [app](concepts/apps.md) — first-party or installed from the [Marketplace](getting-started/install-an-app.md) — declares what it needs to access:\n\n- **Read** entities of a particular type.\n- **Write** entities of a particular type.\n- **Network access** — talk to a specific server, or any server.\n- **Filesystem access** — read files outside the vault.\n\nAt install you see the list and approve or deny each item. You can change your mind later in **Settings → Apps** → an app → **Permissions**.\n\nAn app can't reach anything you haven't granted it. A note-taking app can't read your tasks unless you've granted `read tasks`; it can't talk to the internet unless you've granted network.\n\n## Telemetry\n\nBy default, Brainstorm sends no usage data. You can opt in to crash reports in **Settings → Privacy** if you want to help us debug — crash reports are stripped of personal data before they're sent, and the option is off until you turn it on.\n\n## Your data, exportable\n\nWhatever you put in, you can take out. **Settings → Data → Export** writes your vault as a folder of Markdown files plus JSON for everything that isn't text. Use it for backups, for moving to a different tool, or just to know you can.\n",
+			"plaintext": "Brainstorm is built local-first. Your data lives on your devices; nothing leaves them unless you explicitly turn on a feature that needs to. Local-first Everything you create — notes, tasks, files, every entity — is stored on the machine that wrote it. You don't need an account, an internet connection, or a server. Brainstorm runs offline by default. Encryption at rest Every vault is encrypted on disk with a passphrase you chose at creation time. If your laptop is stolen, the vault folder on the drive is unreadable without the passphrase. The encryption is AES-256-GCM, with the key derived from your passphrase via a memory-hard function. The passphrase itself never leaves your device. Encryption in transit When you pair devices, the two paired devices establish a shared key during pairing. Everything sent between them after that is encrypted with that key. The relay server that ferries traffic between them sees only encrypted bytes. If you lose a device, remove it from Settings → Devices on another paired device. The remaining devices rotate the shared key so the lost device can't sync any further. App permissions Every app — first-party or installed from the Marketplace — declares what it needs to access: - Read entities of a particular type. - Write entities of a particular type. - Network access — talk to a specific server, or any server. - Filesystem access — read files outside the vault. At install you see the list and approve or deny each item. You can change your mind later in Settings → Apps → an app → Permissions. An app can't reach anything you haven't granted it. A note-taking app can't read your tasks unless you've granted read tasks; it can't talk to the internet unless you've granted network. Telemetry By default, Brainstorm sends no usage data. You can opt in to crash reports in Settings → Privacy if you want to help us debug — crash reports are stripped of personal data before they're sent, and the option is off until you turn it on. Your data, exportable Whatever you put in, you can take out. Settings → Data → Export writes your vault as a folder of Markdown files plus JSON for everything that isn't text. Use it for backups, for moving to a different tool, or just to know you can.",
+			"headings": [
+				{
+					"depth": 2,
+					"text": "Local-first",
+					"anchor": "local-first"
+				},
+				{
+					"depth": 2,
+					"text": "Encryption at rest",
+					"anchor": "encryption-at-rest"
+				},
+				{
+					"depth": 2,
+					"text": "Encryption in transit",
+					"anchor": "encryption-in-transit"
+				},
+				{
+					"depth": 2,
+					"text": "App permissions",
+					"anchor": "app-permissions"
+				},
+				{
+					"depth": 2,
+					"text": "Telemetry",
+					"anchor": "telemetry"
+				},
+				{
+					"depth": 2,
+					"text": "Your data, exportable",
+					"anchor": "your-data-exportable"
+				}
+			],
+			"relPath": "privacy-and-security.md"
+		}
+	]
+}

@@ -1,0 +1,101 @@
+/**
+ * Shared FindBar chrome — shell-injected, identical in every text app
+ * (apps declare zero styling, the `.header-nav` precedent). A floating
+ * docked bar, top-trailing of the text surface, on the shared
+ * popover-class elevation tokens. No bottom border (it floats over
+ * content, not a stacked panel header — doc 59).
+ */
+
+.bs-find-bar {
+	position: absolute;
+	top: 8px;
+	inset-inline-end: 8px;
+	z-index: 30;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	padding: var(--space-2);
+	border-radius: var(--radius-md);
+	background: var(--color-background-elevated, #1c1f26);
+	border: var(--border-width) solid var(--color-border-subtle, rgba(255, 255, 255, 0.08));
+	box-shadow: var(--shadow-lg, 0 8px 24px rgba(0, 0, 0, 0.32));
+	color: var(--color-text-primary, #e8e8e8);
+	font-size: var(--text-size-md);
+}
+
+.bs-find-bar__row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+}
+
+.bs-find-bar__input {
+	min-width: 180px;
+	height: 26px;
+	padding: 0 var(--space-2);
+	border-radius: var(--radius-sm);
+	border: var(--border-width) solid transparent;
+	background: var(--color-background-subtle, rgba(255, 255, 255, 0.06));
+	color: inherit;
+	font: inherit;
+}
+
+.bs-find-bar__input:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+	border-color: transparent;
+}
+
+.bs-find-bar__count {
+	min-width: 64px;
+	padding: 0 var(--space-1);
+	color: var(--color-text-secondary, #9aa0aa);
+	font-size: var(--text-size-sm);
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+.bs-find-bar__btn,
+.bs-find-bar__toggle,
+.bs-find-bar__action {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	height: 26px;
+	padding: 0 var(--space-2);
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: inherit;
+	cursor: pointer;
+	font: inherit;
+}
+
+.bs-find-bar__toggle {
+	min-width: 28px;
+	font-variant-numeric: tabular-nums;
+}
+
+.bs-find-bar__btn:hover,
+.bs-find-bar__toggle:hover,
+.bs-find-bar__action:hover {
+	background: var(--color-interactive-hover, rgba(255, 255, 255, 0.08));
+}
+
+.bs-find-bar__toggle[aria-pressed="true"] {
+	background: var(--color-accent-subtle, rgba(79, 140, 255, 0.22));
+	color: var(--color-accent-default, #4f8cff);
+}
+
+.bs-find-bar__btn:disabled,
+.bs-find-bar__action:disabled {
+	opacity: 0.4;
+	cursor: default;
+}
+
+.bs-find-bar__btn:focus-visible,
+.bs-find-bar__toggle:focus-visible,
+.bs-find-bar__action:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+}

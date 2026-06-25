@@ -1,0 +1,208 @@
+/* Base reset + token-driven defaults. All design values reference CSS variables
+ * defined by the ThemeProvider per docs/shell/36-design-system.md.
+ */
+
+/* Chrome layout constants shared by every panel header / footer in the shell
+ * (dashboard, settings, marketplace, popovers) and pushed into apps via
+ * app-preload's `applyChrome`. Per CLAUDE.md "Panel headers share height".
+ *
+ * `--focus-ring-*` are structural shell-side tokens consumed by the global
+ * `:focus-visible` rule below and by the per-component overrides that need a
+ * different offset (inset for bordered inputs per
+ * [[feedback_focus_outline_replaces_border]]). See docs/shell/36-design-system.md §Focus. */
+:root {
+	--app-header-height: 44px;
+	/* Softened from 2px → 1px (2026-06-21): the 2px accent ring read as harsh,
+	   especially over wallpaper. Still a visible keyboard-focus affordance
+	   (WCAG 2.4.7) but quieter. The dashboard subtree suppresses it entirely
+	   (see dashboard.css) and relies on the app-icon tile glow instead. */
+	--focus-ring-outline: 1px solid var(--color-focus-ring);
+	--focus-ring-offset: 2px;
+	--focus-ring-offset-inset: -1px;
+}
+
+* {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+html,
+body,
+#root {
+	height: 100%;
+	width: 100%;
+	/* Concrete fallbacks first, then tokens — guarantees a sensible look
+	 * even if ThemeProvider hasn't applied tokens yet (first paint) or has
+	 * just torn them down during an error-boundary unmount. */
+	background: #161616;
+	background: var(--color-background-primary, #161616);
+	color: #f7f7f7;
+	color: var(--color-text-primary, #f7f7f7);
+	font-family: var(--text-family-ui);
+	font-size: var(--text-size-md);
+	line-height: var(--text-line-height-normal);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	overflow: hidden;
+	user-select: none;
+}
+
+button,
+input,
+textarea {
+	font: inherit;
+	color: inherit;
+}
+
+/* Theme-following scrollbars on Windows/Linux only — macOS keeps its native
+ * auto-hiding overlay scrollbars. Mirrors the SDK `app-theme.css` block so the
+ * dashboard, settings, marketplace and portaled popovers match the apps.
+ * `data-platform` is stamped on <html> in `main.tsx`. We don't set `display`,
+ * so surfaces that hide their scrollbar (e.g. the window strip) stay hidden. */
+:root[data-platform="win32"],
+:root[data-platform="linux"] {
+	scrollbar-color: var(--color-border-strong) transparent;
+	scrollbar-width: thin;
+}
+
+:root[data-platform="win32"] ::-webkit-scrollbar,
+:root[data-platform="linux"] ::-webkit-scrollbar {
+	width: 12px;
+	height: 12px;
+}
+
+:root[data-platform="win32"] ::-webkit-scrollbar-track,
+:root[data-platform="linux"] ::-webkit-scrollbar-track,
+:root[data-platform="win32"] ::-webkit-scrollbar-corner,
+:root[data-platform="linux"] ::-webkit-scrollbar-corner {
+	background: transparent;
+}
+
+:root[data-platform="win32"] ::-webkit-scrollbar-thumb,
+:root[data-platform="linux"] ::-webkit-scrollbar-thumb {
+	background: var(--color-border-strong);
+	border-radius: 8px;
+	border: 3px solid transparent;
+	background-clip: padding-box;
+}
+
+:root[data-platform="win32"] ::-webkit-scrollbar-thumb:hover,
+:root[data-platform="linux"] ::-webkit-scrollbar-thumb:hover {
+	background: var(--color-text-tertiary);
+	background-clip: padding-box;
+}
+
+/* RTL inline-axis icon mirror — Stage 12.5. Glyphs that encode the
+ * inline-start ↔ inline-end direction (back/forward carets, prev/next match
+ * arrows) are marked with `data-icon-direction="inline"` at the call site
+ * via `<Icon direction={IconDirection.Inline} />` (SDK) so their visual
+ * orientation flips with the locale. Bidirectional glyphs (Settings, Trash,
+ * Sun, Cube, …) are never stamped and stay identical. */
+[dir="rtl"] [data-icon-direction="inline"] {
+	transform: scaleX(-1);
+}
+
+/* Strip user-agent button chrome. Every clickable surface in the shell builds
+ * its own look from tokens (see `.button`, `.icon-button`, and per-component
+ * tiles like `.window-strip__tile`); the UA's `2px outset` border and grey
+ * fill never reads correctly on glass. Focus rings flow through the global
+ * `:focus-visible` rule below — not the default outline. */
+button {
+	background: none;
+	border: none;
+	cursor: pointer;
+}
+
+button:disabled {
+	cursor: not-allowed;
+}
+
+a {
+	color: var(--color-text-link);
+	text-decoration: none;
+}
+
+/* Keyboard focus must be visible — WCAG 2.4.7 (AA). Mirrors the SDK app-theme /
+ * editor-theme fix (F-270): suppress the mouse / programmatic UA outline, and
+ * give keyboard focus a ring by default on BARE interactive controls. Text-entry
+ * surfaces (`<input>`/`<textarea>`/`<select>`/contenteditable) are EXCLUDED —
+ * they show focus via their own border / caret, so the inset box is redundant
+ * there. `:root …` = (0,0,2,0) so it survives single-class `outline: none`
+ * resets; per-component opt-ins below (`.bs-btn`, `.segmented__item`, …) still
+ * win to tune offset. The earlier global `outline: none !important` silently
+ * killed every ring in the dashboard, start menu, window strip and settings. */
+:focus:not(:focus-visible) {
+	outline: none;
+}
+/* Baseline: kill Chromium's default `outline: auto` for the `:focus-visible`
+ * case too. That UA ring renders in `-webkit-focus-ring-color` — the macOS
+ * system accent — so a user whose OS accent is yellow saw a GOLD ring that
+ * ignored the app theme. It surfaces whenever an element becomes
+ * `:focus-visible` WITHOUT `[data-kbnav]` (no deliberate Tab) — e.g. the
+ * Settings focus-trap moving focus when Settings opens via Cmd+,. The themed
+ * ring below ([data-kbnav], higher specificity) still wins on real keyboard
+ * nav; this only removes the off-theme UA fallback. Edit surfaces keep their
+ * own caret/border affordance. */
+:focus-visible {
+	outline: none;
+}
+/* Gated on `html[data-kbnav]` (focus-nav.ts): the ring shows ONLY after a
+ * deliberate plain Tab — never on mouse click, a Cmd/Ctrl/Alt+Tab window
+ * switch, or a Cmd+Tab return (which used to re-light a stale ring on the
+ * dashboard via Chromium's window-refocus :focus-visible re-eval). The
+ * `[data-kbnav]` attribute adds specificity, so it still survives single-class
+ * `outline: none` resets. Edit surfaces stay excluded. */
+:root[data-kbnav] :focus-visible:not([contenteditable]):not(input):not(textarea):not(select) {
+	outline: var(--focus-ring-outline);
+	outline-offset: var(--focus-ring-offset-inset);
+}
+
+/* Shared glass surface. Apply alongside any element's own size / radius /
+ * border styles. Three densities:
+ *   .glass--subtle  — lightest, for thin chrome over wallpapers (header/footer)
+ *   .glass          — default, for floating overlays and toolbars
+ *   .glass--strong  — densest, for sidebars / settings panels that need
+ *                     stronger separation from the surface beneath
+ * All three share the same blur + saturation tokens so motion feels uniform.
+ * See docs/shell/36-design-system.md §Surfaces. */
+.glass,
+.glass--subtle,
+.glass--strong {
+	backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+	-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+	border-color: var(--color-glass-border);
+}
+
+.glass--subtle {
+	background: var(--color-glass-background-subtle);
+}
+
+.glass {
+	background: var(--color-glass-background);
+}
+
+.glass--strong {
+	background: var(--color-glass-background-strong);
+}
+
+/* Global reduced-motion cover. The shell wraps individual animations where it
+ * makes sense (settings drawer fade-only, popover backdrop fade-only); for the
+ * many `transition: <prop> <duration> <easing>` decorations sprinkled across
+ * settings / button / icon-button / dashboard / welcome / etc., the durable
+ * solution is one cover that crushes the easing curve to instantaneous. Every
+ * new animation in the shell or SDK falls under this cover for free.
+ *
+ * 0.01ms (not 0) so existing `transitionend` listeners still fire — useful for
+ * focus-trap / animation-sync code that watches for the end event.
+ */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
+}

@@ -1,0 +1,8 @@
+/* The scroll viewport is the consumer's element; `.bs-vlist__spacer` carries
+ * the full virtual height and rows are absolutely positioned within it. The
+ * viewport itself needs `position: relative` + `overflow-y: auto` from the
+ * consumer's own CSS. */
+.bs-vlist__spacer {
+	position: relative;
+	width: 100%;
+}

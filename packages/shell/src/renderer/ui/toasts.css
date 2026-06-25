@@ -1,0 +1,93 @@
+.toasts {
+	position: fixed;
+	right: var(--space-4);
+	bottom: calc(var(--space-4) + 32px); /* clears the footer */
+	z-index: var(--z-toast);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	max-width: 360px;
+	pointer-events: none;
+}
+
+/* Translucent glass surface — background + backdrop-filter come from the
+ * shared `.glass` class applied via JSX (see styles.css). This rule owns
+ * layout, the colored left accent, and chrome only. */
+.toast {
+	display: grid;
+	grid-template-columns: auto 1fr auto;
+	column-gap: var(--space-3);
+	align-items: start;
+	padding: var(--space-3) var(--space-2);
+	border: var(--border-width) solid var(--color-glass-border);
+	border-inline-start: 3px solid var(--color-text-tertiary);
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-lg);
+	color: var(--color-text-primary);
+	pointer-events: auto;
+}
+
+.toast--info {
+	border-inline-start-color: var(--color-state-info, var(--color-accent-default));
+}
+
+.toast--success {
+	border-inline-start-color: var(--color-state-success);
+}
+
+.toast--warning {
+	border-inline-start-color: var(--color-state-warning);
+}
+
+.toast--error {
+	border-inline-start-color: var(--color-state-error);
+}
+
+.toast__icon {
+	display: inline-flex;
+	align-items: center;
+	color: var(--color-text-secondary);
+	padding-top: var(--space-0_5);
+}
+
+.toast--error .toast__icon {
+	color: var(--color-state-error);
+}
+
+.toast--warning .toast__icon {
+	color: var(--color-state-warning);
+}
+
+.toast--success .toast__icon {
+	color: var(--color-state-success);
+}
+
+.toast__body {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	min-width: 0;
+	user-select: text;
+	-webkit-user-select: text;
+	cursor: text;
+}
+
+.toast__title {
+	margin: 0;
+	font-size: var(--text-size-md);
+	font-weight: var(--text-weight-medium);
+	user-select: text;
+	-webkit-user-select: text;
+}
+
+.toast__detail {
+	margin: 0;
+	font-size: var(--text-size-xs);
+	color: var(--color-text-secondary);
+	word-break: break-word;
+	user-select: text;
+	-webkit-user-select: text;
+}
+
+/* Toast close button uses the shared <IconButton> primitive. No bespoke
+ * chrome here — see renderer/ui/icon-button.tsx. */

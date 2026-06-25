@@ -1,0 +1,159 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel in-progress runs on the same PR / branch when a new commit arrives.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Verify on ${{ matrix.os }} (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-13
+            arch: x64
+            runner: macos-13
+            rust-target: x86_64-apple-darwin
+            napi-script: build:darwin-x64
+            package-script: package:mac
+          - os: macos-14
+            arch: arm64
+            runner: macos-14
+            rust-target: aarch64-apple-darwin
+            napi-script: build:darwin-arm64
+            package-script: package:mac
+          - os: windows-2022
+            arch: x64
+            runner: windows-2022
+            rust-target: x86_64-pc-windows-msvc
+            napi-script: build:windows-x64
+            package-script: package:win
+          # GA-2025 — verify availability + exact label at iteration start.
+          # If the runner label is wrong, this matrix entry fails fast with
+          # "unknown runner" and the label can be corrected without affecting
+          # the other entries (fail-fast is off).
+          - os: windows-11-arm
+            arch: arm64
+            runner: windows-11-arm
+            rust-target: aarch64-pc-windows-msvc
+            napi-script: build:windows-arm64
+            package-script: package:win
+          - os: ubuntu-22.04
+            arch: x64
+            runner: ubuntu-22.04
+            rust-target: x86_64-unknown-linux-gnu
+            napi-script: build:linux-x64
+            package-script: package:linux
+          # GA-2025 — verify availability + exact label at iteration start.
+          - os: ubuntu-22.04-arm
+            arch: arm64
+            runner: ubuntu-22.04-arm
+            rust-target: aarch64-unknown-linux-gnu
+            napi-script: build:linux-arm64
+            package-script: package:linux
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup-bun-rust
+        with:
+          rust-target: ${{ matrix.rust-target }}
+
+      - name: Verify (typecheck + lint + tests)
+        run: bun run verify
+
+      - name: Build native (host-arch)
+        run: bun run --filter @brainstorm/native ${{ matrix.napi-script }}
+
+      - name: Build apps + shell
+        run: bun run --filter @brainstorm/shell build && bun run build:apps
+
+      - name: Package (unsigned)
+        env:
+          # Signing is env-var-gated; no secrets → no-op signed step.
+          CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+        run: bun run --filter @brainstorm/shell ${{ matrix.package-script }}
+
+      - name: Smoke-check artefact (host platform)
+        if: matrix.os == 'macos-14'  # the host-platform smoke; other OSes skip
+        run: node packages/shell/scripts/preview-package.mjs
+
+      - name: Upload artefact (diagnostic only — not for release)
+        uses: actions/upload-artifact@v4
+        with:
+          name: brainstorm-${{ matrix.os }}-${{ matrix.arch }}
+          path: packages/shell/dist/*
+          retention-days: 7
+
+  # 13.3 — real-renderer smoke on a virtual display. Runs the Playwright e2e
+  # suite (beta-exit flows) and the KBN-P keyboard-accessibility specs against
+  # the production-built shell under `xvfb-run` (the harness needs a real
+  # display + GPU paint to mean anything; macOS/Windows devs run these
+  # directly via `bun run e2e` / `playwright test kbn-`).
+  e2e-smoke:
+    name: E2E + KBN smoke (xvfb)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup-bun-rust
+        with:
+          rust-target: x86_64-unknown-linux-gnu
+
+      - name: Install display + Electron system deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libnss3 libatk-bridge2.0-0 libgtk-3-0 libgbm1 libasound2
+
+      - name: Build native (host-arch)
+        run: bun run --filter @brainstorm/native build:linux-x64
+
+      - name: Rebuild SQLite natives for Electron's ABI
+        # bun install fetches Node-ABI prebuilds; the shell loads these inside
+        # Electron ("Module did not self-register" without the rebuild).
+        run: cd packages/shell && bunx @electron/rebuild -f -w better-sqlite3,better-sqlite3-multiple-ciphers
+
+      - name: Build shell + apps
+        run: bun run e2e:build
+
+      - name: E2E smoke (xvfb)
+        env:
+          # GitHub's container kernel blocks Chromium's sandbox; the suite
+          # exercises app flows, not the sandbox itself.
+          ELECTRON_DISABLE_SANDBOX: "1"
+          # Headless runner has no Secret Service / unlocked keyring; the
+          # suite tests app flows, the keystore has its own unit suites.
+          BRAINSTORM_DEV_INSECURE_CREDENTIALS: "1"
+        run: xvfb-run --auto-servernum -- npx playwright test --config=playwright.e2e.config.ts
+
+      - name: KBN keyboard specs (xvfb)
+        env:
+          ELECTRON_DISABLE_SANDBOX: "1"
+          BRAINSTORM_DEV_INSECURE_CREDENTIALS: "1"
+        run: xvfb-run --auto-servernum -- npx playwright test --config=playwright.config.ts kbn-
+
+      - name: Upload failure artefacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-smoke-results
+          path: |
+            test-results/
+            tests/e2e/results/
+            tests/perf/results/
+          retention-days: 7

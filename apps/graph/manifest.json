@@ -1,0 +1,121 @@
+{
+  "id": "io.brainstorm.graph",
+  "name": "Graph",
+  "version": "0.1.0",
+  "sdk": "1",
+  "description": "The vault as a typed-link graph — multi-subject pattern filters, three view kinds (full / local / path), temporal history animation.",
+  "icon": "icon.svg",
+  "entry": "dist/index.html",
+  "capabilities": [
+    "storage.kv",
+    "entities.read:brainstorm/Graph/v1",
+    "entities.write:brainstorm/Graph/v1",
+    "entities.read:brainstorm/GraphView/v1",
+    "entities.write:brainstorm/GraphView/v1",
+    "entities.read:*",
+    "entities.write:*",
+    "intents.dispatch:open",
+    "intents.dispatch:share",
+    "blocks.provide:io.brainstorm.graph/embedded-graph",
+    "files.write"
+  ],
+  "registrations": {
+    "entityTypes": [
+      {
+        "id": "brainstorm/Graph/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/graph/graph/v1.json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "id",
+            "name",
+            "pattern",
+            "pins",
+            "hides",
+            "highlights",
+            "views",
+            "createdAt",
+            "updatedAt"
+          ],
+          "properties": {
+            "id": { "type": "string" },
+            "name": { "type": "string" },
+            "icon": { "type": ["object", "null"] },
+            "description": { "type": "string" },
+            "pattern": {
+              "type": "object",
+              "required": ["subjects", "edges", "primarySubject"],
+              "properties": {
+                "subjects": { "type": "object" },
+                "edges": { "type": "array" },
+                "primarySubject": { "type": "string" }
+              }
+            },
+            "pins": { "type": "array" },
+            "hides": { "type": "array" },
+            "highlights": { "type": "array" },
+            "views": { "type": "array", "items": { "type": "string" } },
+            "defaultViewId": { "type": ["string", "null"] },
+            "createdAt": { "type": "number" },
+            "updatedAt": { "type": "number" }
+          }
+        }
+      },
+      {
+        "id": "brainstorm/GraphView/v1",
+        "schemaUrl": "https://brainstorm.io/schemas/graph/graph-view/v1.json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "id",
+            "graphId",
+            "name",
+            "kind",
+            "layoutOptions",
+            "visibility",
+            "settings",
+            "history",
+            "ordering"
+          ],
+          "properties": {
+            "id": { "type": "string" },
+            "graphId": { "type": "string" },
+            "name": { "type": "string" },
+            "icon": { "type": ["object", "null"] },
+            "kind": {
+              "type": "string",
+              "enum": ["full", "local", "path"]
+            },
+            "layoutOptions": { "type": "object" },
+            "visibility": { "type": "object" },
+            "filterOverlay": { "type": ["object", "null"] },
+            "ordering": { "type": "object" },
+            "settings": { "type": "object" },
+            "history": { "type": "object" },
+            "cameraPolicy": {
+              "type": "string",
+              "enum": ["keep", "fit", "centerSel"]
+            },
+            "createdAt": { "type": "number" },
+            "updatedAt": { "type": "number" }
+          }
+        }
+      }
+    ],
+    "openers": [
+      { "kind": "primary", "entityType": "brainstorm/Graph/v1" },
+      { "kind": "primary", "entityType": "brainstorm/GraphView/v1" }
+    ],
+    "blocks": [
+      {
+        "id": "io.brainstorm.graph/embedded-graph",
+        "name": "Embedded graph",
+        "entityTypes": ["brainstorm/Graph/v1"]
+      }
+    ],
+    "intents": [
+      { "verb": "open", "entityType": "brainstorm/Graph/v1", "priority": "primary" },
+      { "verb": "open", "entityType": "brainstorm/GraphView/v1", "priority": "primary" }
+    ]
+  }
+}
