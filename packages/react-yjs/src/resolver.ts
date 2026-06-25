@@ -11,7 +11,7 @@
  * `resolver.resolve` at Stage 9.3.2b. Until then this core stands alone
  * and tested.
  *
- * Sync model (per docs/editing/06-collaboration-yjs.md — the IPC bridge
+ * Sync model (per — the IPC bridge
  * behaves like a Yjs `Provider`): the renderer holds a full replica
  * (OQ-9). `resolve()` is synchronous (the `<YDocProvider>` contract) so
  * it returns an empty `Y.Doc` immediately and hydrates it from the

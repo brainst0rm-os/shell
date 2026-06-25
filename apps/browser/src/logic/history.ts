@@ -3,7 +3,7 @@
  * the websites you visited". One `brainstorm/BrowsingHistory/v1` entity per
  * vault holds a bounded, most-recent-first visit list the chrome feeds from
  * the shell's `UrlChanged` metadata events (titles backfill from
- * `TitleChanged`). Vault-local, never synced (docs/apps/54 §Entity types) —
+ * `TitleChanged`). Vault-local, never synced (§Entity types) —
  * the list is bounded and clearable from the History menu, not a surveillance
  * log.
  *

@@ -8,7 +8,7 @@
  *     `signPayload` — the private key never leaves the main process).
  *   - The credential store (Tier 2; encrypted JSON file under the master key).
  *
- * Lifecycle per docs/security/29-credentials-storage.md §Specific secrets:
+ * Lifecycle per §Specific secrets:
  *
  *   Vault create:
  *     1. Pick a keystore backend (keyring → passphrase fallback → insecure dev).
@@ -108,7 +108,7 @@ import {
 /**
  * Canonical entity type of the vault's root container — the single
  * `brainstorm/Folder/v1` every folder/file hangs off (per
- * docs/apps/30-file-manager-and-folders.md). Kept here, not app-side, so
+ * ). Kept here, not app-side, so
  * the bootstrap and any future shell consumer share one literal.
  */
 export const ROOT_FOLDER_TYPE = "brainstorm/Folder/v1";
@@ -119,7 +119,7 @@ export const ROOT_FOLDER_TYPE = "brainstorm/Folder/v1";
  * with a single `repo.get(id)` probe and lets any reader resolve the root
  * without an extra lookup table — the same stable-id strategy the kv→
  * entities bridge uses for migrated rows. Entity ids are local opaque
- * strings (docs/data/05 §Decision), so a constant is a valid id.
+ * strings (§Decision), so a constant is a valid id.
  */
 export const ROOT_FOLDER_ENTITY_ID = "brainstorm/root-folder/v1";
 

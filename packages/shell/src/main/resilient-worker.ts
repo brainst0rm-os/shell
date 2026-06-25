@@ -1,6 +1,6 @@
 /**
  * Resilient worker supervisor — keeps a `utilityProcess` worker alive across
- * crashes, per docs/shell/12-shell-architecture.md §Crash recovery:
+ * crashes, per §Crash recovery:
  * "Worker crash: shell respawns the worker … apps may briefly see
  * `Unavailable` for that service."
  *

@@ -2,7 +2,7 @@
  * Stage 10.13 — selective-sync policy: renderer-safe wire types + the pure
  * admit decision.
  *
- * Per [20-database-growth-and-sync.md §Selective sync](../../../docs/data/20-database-growth-and-sync.md):
+ * Per 20-database-growth-and-sync.md §Selective sync:
  * a per-device policy chooses **which shared entities the device actively
  * syncs**. v1 modes:
  *   - **Everything** — every shared entity syncs (desktop default).

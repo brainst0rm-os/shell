@@ -44,7 +44,7 @@ import type { FeedbackSettingsStore } from "./feedback-settings-store";
 /** Privileged sentinel `appId` recorded against the audit log entry for
  *  every feedback POST. Apps cannot spoof this — they never reach the
  *  service. The shell distinguishes it from real app ids by the
- *  double-underscore prefix per [docs/security/38-network-and-proxy.md]
+ *  double-underscore prefix per
  *  §Shell-mediated network broker. */
 export const FEEDBACK_AUDIT_APP_ID = "__feedback__";
 

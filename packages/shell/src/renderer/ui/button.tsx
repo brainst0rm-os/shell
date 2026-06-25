@@ -53,7 +53,7 @@ export type ButtonProps = {
 	/**
 	 * Async request in flight. Shows the loader centered over the label
 	 * (the button keeps its size), blocks `onClick`, and sets
-	 * `aria-busy`. Per docs/shell/36-design-system.md §Async loading.
+	 * `aria-busy`. Per §Async loading.
 	 */
 	loading?: boolean;
 	iconLeft?: IconName;
@@ -74,7 +74,7 @@ export type ButtonProps = {
 	 *      so assistive tech announces the binding without parsing the
 	 *      visual glyphs.
 	 * Unknown ids / unbound actions render no hint (no empty `<kbd>`).
-	 * Per [24-keyboard-shortcuts.md](../../../../../docs/shell/24-keyboard-shortcuts.md) — Stage 6.10d.
+	 * Per 24-keyboard-shortcuts.md — Stage 6.10d.
 	 */
 	shortcutId?: string;
 	type?: "button" | "submit" | "reset";

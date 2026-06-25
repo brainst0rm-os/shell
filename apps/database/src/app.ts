@@ -1824,7 +1824,7 @@ function onOpenEntity(state: AppState, entity: EntityRow): void {
 }
 
 /**
- * The shared **object menu** (Stage 7.13, docs/shell/37 §Object menu).
+ * The shared **object menu** (Stage 7.13, §Object menu).
  * One delegated `contextmenu` on the stable stage body covers every
  * view kind (grid / list / gallery / board / calendar / timeline) —
  * each renders rows with `data-entity-id`, so there's a single
@@ -1845,7 +1845,7 @@ function bindStageObjectMenu(state: AppState): void {
 		const entity = state.db.entities.find((e) => e.id === entityId);
 		if (!entity) return;
 		event.preventDefault();
-		// 9.12.5 — member-override affordance on the row menu (docs/apps/
+		// 9.12.5 — member-override affordance on the row menu (
 		// database/10 §Removing an entity from a List): a user list's row
 		// offers "Hide from list" when the source matches it (→ exclude) or
 		// "Remove from list" when it's only pinned in (→ drop include).

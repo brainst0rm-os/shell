@@ -1,6 +1,6 @@
 /**
  * Yjs worker — resolves OQ-18: canonical Y.Docs live in this dedicated
- * `utilityProcess`, not the main process. Per docs/shell/12-shell-architecture.md
+ * `utilityProcess`, not the main process. Per
  * §Roles, isolating the CRDT runtime keeps the main loop's perf budget
  * intact even under heavy concurrent editing.
  *
@@ -88,7 +88,7 @@ type ProcessWithParentPort = NodeJS.Process & { parentPort?: ParentPort };
 /**
  * Per-worker state. One YDocStore per vault path; opened lazily the first
  * time a vault's entity is touched. The worker stays single-vault in v1
- * (one vault per shell window per docs/28); the structure here supports
+ * (one vault per shell window per); the structure here supports
  * multi-vault if/when that lands.
  *
  * Doc cache is LRU-bounded. Eviction is safe because every `applyUpdate`
@@ -217,7 +217,7 @@ const handlers: Record<string, (envelope: Envelope) => Promise<unknown> | unknow
 		const result = await storeFor(args.vaultPath).appendAndMaybeCompact(args.entityId, update);
 		// The Y.Doc is the source of truth; return the derived projection so
 		// the entities service can materialise the `entities.db` row from the
-		// just-applied doc state (docs/editing/06-collaboration-yjs.md). Empty
+		// just-applied doc state. Empty
 		// for a doc that carries no property/link roots (e.g. body-only).
 		return {
 			compacted: result.compacted,

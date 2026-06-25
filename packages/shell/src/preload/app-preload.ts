@@ -1,6 +1,6 @@
 /**
  * App preload — runs in every app renderer's preload context per
- * docs/security/09-security-and-sandbox.md §Isolation:
+ *  §Isolation:
  *
  *   - `nodeIntegration: false`
  *   - `contextIsolation: true`

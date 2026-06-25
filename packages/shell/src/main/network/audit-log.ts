@@ -1,7 +1,7 @@
 /**
  * Net-1a step 2 — append-only audit log for the network broker.
  *
- * Per `docs/security/38-network-and-proxy.md §Logging hygiene`: every
+ * Per ` §Logging hygiene`: every
  * brokered network request lands one JSON-lines record. The record is
  * **metadata only** — never the request body, never the response body,
  * never URL query strings. Path is preserved up to (not including) the

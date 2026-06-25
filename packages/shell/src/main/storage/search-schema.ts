@@ -1,7 +1,7 @@
 /**
  * `search.db` schema — FTS5 full-text indexes.
  *
- * Per docs/data/18-storage-and-search.md §Schema (search.db):
+ * Per §Schema (search.db):
  *
  *   - `entity_fts` — one row per indexed entity; plain-text content assembled
  *     from text-typed properties + Yjs rich-text plaintext.

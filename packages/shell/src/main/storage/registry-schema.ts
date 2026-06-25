@@ -1,8 +1,8 @@
 /**
  * `registry.db` schema — installed apps and their registrations.
  *
- * Per docs/apps/03-app-model.md §Manifest, docs/apps/03-app-model.md §Install,
- * and docs/shell/12-shell-architecture.md §Persistence layout. Each installed
+ * Per §Manifest, §Install,
+ * and §Persistence layout. Each installed
  * app contributes registrations across openers (entity-type / MIME →
  * handler), blocks, custom Lexical node types, and widgets.
  *
@@ -205,7 +205,7 @@ export const REGISTRY_MIGRATIONS: SqliteMigration[] = [
 		description:
 			"registry.db v9 — install provenance (doc 59 / 14.29): where an app came from + how it updates",
 		up: (db) => {
-			// Per docs/apps/59-app-lifecycle-and-catalog.md §Registry schema
+			// Per §Registry schema
 			// changes. `install_source` is the `InstallOrigin` enum (where the
 			// app came from); `catalog_id` is the catalog it's tracked against
 			// (NULL for sideload/local-file/dev); `channel` is the per-app update

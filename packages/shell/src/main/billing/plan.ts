@@ -28,7 +28,7 @@ export enum PlanTier {
 
 /** Entitlement flags a feature gates on. Wire strings carried in the token's
  *  `features` array; denormalised into `account.db`. The Free tier holds none —
- *  Free is fully local-first + BYO-AI (docs/platform/44-pricing.md §Free). */
+ *  Free is fully local-first + BYO-AI (§Free). */
 export enum FeatureFlag {
 	/** Hosted, lower-latency relay tier (Plus+). */
 	HostedRelay = "hosted-relay",

@@ -1,6 +1,6 @@
 /**
  * Structured errors thrown by the SDK when an envelope reply comes back as
- * `EnvelopeReplyError`. Per docs/apps/08-app-sdk.md §Errors:
+ * `EnvelopeReplyError`. Per §Errors:
  *
  *   - `CapabilityDenied { capability }` — try `capabilities.request`.
  *   - `NotFound { kind, id }`           — entity, file, etc.

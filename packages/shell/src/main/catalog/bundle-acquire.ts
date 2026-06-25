@@ -3,7 +3,7 @@
  * **integrity (sha256)** then **authenticity (Ed25519 / TOFU)**, and unpack it
  * to a bundle dir. Used by both the install (14.32) and update (14.33) engines,
  * which only differ in whether they then call `AppInstaller.install` or
- * `.update`. Per docs/apps/59 §The install/update engines + docs/apps/14
+ * `.update`. Per §The install/update engines +
  * §Trust model.
  *
  * Every side-effecting dependency is injected; total — never throws.

@@ -155,7 +155,7 @@ export function unionAll(sets: Set<string>[]): Set<string> {
 
 /** Apply `members.include` / `members.exclude` to the source-resolved set.
  *  `effective(L) = (source ∪ include) \ exclude`, per
- *  docs/apps/database/10-lists-sets-collections.md §Effective members. */
+ *  §Effective members. */
 export function applyMemberOverrides(
 	resolved: Set<string>,
 	include: ReadonlyArray<{ entityId: string }>,

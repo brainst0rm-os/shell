@@ -190,7 +190,7 @@ export function BpBlockMount<TIn = unknown, TOut = unknown>(
 	// snapshot identity only changes when the contents do. A `\n`
 	// separator is unambiguous: capability strings never contain
 	// newlines (they're reverse-DNS-ish `<svc>.<verb>:<scope>` per
-	// `docs/security/09-security-and-sandbox.md`).
+	// ).
 	const capsKey = (capabilities ?? EMPTY_CAPS).join("\n");
 	// biome-ignore lint/correctness/useExhaustiveDependencies: capsKey-keyed by design — see comment above
 	const capsSnapshot = useMemo(() => Object.freeze([...(capabilities ?? EMPTY_CAPS)]), [capsKey]);

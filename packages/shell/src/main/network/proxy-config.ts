@@ -1,6 +1,6 @@
 /**
  * Net-1d — proxy configuration keystone for the shell-mediated network
- * broker (`docs/security/38-network-and-proxy.md` §Proxy support).
+ * broker (§Proxy support).
  *
  * Defines the user-facing proxy config shape — system / manual / PAC /
  * direct, in that preference order — its validator, and the no-proxy

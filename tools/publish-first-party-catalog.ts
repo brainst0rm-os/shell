@@ -9,7 +9,7 @@
  *   CATALOG_OUT=… CATALOG_PUBLISHER_SEED=<hex64> bun tools/publish-first-party-catalog.ts
  *
  * Apps must be built first (`bun run build:apps`). The publisher seed is a CI
- * secret for real releases; a fixed dev seed otherwise. Per docs/apps/59
+ * secret for real releases; a fixed dev seed otherwise. Per
  * §The publish pipeline.
  */
 

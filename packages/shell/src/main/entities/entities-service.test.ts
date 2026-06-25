@@ -618,7 +618,7 @@ describe("entities service handler", () => {
 // ── Y.Doc → entities.db projection (Phase 1 keystone) ──────────────────
 // applyDoc must materialise the just-applied canonical doc state into the
 // `entities.db` row, so the Y.Doc is the source of truth and the SQLite
-// row is a derived index (docs/editing/06-collaboration-yjs.md).
+// row is a derived index.
 describe("entities service — Y.Doc → entities.db projection", () => {
 	// A faithful `ydoc` fake: keeps a real Y.Doc per entity, applies the
 	// incoming update, and returns the codec's projection exactly as the

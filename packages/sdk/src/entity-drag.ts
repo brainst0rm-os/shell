@@ -120,7 +120,7 @@ export function dataTransferHasEntity(dataTransfer: DataTransfer | null): boolea
 	return false;
 }
 
-// ─── Multi-item selection / cross-app drag payload (DND-1, docs/platform/65) ──
+// ─── Multi-item selection / cross-app drag payload (DND-1,) ──
 
 /** The canonical multi-item drag types live in `@brainstorm/sdk-types` (so the
  *  shell `dnd`/`selection` services + the SDK proxy share one home); re-exported
@@ -171,7 +171,7 @@ export function hardenObjectDragItems(items: unknown): ObjectDragItem[] {
 export const OBJECT_DRAG_PAYLOAD_VERSION = 1 as const;
 
 /** Serialize a multi-item `ObjectDragPayload` to the JSON string carried under
- *  `ENTITY_DRAG_MIME` (DND-3 wire reconciliation, docs/platform/65 §Part IV.3).
+ *  `ENTITY_DRAG_MIME` (DND-3 wire reconciliation, §Part IV.3).
  *  The SAME MIME carries both the legacy single-item shape and this widened
  *  `{ v, sourceApp, items[] }` shape; `parseObjectDragPayload` reads either. */
 export function serializeObjectDragPayload(payload: ObjectDragPayload): string {

@@ -10,7 +10,7 @@
  * engines use (a stable src key + a decoded bitmap, decoupled from the
  * draw loop) but shares no code with any of them — the kinds, the Phosphor
  * asset path and the recolouring are all Brainstorm's own universal-icon
- * model (docs/foundations/39-universal-icons.md).
+ * model.
  *
  *   - Emoji → the bundled WebP the shell serves (`brainstorm://emoji/…`).
  *   - Image → the stored URL as-is.

@@ -2636,7 +2636,7 @@ void app.whenReady().then(async () => {
 		}),
 	);
 
-	// DND-1 — the `selection` broker service (docs/platform/65 §Part IV.1). The
+	// DND-1 — the `selection` broker service (§Part IV.1). The
 	// shell holds the focused app's published selection in one in-memory slot
 	// (`selectionStore`), so selection-driven intents + the action surface +
 	// keyboard "move to…" can read "what's selected" without each app
@@ -2669,7 +2669,7 @@ void app.whenReady().then(async () => {
 	// that plaintext vault bytes don't linger in the shared temp dir.
 	const DRAG_EXPORT_TEMP_TTL_MS = 60_000;
 	// DND-2 — the `dnd` broker service: the shell-mediated cross-app drag session
-	// (docs/platform/65 §Part IV.2). Native HTML5 DnD can't cross the per-app
+	// (§Part IV.2). Native HTML5 DnD can't cross the per-app
 	// renderer boundary, so the shell stamps `sourceApp`, hit-tests the target
 	// window via the window index, and negotiates the drop (kinds+point on hover
 	// — OQ-DND-2 privacy — payload only on drop, caps re-checked fail-closed).
@@ -3558,7 +3558,7 @@ void app.whenReady().then(async () => {
 	}
 
 	// 6.10c — clear an app's dynamic shortcuts + active-scope state when
-	// its last window closes (per docs/24 §Aggregation across the sandbox
+	// its last window closes (per §Aggregation across the sandbox
 	// boundary: "Removed when the app's last window closes."). Tracks the
 	// previous running set so each `onWindowsChanged` tick can diff to
 	// find apps that went to zero. Re-subscribes on session rebuilds so
@@ -3591,7 +3591,7 @@ void app.whenReady().then(async () => {
 	// launcher's `onWindowsChanged` plumbing. The previous indirection (gated
 	// on `onSessionRebuilt` firing before windows opened) silently missed
 	// app windows on some boot orderings, so `⌘ Shift L` from a focused app
-	// window did nothing — see docs/shell/24-keyboard-shortcuts.md §Delivery
+	// window did nothing — see §Delivery
 	// mechanics. `attach()` is WeakSet-idempotent so multi-firing is a no-op.
 	// Skip non-`window` webContents (devtools, BrowserView, webview, remote)
 	// so DevTools keyboard stays unmodified.

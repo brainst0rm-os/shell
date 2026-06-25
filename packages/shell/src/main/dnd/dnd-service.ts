@@ -1,5 +1,5 @@
 /**
- * `dnd` broker service (DND-2, docs/platform/65 §Part IV.2) — the shell-mediated
+ * `dnd` broker service (DND-2, §Part IV.2) — the shell-mediated
  * cross-app drag session. Native HTML5 DnD can't cross the per-app renderer
  * boundary (a `DataTransfer` doesn't serialize across processes), so the shell
  * runs the drag: stamps `sourceApp`, owns the cursor-following ghost overlay,

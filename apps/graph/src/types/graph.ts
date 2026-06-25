@@ -1,7 +1,7 @@
 /**
  * `Graph/v1` — a saved configuration that selects a subset of the vault
  * (via `pattern`) and carries user overrides (pins, hides, highlights)
- * that survive pattern recomputation. See docs/apps/graph/01-data-model.md.
+ * that survive pattern recomputation. See.
  */
 
 import type { Icon } from "./icon";

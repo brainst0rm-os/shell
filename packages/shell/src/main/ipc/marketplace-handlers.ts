@@ -4,7 +4,7 @@
  * workflow-pack / shortcut-pack later) to the dashboard renderer.
  *
  * The marketplace overlay is a privileged shell view (per
- * docs/apps/47-marketplace.md §The Marketplace surface is part of the shell),
+ *  §The Marketplace surface is part of the shell),
  * so it talks to ipcMain directly — never through the broker. Mirrors the
  * `dashboard:*` / `properties:*` patterns.
  *

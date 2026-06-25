@@ -1,7 +1,7 @@
 /**
  * Universal icon model — every entity / property / dictionary item / app
  * / vault can carry an icon, drawn from one of three sources. See
- * docs/foundations/39-universal-icons.md.
+ * .
  *
  * Pack glyphs are addressed as `"<packId>/<glyphName>"` — today the only
  * registered pack is `"phosphor"`. Emoji is the raw codepoint(s). Image

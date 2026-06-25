@@ -1,10 +1,10 @@
 /**
  * @brainstorm/sdk-types — type-only declarations for the Brainstorm app SDK.
  *
- * Per docs/apps/08-app-sdk.md the SDK *runtime* is injected by the shell into
+ * Per the SDK *runtime* is injected by the shell into
  * the renderer at preload time via a `brainstorm` global. App authors install
  * THIS package for typed access against that global; they do NOT install the
- * runtime — it doesn't exist as a separate package by design (per docs/08
+ * runtime — it doesn't exist as a separate package by design (per
  * §Boot handshake).
  *
  * This file declares the surface. The implementation lands in
@@ -849,7 +849,7 @@ export type StorageService = {
  * NOT sync between devices (Graph/Database view config, dictionary sort,
  * panel layout). Mirrors the `StorageService` key/value surface but is
  * backed by the shell's per-device `settings.db`, never the Yjs sync set
- * (docs/data/20-database-growth-and-sync.md: per-device tier alongside the
+ * (: per-device tier alongside the
  * ledger/registry). Use this — NOT `entities` — for anything that is a
  * device preference rather than a vault object. No capability scope; the
  * service is namespaced by the calling app's verified identity.
@@ -866,7 +866,7 @@ export type SettingsService = {
  *  render an affordance, never the object's content. Structurally identical to
  *  `EntityDragPayload` (the intra-app HTML5 drag item); named for the
  *  selection / cross-app-drag context. See
- *  [docs/platform/65](../../../docs/platform/65-object-selection-and-cross-app-dnd.md). */
+ *  */
 export type ObjectDragItem = {
 	entityId: string;
 	entityType: string;
@@ -883,7 +883,7 @@ export type SelectionSnapshot = {
 };
 
 /** The cross-app drag wire format — the selection in motion (DND-2,
- *  docs/platform/65). `sourceApp` is stamped by the shell from the verified
+ * ). `sourceApp` is stamped by the shell from the verified
  *  drag session, never app-provided. Canonical home; `@brainstorm/sdk/entity-drag`
  *  re-exports it. */
 export type ObjectDragPayload = {
@@ -892,7 +892,7 @@ export type ObjectDragPayload = {
 	items: ObjectDragItem[];
 };
 
-// ─── Cross-app drag session (DND-2, docs/platform/65 §Part IV.2) ─────────────
+// ─── Cross-app drag session (DND-2, §Part IV.2) ─────────────
 
 /** The kind of thing a drag carries — negotiated by MIME on the same session. */
 export enum DragPayloadKind {
@@ -961,7 +961,7 @@ export type DropResult = {
 	targetApp: string | null;
 };
 
-/** The `dnd` host service (DND-2, docs/platform/65 §Part IV.2). The shell runs
+/** The `dnd` host service (DND-2, §Part IV.2). The shell runs
  *  ONE active drag session: stamps `sourceApp`, owns the cursor-following ghost,
  *  hit-tests the target window, negotiates the drop semantic (kinds+point on
  *  hover, payload only on drop), re-checks caps fail-closed. Native HTML5 DnD is
@@ -988,7 +988,7 @@ export type DndService = {
 	 *  the current point (updates the ghost affordance). Capability: `dnd.drop`. */
 	setEffect(args: { sessionId: string; effect: DropEffect }): Promise<void>;
 	/** Drag a file OUT of Brainstorm to the OS (Finder/another app) — scope D
-	 *  (docs/platform/65 §Part V). The renderer reads the file's bytes (its own
+	 *  (§Part V). The renderer reads the file's bytes (its own
 	 *  `files.read`), calls this on a native `dragstart`, and the shell materialises
 	 *  them to a temp path and hands the OS drag to `webContents.startDrag`. The
 	 *  one native cross-boundary drag Electron supports (files + icon only).
@@ -1010,7 +1010,7 @@ export type DragExportResult = {
 	started: boolean;
 };
 
-/** The `selection` host service (DND-1, docs/platform/65 §Part IV.1). The shell
+/** The `selection` host service (DND-1, §Part IV.1). The shell
  *  keeps ONLY the focused app's published selection in a single slot, cleared
  *  on focus change — no cross-app aggregation, no privacy leak between apps.
  *  `selection` is the drag payload at rest; the cross-app drag (DND-2+) carries
@@ -1122,7 +1122,7 @@ export type UploadedFile = {
 
 /**
  * Opaque file reference an app holds. Apps never see absolute paths
- * (docs/security/09 §Filesystem). The shell mints these via the picker
+ * (§Filesystem). The shell mints these via the picker
  * (`requestOpen`/`requestSave`) or the cross-app `handleFromIntent`
  * pass-through; the receiver feeds them straight back into `read`/`write`
  * /`watch` and the shell-side registry swaps token → path inside the
@@ -1317,7 +1317,7 @@ export type IntentsService = {
 /**
  * The app-facing face of "pin any object to the dashboard". An app offers
  * "Pin to dashboard" on one of its objects (via the shared object menu —
- * see docs/shell/37-cross-app-navigation.md §Object menu); the shell
+ * see §Object menu); the shell
  * places a tile in the same Yjs-backed dashboard grid as app icons.
  *
  * The pin stores only the **entity id** — label, icon and the opener-app
@@ -1469,7 +1469,7 @@ export type IdentityService = {
 // {displayName, avatarRef, pubkey}. The roster service joins the two: the
 // authoritative pubkey roster from the access record, resolved through the
 // cached profiles, so apps render names + faces while the pubkey stays the
-// identity. Per docs/security/16 §Self-asserted display profile (Collab-C6).
+// identity. Per §Self-asserted display profile (Collab-C6).
 
 /** Membership role on a shared entity — the wire mirror of the main-side
  *  `AccessRole`. Values are the stored wire format; never renumber. */
@@ -1602,7 +1602,7 @@ export type Notification = {
  * no `intent` is inert (a label/separator-like affordance).
  *
  * v1 renders OS-native (`Tray` + `Menu`); the `fancy-menus` app-rendered
- * tray (docs/shell/33) is the later upgrade once that dep lands.
+ * tray is the later upgrade once that dep lands.
  */
 export type TrayMenuItem = {
 	id: string;
@@ -1655,7 +1655,7 @@ export type CapabilitiesService = {
 
 /**
  * Vault-level property + dictionary service — see VP-3 in
- * `docs/implementation-plan.md` and the [[properties-are-vault-level]]
+ *  and the [[properties-are-vault-level]]
  * memory. The authoritative store lives in the shell; this proxy
  * marshals the requests over the broker and surfaces typed snapshots.
  *
@@ -1767,13 +1767,13 @@ export type ShortcutDeclaration = {
 
 /**
  * Apps register state-dependent (dynamic) shortcuts at runtime through
- * this service — per docs/24-keyboard-shortcuts.md §Aggregation across
+ * this service — per §Aggregation across
  * the sandbox boundary. The shell adds the entries to its
  * `ShortcutRegistry` under `app/<app-id>/<id>` and they survive only
  * for the app's lifetime (cleared on the app's last window close).
  *
  * Capability: `shortcuts.register`, default-granted at install per
- * docs/24 §Capabilities ("it's part of being an app"). Static manifest
+ *  §Capabilities ("it's part of being an app"). Static manifest
  * `shortcuts: [...]` declarations don't need this call — they're
  * mirrored at install time (6.10b).
  *
@@ -1938,7 +1938,7 @@ export type AppRuntime = {
 /**
  * Universal icon model — every entity / property / dictionary item / app
  * / vault can carry an icon, drawn from one of three sources. See
- * docs/foundations/39-universal-icons.md.
+ * .
  *
  * Pack glyphs are addressed as `"<packId>/<glyphName>"` — today the only
  * registered pack is `"phosphor"`. Emoji is the raw codepoint(s). Image
@@ -1959,7 +1959,7 @@ export { TAB_ICON_NONE, emojiFaviconUrl, tabFaviconUrl } from "./tab-identity";
 /**
  * Universal cover model — every object can carry a wide banner backdrop,
  * the visual companion to the universal icon. See
- * docs/foundations/50-object-covers.md. Renderer + curated gradient set +
+ * . Renderer + curated gradient set +
  * id-seeded fallback live in `@brainstorm/sdk/entity-cover`.
  */
 export { CoverKind } from "./cover";
@@ -1971,7 +1971,7 @@ export type { Cover, CoverFocal } from "./cover";
 export { enumGuard } from "./enum-guard";
 
 /**
- * Open-resolution pure core (docs/platform/57-open-resolution.md;
+ * Open-resolution pure core (;
  * OpenRes-1a). Target kinds + `normalizeOpenInput` + the dangerous-scheme
  * hard-block floor + the pure terminating ladder (`decideOpen`). The
  * shell-side `OpenResolver` (OpenRes-1b) gathers the facts + executes;
@@ -2004,7 +2004,7 @@ export {
 } from "./open-resolution";
 
 /**
- * Layouts as data (docs/shell/27-layouts.md) — `brainstorm/Layout/v1`
+ * Layouts as data — `brainstorm/Layout/v1`
  * shape + cell-kind enums + validators. Stage 8.1 contract freeze; the
  * resolver (8.2) / render pipeline (8.3) / form-designer (8.10) and the
  * B7 `cover` chrome surface build on this. No blocking OQ (OQ-90 gates
@@ -2052,7 +2052,7 @@ export type {
 
 /**
  * Typography — `brainstorm/Typography/v1`, one of the three composable
- * theme pieces (docs/shell/13-frontend-stack.md §Typography). Stage 8.7
+ * theme pieces (§Typography). Stage 8.7
  * contract freeze; the theme-editor (9.9) + app-preload theme injection
  * consume the resolved stacks. No bundled font binaries in v1.
  */
@@ -2074,7 +2074,7 @@ export type { FontStack, TypographyDef, TypographyIssue } from "./typography";
 
 /**
  * Icon packs — `brainstorm/IconPack/v1` + the shell-curated canonical
- * icon-name registry (docs/shell/13-frontend-stack.md §Icon packs).
+ * icon-name registry (§Icon packs).
  * Stage 8.6 contract/registry half; the `<Icon>` component / `useIcon`
  * hook / pack-resolver (renderer) consume it. Ships no SVG glyphs.
  */
@@ -2105,7 +2105,7 @@ export type { IconPackSvgSanitizeIssue } from "./icon-pack-sanitizer";
 
 /**
  * Canonical semantic-token namespace — the frozen `--kebab` CSS variable
- * names a `brainstorm/TokenSet/v1` may override (docs/apps/40-theme-
+ * names a `brainstorm/TokenSet/v1` may override (
  * store.md §Validation). Snapshot of the `@brainstorm/tokens` flattened
  * key space; pinned by a drift test in the tokens package.
  */
@@ -2113,7 +2113,7 @@ export { CANONICAL_TOKEN_NAMES, TOKEN_NAME_VERSION, isCanonicalTokenName } from 
 
 /**
  * Token sets — `brainstorm/TokenSet/v1`, one of the three composable
- * theme pieces (docs/apps/40-theme-store.md §What's distributed). Stage
+ * theme pieces (§What's distributed). Stage
  * 9.9.1 contract freeze; the theme-editor (9.9) authors them as partial
  * override maps over the base theme and the render layer applies them.
  */
@@ -2157,7 +2157,7 @@ export type { ThemeComponentRef, ThemeDef, ThemeIssue } from "./theme";
 /**
  * Style packs — `brainstorm/StylePack/v1`, the optional fourth composable
  * theme piece: user-authored raw CSS targeting the frozen `data-bs-*` hook
- * surface (docs/apps/40-theme-store.md §What's distributed; OQ-183). Stage
+ * surface (§What's distributed; OQ-183). Stage
  * 9.9.4 contract freeze. The canonical CSS lives in the entity's code
  * buffer; `properties.css` mirrors it. `sanitizeStylePackCss` is the
  * bundle validator that blocks script/network/exfil vectors.
@@ -2800,7 +2800,7 @@ export {
 } from "./self-hosting";
 export { defaultIconForType, GENERIC_TYPE_ICON } from "./type-icon";
 
-// ─── Universal rich-text body (docs/data/21 §Universal rich-text body) ──────
+// ─── Universal rich-text body (§Universal rich-text body) ──────
 
 /**
  * The reserved `Y.XmlText` root name carrying every entity's universal,
@@ -2817,7 +2817,7 @@ export { UNIVERSAL_BODY_FRAGMENT_NAME, type UniversalBodyFragmentName } from "./
 /**
  * Canonical entity Y.Doc layout — the well-known roots that make the
  * entity's Y.Doc the source of truth and `entities.db` a derived
- * projection (docs/editing/06-collaboration-yjs.md). Centralised so the
+ * projection. Centralised so the
  * ydoc worker, entities service, projection codec, and apps name the same
  * roots by the same strings; part of the on-disk protocol.
  */

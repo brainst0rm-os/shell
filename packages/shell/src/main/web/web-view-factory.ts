@@ -10,7 +10,7 @@
  * as `print-to-pdf.ts`). The *decisions* it applies are unit-tested in
  * `web-policy.test.ts`; the *routing* that drives it in `web-view-service.test.ts`.
  *
- * Security posture (docs/apps/54 §Privacy & security): per-tab ephemeral
+ * Security posture (§Privacy & security): per-tab ephemeral
  * partition, `sandbox`/`contextIsolation` on, `nodeIntegration` off, **no
  * preload** (no `window.brainstorm` bridge), deny-default device permissions,
  * tracker/ad blocklist, HTTPS-upgrade (top-level upgrade happens in the

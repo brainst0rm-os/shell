@@ -3,8 +3,8 @@
  * Default size 16x16 (per user direction 2026-05-12).
  *
  * Backed by `@phosphor-icons/react` — the curated, tree-shakable icon pack
- * documented in [docs/shell/13-frontend-stack.md §Icon packs] and
- * [docs/shell/36-design-system.md]. Adding a new glyph: import the Phosphor
+ * documented in [ §Icon packs] and
+ * . Adding a new glyph: import the Phosphor
  * component, register it in `ICON_REGISTRY` against an enum entry, done.
  *
  * Every renderer surface goes through this component — never reach for a

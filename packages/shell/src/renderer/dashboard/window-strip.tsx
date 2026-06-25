@@ -1,6 +1,6 @@
 /**
  * Dashboard running-windows strip — the always-visible OS-shell-style
- * task panel per docs/shell/33-windows-and-menus.md §Running-apps surface.
+ * task panel per §Running-apps surface.
  *
  * Lives inside the dashboard footer (matched in height to the header).
  * Lists every open app window with the app's icon, the app name as the

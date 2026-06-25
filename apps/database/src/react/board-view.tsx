@@ -1,6 +1,6 @@
 /**
  * Board view — React port. Kanban columns derived from `view.groupBy`.
- * Per `docs/apps/database/20-views.md §Board`.
+ * Per ` §Board`.
  *
  * Column reorder — `@dnd-kit/sortable` horizontal strategy on the column
  * headers (matching the grid's column DnD pattern, fixing the same

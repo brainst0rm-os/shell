@@ -473,7 +473,7 @@ export function CalendarApp() {
 		[applyDetailResult, storageRuntime],
 	);
 
-	// Cross-app object drop onto a day (DND-4, docs/platform/65 §III set-property):
+	// Cross-app object drop onto a day (DND-4, §III set-property):
 	// an object dragged from another app's window lands on a Calendar day cell and
 	// has its date property set to that day. The dropped item carries only a
 	// reference (id + type); the real properties are read from the live vault

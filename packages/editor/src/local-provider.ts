@@ -1,7 +1,7 @@
 /**
  * A no-transport `@lexical/yjs` provider over an already-resolved Y.Doc.
  *
- * Brainstorm Lexical is *always* Yjs-backed (docs/editing/07-editing-lexical.md
+ * Brainstorm Lexical is *always* Yjs-backed (
  * §Decision: no non-collaborative mode) — even a local-only edit goes
  * through the CRDT so turning sync on later is a pure transport addition.
  * This provider satisfies `@lexical/yjs`'s `Provider` contract without a

@@ -1,7 +1,7 @@
 /**
  * Canonical entity-type → default icon resolver.
  *
- * Per docs/foundations/39-universal-icons.md §"Per-object icons
+ * Per §"Per-object icons
  * everywhere": an app renders an object's OWN `properties.icon`; the
  * entity *type* supplies the icon only as a **fallback** when the object
  * has none. That fallback must be (a) complete — every first-party type

@@ -7,7 +7,7 @@
  * subtle shadow / specular that macOS adds when rendering, and ensures the
  * icon-shape's rounded corners don't get clipped at the canvas edge.
  *
- * Inputs:  docs/art/icon/icon9.png  (source artwork, square, ideally 1024×1024)
+ * Inputs: (source artwork, square, ideally 1024×1024)
  * Outputs:
  *   packages/shell/art/icon.png                 512×512 RGBA, used by app.dock.setIcon()
  *   packages/shell/art/icon@2x.png              1024×1024 RGBA retina variant
@@ -41,7 +41,7 @@ const ICON_BODY_RATIO = 824 / 1024;
 // becomes an unreadable speck (the tray symptom). Small sizes drop the
 // container and render a clean bolt glyph on transparency — Apple's HIG
 // explicitly recommends simplifying the mark at small sizes.
-// Geometry mirrors docs/art/icon/icon.svg (the single source of the artwork).
+// Geometry mirrors (the single source of the artwork).
 const GLYPH_SMALL_SIZE_CEIL = 64;
 const BOLT_PATH = "M 600 215 L 348 555 L 488 555 L 424 808 L 676 468 L 536 468 Z";
 // Bolt bbox ≈ x[348,676] y[215,808], centred on (512, 511). With no squircle

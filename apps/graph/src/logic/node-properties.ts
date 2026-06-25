@@ -1,7 +1,7 @@
 /**
  * Inspector property rows (9.13.11, read-only slice) — the node card's
  * "Name: Alice · City: Berlin" section per
- * docs/apps/graph/20-views-and-rendering.md §Inspector panel. Pure: picks
+ *  §Inspector panel. Pure: picks
  * the human-meaningful properties off an entity's bag, formats scalars,
  * and caps row count + value length so a content-heavy entity can't blow
  * the card. The editable inspector (shared property cells over

@@ -1,6 +1,6 @@
 /**
  * Gallery view — React port. Responsive card grid with cover + title +
- * subtitle + chip strip. Per `docs/apps/database/20-views.md §Gallery`.
+ * subtitle + chip strip. Per ` §Gallery`.
  *
  * Virtualized by *row of cards* (per the [[virtualize-lists-by-default]]
  * memory): a `ResizeObserver` measures the available width, we compute how

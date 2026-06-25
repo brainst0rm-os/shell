@@ -1,7 +1,7 @@
 /**
  * Type-level surface for the Database app's two canonical entity types
  * (`brainstorm/List/v1`, `brainstorm/ListView/v1`) plus the predicate
- * and view-config shapes documented in docs/apps/database/.
+ * and view-config shapes documented in
  *
  * These types intentionally have no runtime imports from the SDK or shell.
  * Stage 9.12.1 ships the surface; subsequent iterations (9.12.2+) wire it

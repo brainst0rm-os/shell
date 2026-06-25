@@ -1,5 +1,5 @@
 /**
- * Yjs document persistence per docs/data/18-storage-and-search.md §Yjs document persistence.
+ * Yjs document persistence per §Yjs document persistence.
  *
  * Layout — one file per entity at `<vault>/data/docs/<id-prefix>/<id>.ydoc`,
  * where `<id-prefix>` is the first three characters of the entity id (sharded
@@ -29,7 +29,7 @@
  * module as its persistence backend; the worker itself lands in this stage's
  * `ydoc-worker` module.
  *
- * Encryption note: per docs/16-identity-orgs-encryption.md the on-disk bytes
+ * Encryption note: per the on-disk bytes
  * should be ciphertext under the entity DEK. Stage 3 stores plaintext for
  * the same reason `entities.db` does (OQ-34 deferral); Stage 10 wraps the
  * snapshot + each tail entry with XChaCha20-Poly1305 under the entity DEK.
@@ -45,7 +45,7 @@ const MAGIC = Buffer.from("YDOC", "ascii");
 const FORMAT_VERSION = 1;
 const HEADER_BYTES = 4 /* magic */ + 4 /* version */ + 4 /* snap_len */;
 
-/** Default tail-size threshold past which we compact (per docs/18 §256KB). */
+/** Default tail-size threshold past which we compact (per §256KB). */
 export const DEFAULT_COMPACT_THRESHOLD = 256 * 1024;
 
 export type YDocStoreOptions = {

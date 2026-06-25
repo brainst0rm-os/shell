@@ -1,7 +1,7 @@
 /**
  * SearchIndexer — wraps `search.db`'s FTS5 virtual table with insert /
  * update / delete / query operations. The single writer to `entity_fts`
- * inside the main process (see docs/data/18-storage-and-search.md
+ * inside the main process (see
  * §Indexing pipeline).
  *
  * Why one writer in main, not a separate worker yet?
@@ -15,7 +15,7 @@
  *     inter-process concurrency on the index. better-sqlite3 / bun:sqlite
  *     are synchronous; the FTS5 writes are millisecond-scale at our
  *     scale (target ≤ 1M entities per
- *     docs/data/18-storage-and-search.md §Capacity assumptions).
+ *  §Capacity assumptions).
  *   - The index is **rebuildable from sources** — if the file is ever
  *     corrupt we can drop + rebuild with zero data loss because the
  *     canonical content lives in the per-app KV stores (Stage 9.3 entities

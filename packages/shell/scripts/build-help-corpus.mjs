@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Help-1 — build the in-shell Help corpus from the curated source declared
- * in `docs/help-manifest.json`. Mirrors `scripts/build-icons.mjs`'s
+ * in. Mirrors `scripts/build-icons.mjs`'s
  * pattern: read source files at build time and emit a single bundled
  * artifact the main process imports via Vite's static JSON inliner.
  *

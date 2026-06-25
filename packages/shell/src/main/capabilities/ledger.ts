@@ -1,7 +1,7 @@
 /**
  * Capability ledger — CRUD on `ledger.db`'s `capabilities` table.
  *
- * Per docs/security/09-security-and-sandbox.md §Capabilities:
+ * Per §Capabilities:
  *
  *   A capability is a named, scoped grant. Capabilities are listed in the
  *   manifest, presented to the user at install (and on update if new ones
@@ -119,7 +119,7 @@ export class CapabilityLedger {
 	 *     scope is null (or "*").
 	 *
 	 * On any SQL failure (corrupt DB, locked file), this throws
-	 * `LedgerUnavailableError` so the broker can fail closed per docs/09.
+	 * `LedgerUnavailableError` so the broker can fail closed per
 	 */
 	has(appId: string, required: string): boolean {
 		const { capability, scope } = parseCapability(required);

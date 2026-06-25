@@ -1,5 +1,5 @@
 /**
- * Web Browser — **chrome only** (docs/apps/54 §The core tension). This renderer
+ * Web Browser — **chrome only** (§The core tension). This renderer
  * draws tabs, the address bar, and navigation controls; the page itself lives
  * in a shell-managed, partitioned `WebContentsView` the chrome drives through
  * `services.webView` and observes via metadata events. The page DOM and bytes

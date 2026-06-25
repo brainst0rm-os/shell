@@ -12,7 +12,7 @@
  * border with no visible ring to replace it.
  *
  * Canonical pattern (per `feedback_focus_outline_replaces_border` memory
- * and `docs/foundations/35-code-conventions.md`):
+ * and):
  *   - `:focus-visible` triggers the focus chrome.
  *   - `outline: 2px solid var(--color-focus-ring); outline-offset: -1px;
  *     border-color: transparent;` — ring SITS where the border was,

@@ -4,7 +4,7 @@
  * Write pipeline (dry-run `plan` + idempotent `run`) instead of hand-rolling its
  * own importer (the IE-4 consolidation target).
  *
- * Capability model (mirrors `entities` — docs/security/09): import is **bulk
+ * Capability model (mirrors `entities` —): import is **bulk
  * entity creation**, so it reuses the per-type `entities.write:<targetType>`
  * grant rather than inventing a broad new capability surface. The per-call broker
  * gate is a no-op (`caps: []`); THIS handler is the sole authority and checks the

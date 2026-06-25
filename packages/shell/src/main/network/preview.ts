@@ -8,7 +8,7 @@
  * cap. This module never touches the network — it's a string→record
  * function so the unit suite can drive it with hand-built fixtures.
  *
- * Per `docs/security/38-network-and-proxy.md §Link previews`: the
+ * Per ` §Link previews`: the
  * extractor parses (in fall-through order)
  *
  *   1. OpenGraph tags (`<meta property="og:title">`, og:description,

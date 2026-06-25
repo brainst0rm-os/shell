@@ -4,7 +4,7 @@
  *
  * No IO, no native imports: every side-effecting dependency (the Ed25519 verify
  * primitive, the trusted-key lookup) is passed in, so the whole module is
- * unit-testable with no network and no Electron. Per docs/apps/59 §The catalog
+ * unit-testable with no network and no Electron. Per §The catalog
  * client. Total — every function returns null/false on bad input, never throws.
  */
 

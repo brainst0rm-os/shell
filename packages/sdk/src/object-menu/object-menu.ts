@@ -15,7 +15,7 @@
  * menu chrome (Database's `openContextMenu`, the shell's
  * `DashboardIconContextMenu`, …) so we don't fork menu styling. The
  * convention — including how to add app-specific items — is documented
- * in docs/shell/37-cross-app-navigation.md §Object menu.
+ * in §Object menu.
  *
  * v1 items: **Open**, **Pin to dashboard / Remove from dashboard**,
  * then any app `extraItems` (future: Print, Duplicate, Move…), then
@@ -179,7 +179,7 @@ export function buildObjectMenuItems(options: BuildObjectMenuOptions): ObjectMen
 	const items: ObjectMenuItem[] = [];
 
 	// Open — routes through the one open path so it inherits focus-existing +
-	// the registered opener (per docs/shell/37-cross-app-navigation.md §The
+	// the registered opener (per §The
 	// Link component). Disabled with a hint when the runtime can't dispatch
 	// (standalone preview): clicking would silently no-op, so we say why
 	// instead of offering a dead action.

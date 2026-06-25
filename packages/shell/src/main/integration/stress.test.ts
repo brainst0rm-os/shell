@@ -24,8 +24,8 @@
  * unknown hardware — the raw measured numbers in the log are the real signal;
  * the assertions only guard against an order-of-magnitude regression.
  *
- * Spec: docs/shell/12-shell-architecture.md §Performance budgets,
- *       docs/data/18-storage-and-search.md §Performance budgets.
+ * Spec: §Performance budgets,
+ *  §Performance budgets.
  */
 
 import { Buffer } from "node:buffer";

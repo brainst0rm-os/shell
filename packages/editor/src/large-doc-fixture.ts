@@ -12,7 +12,7 @@
  * primary consumer.
  *
  * Why a single fixture: the budget is the keystroke→paint number in
- * [docs/shell/13-frontend-stack.md §Performance budgets]; whichever
+ * [ §Performance budgets]; whichever
  * environment is measuring (headless, jsdom, eventually a real-browser
  * Playwright bench), the WORK being measured — a fixed-shape EditorState
  * tree — must be identical, else the numbers don't compare.

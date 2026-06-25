@@ -1,6 +1,6 @@
 /**
  * Pure resolution of the active (theme, wallpaper) pair from the user's
- * appearance state — per docs/shell/36-design-system.md §Appearance modes
+ * appearance state — per §Appearance modes
  * & pair slots.
  *
  * The runtime split:
@@ -101,7 +101,7 @@ export function slotForTheme(theme: ThemeName): AppearanceSlot {
 }
 
 /** Mode the `appearance.toggle` shortcut should commit, given the current
- *  state and OS preference. Spec (per docs/shell/36-design-system.md):
+ *  state and OS preference. Spec (per):
  *    - From an explicit `Light`/`Dark`, flip to the other.
  *    - From `Auto`, pin the explicit OPPOSITE of the currently-resolved
  *      slot so the user gets the immediate visual change they expected.

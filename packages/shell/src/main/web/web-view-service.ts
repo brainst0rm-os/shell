@@ -1,5 +1,5 @@
 /**
- * The `WebView` host service (Browser-2, docs/apps/54-web-browser.md §The core
+ * The `WebView` host service (Browser-2, §The core
  * tension). Web content runs in shell-managed, partitioned, Node-less
  * `WebContentsView`s that the Browser app's chrome drives through this service;
  * the chrome never touches the page DOM or bytes — it sends {@link

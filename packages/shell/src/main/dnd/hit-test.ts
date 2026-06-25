@@ -1,5 +1,5 @@
 /**
- * Window hit-testing for the cross-app drag session (DND-2, docs/platform/65
+ * Window hit-testing for the cross-app drag session (DND-2,
  * §Part IV.2). Pure over a `WindowEntry[]` snapshot + a screen point — given a
  * cursor position, resolve which app window is under it and the cursor's
  * position WITHIN that window's content area (what a target needs to place a

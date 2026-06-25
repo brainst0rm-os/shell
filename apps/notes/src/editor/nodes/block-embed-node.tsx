@@ -1,7 +1,7 @@
 /**
  * BlockEmbedNode — block-level reference to a vault entity, rendered as a
  * preview card (icon + title + type label). The data payload is the
- * `BlockEmbedNode` shape from `docs/editing/15-embedding-and-composition.md`:
+ * `BlockEmbedNode` shape from :
  * a `{blockId, entityId}` reference — never the embedded entity's content.
  *
  * v1 ships the *fallback card* path only — every embed renders through

@@ -1,5 +1,5 @@
 /**
- * Dashboard state store per docs/shell/04-shell.md §Dashboard.
+ * Dashboard state store per §Dashboard.
  *
  * The dashboard surface is a Yjs doc owned by the shell. Schema (top-level):
  *
@@ -22,7 +22,7 @@
  *
  * The store persists via the existing YDocStore (one file per entity sharded
  * by id-prefix); the dashboard uses a fixed id `brainstorm-Dashboard` so its
- * file lives at `<vault>/data/docs/bra/brainstorm-Dashboard.ydoc`.
+ * file lives at `<vault>/data/`.
  *
  * Stage 9 will migrate this to the entities service as
  * `brainstorm/Dashboard/v1` via a one-shot read-and-store — the on-disk shape

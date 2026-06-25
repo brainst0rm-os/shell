@@ -1,5 +1,5 @@
 /**
- * Entity fallback renderer per docs/apps/03-app-model.md §Inactive / removed
+ * Entity fallback renderer per §Inactive / removed
  * apps in user data:
  *
  *   When an app is uninstalled (or fails to load), entities and blocks it

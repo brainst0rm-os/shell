@@ -22,7 +22,7 @@
  * doesn't touch the index.
  *
  * Completion is **quiescence-based** (initial sync is streamed, not
- * all-or-nothing per docs/data/20): restore resolves when every catalog entry
+ * all-or-nothing per): restore resolves when every catalog entry
  * has come back, OR no new entity has landed for `quietMs`, OR the overall
  * timeout elapses — whichever first. Partial restore is a valid outcome (the
  * rest backfill lazily on access); the summary reports what came back.

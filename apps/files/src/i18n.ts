@@ -1,12 +1,12 @@
 /**
- * App-side translations per docs/foundations/35-code-conventions.md
- * §Localization and docs/platform/21-localization.md.
+ * App-side translations per
+ * §Localization and.
  *
  * `t` is produced by the shared `@brainstorm/sdk/i18n` `createT` (the B-2
  * app-side `t()`): call sites depend on the **id**, the default-English
  * manifest fills in until the locale layer (Stage 12) lands, and a
  * future localised build passes a `Partial<MANIFEST>` of overrides. The
- * `brainstorm.files.*` id namespace mirrors what docs/apps/41-file-
+ * `brainstorm.files.*` id namespace mirrors what
  * manager-ux.md §Localization enumerates.
  */
 

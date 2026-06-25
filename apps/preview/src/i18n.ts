@@ -1,5 +1,5 @@
 /**
- * Preview app i18n manifest. Per docs/foundations/35-code-conventions.md
+ * Preview app i18n manifest. Per
  * §Localization every user-visible string flows through the shared
  * app-side `t()` (`createT` from `@brainstorm/sdk/i18n`) over this
  * default-English manifest — no bare literals in app.ts / inspector.ts.

@@ -1,5 +1,5 @@
 /**
- * Token-set **contrast lint** (docs/apps/40-theme-store.md §Validation;
+ * Token-set **contrast lint** (§Validation;
  * OQ-171). Given the *resolved* effective value of each colour token (the
  * base theme composed with a `brainstorm/TokenSet/v1`'s overrides), this
  * checks the foreground/background pairs that carry text against the WCAG

@@ -1,6 +1,6 @@
 /**
  * Baseline `ImageNode`. Lexical core has no image node, but "image" is in
- * the agreed baseline set (docs/editing/07-editing-lexical.md §baseline
+ * the agreed baseline set (§baseline
  * nodes), so the shared editor owns a minimal one. Kept deliberately small
  * — the Notes app's heavier `ImageBlockNode` (caption editing, alignment,
  * resize handles) stays app-local; this is the cross-app lowest common

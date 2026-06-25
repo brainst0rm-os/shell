@@ -1,12 +1,12 @@
 /**
  * Property-predicate language used by Subject.where (per
- * docs/apps/graph/10-pattern-filters.md) — mirrors the shape from
- * docs/apps/database/30-filters-sorts.md so the predicate UI is shared.
+ * ) — mirrors the shape from
+ *  so the predicate UI is shared.
  *
  * Defined locally so the type-level surface is self-contained; the runtime
  * compiler lives in the entities service (Stage 9.3) and the visual builder
  * is the Database app's shared predicate component (DRY rule —
- * docs/foundations/35-code-conventions.md).
+ * ).
  */
 
 export type PropertyPath = string;

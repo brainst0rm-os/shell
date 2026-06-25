@@ -1,7 +1,7 @@
 /**
  * In-folder search algorithm.
  *
- * Per docs/apps/42-file-manager-implementation.md §9.8.9: the active
+ * Per §9.8.9: the active
  * folder's members are filtered live as the user types. Folding rules:
  *
  *   - case-folded (Unicode NFKD + lowercase)
@@ -43,7 +43,7 @@ export type ScopeFlip =
 /**
  * The scope chip cycles this-folder → subfolders → vault. When the shell
  * exposes `ui.openSearch` (`canHandOff`), the vault position IS the
- * launcher (per docs/apps/42-file-manager-implementation.md §9.8.9) — the
+ * launcher (per §9.8.9) — the
  * flip closes the in-app search and opens the global palette. Without the
  * service (older shell / standalone dev) the vault position stays the
  * local root-walk, so the chip never dead-ends.

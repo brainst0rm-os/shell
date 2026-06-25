@@ -1,5 +1,5 @@
 /**
- * Agent app i18n manifest. Per docs/foundations/35-code-conventions.md
+ * Agent app i18n manifest. Per
  * §Localization every user-visible string flows through the shared app-side
  * `t()` (`createT` from `@brainstorm/sdk/i18n`) — no bare literals.
  */

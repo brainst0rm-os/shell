@@ -3,7 +3,7 @@
  * that the entities service will use at Stage 9.3. Every operator branch
  * pins down its truth table here. Same `PropertyPredicate` shape MUST
  * produce the same matches across both engines per
- * docs/apps/database/30-filters-sorts.md §Predicate semantics.
+ *  §Predicate semantics.
  */
 
 import type { PropertyPredicate } from "@brainstorm/sdk-types";

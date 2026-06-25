@@ -6,7 +6,7 @@
  * shape we actually use; the real `Awareness` is assignable to it.
  *
  * Awareness state is session-scoped and never persisted (per
- * docs/editing/06-collaboration-yjs.md §Awareness).
+ *  §Awareness).
  */
 
 import { type YStore, createYStore } from "./subscription";

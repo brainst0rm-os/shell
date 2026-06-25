@@ -1055,7 +1055,7 @@ const intents = {
 /** Marketplace shell surface — unified browse / library / sources view
  *  across content kinds (apps + themes today; plugin / layout-pack /
  *  wallpaper-pack / locale-pack / workflow-pack / shortcut-pack later)
- *  per docs/apps/47-marketplace.md. The marketplace overlay is a
+ *  per. The marketplace overlay is a
  *  privileged shell view, so it talks to ipcMain directly.
  *
  *  Type + enum definitions live in `./marketplace-types` (no electron

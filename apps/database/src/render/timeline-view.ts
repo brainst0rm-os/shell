@@ -1,6 +1,6 @@
 /**
  * Timeline view renderer — horizontal time axis with markers (events) and
- * bars (spans). Per `docs/apps/database/20-views.md §Timeline` and the
+ * bars (spans). Per ` §Timeline` and the
  * `deriveTimelineMode` semantics in `logic/timeline-mode.ts`.
  *
  * Scope: axis with day / month / quarter primary scales as a function of

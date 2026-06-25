@@ -3,7 +3,7 @@
  * `composeMenu()` output into a real application menu via Electron's
  * `Menu.buildFromTemplate` + `Menu.setApplicationMenu`.
  *
- * Per docs/shell/33-windows-and-menus.md §Logical structure, the menu is
+ * Per §Logical structure, the menu is
  * recomposed on focus change. This file owns the recomposition trigger and
  * the click dispatch; the pure composer lives in `menu-composer.ts`.
  *

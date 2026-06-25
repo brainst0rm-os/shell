@@ -2,7 +2,7 @@
  * IntentsRepository — CRUD on `registry.db.intents`.
  *
  * One row per (app, verb, optional discriminator). Replaced wholesale per app
- * on install/update. The verb namespace is curated (per docs/platform/17-interoperability.md
+ * on install/update. The verb namespace is curated (per
  * §The standard intent verbs); the manifest validator enforces it.
  *
  * Discriminators (`entity_type`, `mime`, `format`, `kind`, `block_id`) are

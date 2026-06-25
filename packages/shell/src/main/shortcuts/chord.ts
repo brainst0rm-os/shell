@@ -24,7 +24,7 @@ const MODIFIER_ALIASES: Record<string, string> = {
 	commandorcontrol: "cmdorctrl",
 	// `Mod` is the doc-24-canonical cross-platform alias (⌘ on macOS,
 	// Ctrl elsewhere). Apps SHOULD declare manifest shortcuts using `Mod`
-	// per docs/shell/24-keyboard-shortcuts.md §App layer; normalizing it
+	// per §App layer; normalizing it
 	// to `cmdorctrl` here is what makes the install-time shell-collision
 	// check correctly catch `Mod+Shift+P` colliding with shell's
 	// `CmdOrCtrl+Shift+P`.

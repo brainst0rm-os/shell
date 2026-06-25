@@ -1,7 +1,7 @@
 /**
  * Stage 10.3a — routing header (the metadata the blind relay reads).
  *
- * Per docs/_review/2026-05-20-10.0-sync-spike.md §3.4 the routing header is
+ * Per §3.4 the routing header is
  * the only thing visible to a blind relay; the AEAD ciphertext after it is
  * opaque. This module is the *single source* for the bytes that feed the
  * AEAD AAD and the Ed25519 signature — any drift between encode and decode

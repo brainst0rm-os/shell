@@ -4,7 +4,7 @@
  * renderers into the shell-side `ShortcutRegistry`.
  *
  * Methods (all capability-gated by `shortcuts.register`, default-granted
- * at install per docs/24 §Capabilities):
+ * at install per §Capabilities):
  *
  *   - register({ additions })         → void
  *       Add or replace dynamic shortcuts for the calling app. App-scoped

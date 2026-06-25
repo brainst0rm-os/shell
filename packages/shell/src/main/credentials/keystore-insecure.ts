@@ -3,7 +3,7 @@
  * file inside the vault. Gated by `BRAINSTORM_DEV_INSECURE_CREDENTIALS=1`
  * or by callers passing `forceInsecure: true` (tests).
  *
- * Per docs/security/29-credentials-storage.md §Fallback chain, this is the
+ * Per §Fallback chain, this is the
  * "developer mode only — refuse in production, allow only when an explicit
  * env var is set, with a giant red banner".
  *

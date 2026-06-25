@@ -1,7 +1,7 @@
 /**
- * `selection` broker service (DND-1, docs/platform/65 §Part IV.1).
+ * `selection` broker service (DND-1, §Part IV.1).
  *
- * The host service [17-interoperability.md](../../../../docs/platform/17-interoperability.md)
+ * The host service 17-interoperability.md
  * specified but never built: the shell holds the **focused app's** published
  * selection in a single in-memory slot, so selection-driven intents, the action
  * surface, and the keyboard "move to…" path can answer "what does the user have

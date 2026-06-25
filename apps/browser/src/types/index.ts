@@ -10,7 +10,7 @@
  * The captured-page artifact is the shared `brainstorm/Bookmark/v1`
  * (OQ-RX-5: `WebPage/v1` retired) — owned by the Bookmarks types, not here.
  *
- * Later iterations land per docs/implementation-plan.md §Web browser:
+ * Later iterations land per §Web browser:
  *   - Browser-2 `WebView` host service (partitioned `WebContentsView`)
  *   - Browser-3 tabbed chrome (URL bar, nav, find, tab strip)
  *   - Browser-5 reader mode + `web.capture` → `Bookmark/v1`

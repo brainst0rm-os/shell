@@ -5,7 +5,7 @@
  * what's currently installed in the active vault. The marketplace reads it
  * so first-party apps stay visible (as reinstallable) after uninstall — the
  * registry's active rows only describe what's installed *right now*, not
- * what the product offers (per docs/apps/47-marketplace.md §The Marketplace
+ * what the product offers (per §The Marketplace
  * surface; bug: uninstall removed apps from the store entirely).
  *
  * It also drives the dev seeder (`dev/seed-demo-apps.ts`). The seeder

@@ -1,6 +1,6 @@
 /**
  * The imperative pointer→`dnd` state machine behind `useDragSource` (DND-2b/3
- * source tail, docs/platform/65 §Part IV.2). Separated from the React hook so
+ * source tail, §Part IV.2). Separated from the React hook so
  * the gesture logic — threshold gating, rAF-coalesced move forwarding, the
  * begin/move/drop/cancel lifecycle, and the begin-still-in-flight edge cases —
  * is unit-testable without a renderer.

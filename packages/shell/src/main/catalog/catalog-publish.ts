@@ -6,7 +6,7 @@
  *
  * This is the testable core of the publish pipeline; the fs/CLI wrapper
  * (`tools/publish-first-party-catalog.ts`) iterates the first-party apps,
- * writes the `.brainstorm` files, and emits the catalog index. Per docs/apps/59
+ * writes the `.brainstorm` files, and emits the catalog index. Per
  * §The publish pipeline. The seed is the publisher's Ed25519 private key (a CI
  * secret for real first-party releases; a dev seed locally).
  */

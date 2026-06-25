@@ -3,7 +3,7 @@
  * to render an object's own universal icon next to its name. The React
  * shell/Notes surfaces use `<EntityIcon>`; this is its imperative twin so
  * Files / Tasks / Whiteboard / Bookmarks / Journal / Database all paint an
- * object's icon identically (per docs/foundations/39-universal-icons.md
+ * object's icon identically (per
  * §Per-object icons everywhere — the object's OWN icon, type glyph as
  * fallback only).
  *

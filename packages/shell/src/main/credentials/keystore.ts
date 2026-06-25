@@ -1,5 +1,5 @@
 /**
- * Keystore backend abstraction per docs/security/29-credentials-storage.md.
+ * Keystore backend abstraction per.
  *
  * Tier 1 storage — the small set of secrets we keep in the OS-protected
  * keystore (identity private key, vault master key, optional recovery key).

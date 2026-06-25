@@ -1,6 +1,6 @@
 /**
- * App-side keyboard **chord registry** per docs/foundations/35-code-
- * conventions.md §Keyboard handling and docs/apps/41-file-manager-ux.md
+ * App-side keyboard **chord registry** per
+ * conventions.md §Keyboard handling and
  * §Keyboard map.
  *
  * The actual key matching + binding now lives in `@brainstorm/sdk/shortcut`
@@ -16,7 +16,7 @@
  */
 
 /**
- * Action ids the Files app declares. Per docs/41 §Keyboard map plus a few
+ * Action ids the Files app declares. Per §Keyboard map plus a few
  * component-scoped ids used inside the app.
  */
 export const ActionId = {

@@ -12,7 +12,7 @@
  *   - If a request times out (configurable, default 30s), it rejects.
  *
  * v0 (this stage): plain timeout + correlation. Per-app queue caps and
- * backpressure shedding land in Stage 4 per docs/shell/12 §Backpressure.
+ * backpressure shedding land in Stage 4 per §Backpressure.
  */
 
 import type { Envelope, EnvelopeReply } from "./envelope";

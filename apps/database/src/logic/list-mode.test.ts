@@ -1,7 +1,7 @@
 /**
  * Tests for `deriveListMode` — the function whose output is the user-facing
  * Query / Manual / Hybrid badge. The three modes are defined in
- * docs/apps/database/10-lists-sets-collections.md §The three modes.
+ *  §The three modes.
  *
  * The truth table this test pins down (per the design table in that doc):
  *

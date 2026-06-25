@@ -7,7 +7,7 @@
  * blobs before the single-object-space collapse. Unlike `entities.db`
  * (a derived projection of the synced Y.Docs), this DB is authored
  * directly and is intentionally local — it is never part of the Yjs sync
- * set (docs/data/20-database-growth-and-sync.md: "SQLite indexes are
+ * set (: "SQLite indexes are
  * rebuilt on each device; the ledger and registry are per-device by
  * design" — settings joins that per-device tier).
  *

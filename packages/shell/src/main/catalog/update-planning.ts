@@ -2,7 +2,7 @@
  * 14.33 — pure update planning. Given the catalog-tracked installs and the
  * cached catalog index, work out which apps have a strictly newer version on
  * their subscribed channel. No IO; the capability-diff classification + the
- * actual apply live in `update-engine.ts`. Per docs/apps/59 §The update engine.
+ * actual apply live in `update-engine.ts`. Per §The update engine.
  */
 
 import type { UpdateChannel } from "../../shared/update-wire-types";
@@ -56,7 +56,7 @@ export function planCatalogUpdates(
 		if (!listing) continue;
 		// TOFU continuity: a listing whose publisher key differs from the one this
 		// app was installed under is refused (fail-closed). Key rotation needs a
-		// signed rotation record (v2, per docs/apps/14 §Key rotation); until then a
+		// signed rotation record (v2, per §Key rotation); until then a
 		// key change is treated as impersonation, not a legitimate update.
 		if (app.publisherKey !== null && app.publisherKey !== listing.publisherKey) continue;
 		const toVersion = listing.channels[app.channel];

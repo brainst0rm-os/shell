@@ -27,7 +27,7 @@
  *                                Mismatches that would have been refused at open-time can't appear
  *                                here (openVault threw), so this fires only on FirstStamp / parallel
  *                                regressions.
- *   6. OrphanYDocFile         — every `<id>.ydoc` under `<vault>/data/docs/<prefix>/` corresponds to
+ *  6. OrphanYDocFile — every `<id>.ydoc` under `<vault>/data/docs/<prefix>/` corresponds to
  *                                a live or soft-deleted entities row; hard-deleted leftovers are
  *                                flagged. The reserved vault-level docs
  *                                (`brainstorm-Dashboard` + `brainstorm-VaultProperties`) are exempt.

@@ -1,7 +1,7 @@
 /**
  * `brainstorm/IconPack/v1` — the mapping from semantic icon names
  * (`save`, `settings`, `entity.note`, `vocab.color.red`) to SVG content
- * (docs/shell/13-frontend-stack.md §Icon packs). One of the three
+ * (§Icon packs). One of the three
  * composable theme pieces (TokenSet + **IconPack** + Typography); the
  * theme-editor (9.9) picks one, the `<Icon name>` component / `useIcon`
  * hook / pack-resolver (Stage 8.6 render half, renderer-resident)

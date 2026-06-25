@@ -1,5 +1,5 @@
 /**
- * `useComposerObjectDrop` (DND-4 reference adoption, docs/platform/65) — drop an
+ * `useComposerObjectDrop` (DND-4 reference adoption,) — drop an
  * object onto a composer to pin it as context. The drop `Reference` semantic:
  * each dropped `ObjectDragItem` becomes an `EntityAttachment` and is `add`ed to
  * the draft attachments — the same result as the "Link a document…" affordance,

@@ -1,14 +1,14 @@
 /**
  * Settings overlay — the canonical surface for every shell-level preference
- * per docs/shell/25-settings.md. Sidebar nav on the left, section content on
+ * per. Sidebar nav on the left, section content on
  * the right. The wallpaper picker lives here as part of Appearance instead
  * of a free-standing popover (per user 2026-05-12).
  *
  * Conventions:
  *   - `Escape` routes through `useEscapeStackEntry({ onEscape: onClose })` —
  *     the renderer-wide LIFO escape stack (KBN-2); no raw `e.key`.
- *   - Every label flows through `t()` (docs/35 §Localization).
- *   - Section ids are an enum (docs/35 §Enums); no raw string switches.
+ *  - Every label flows through `t` (§Localization).
+ *  - Section ids are an enum (§Enums); no raw string switches.
  *
  * Until the Claude-Design build kicks off, this is a polished-enough
  * scaffold to be the daily-driver Settings surface.

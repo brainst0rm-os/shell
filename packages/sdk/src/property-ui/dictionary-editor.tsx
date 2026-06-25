@@ -1,6 +1,6 @@
 /**
  * DictionaryEditor — the full vocabulary editor (B5.8). Per
- * docs/apps/notes/20-blocks/dictionary-editor.md: header (name +
+ * : header (name +
  * count), toolbar (search + sort + Add + import/export menu),
  * reorderable item list (drag handle + swatch + label + usage + row
  * menu), footer ("Show archived (N)").

@@ -1,5 +1,5 @@
 /**
- * App-side keyboard delivery per docs/foundations/35-code-conventions.md
+ * App-side keyboard delivery per
  * §Keyboard handling. Mirrors `apps/files/src/shortcuts.ts`: every
  * keyboard interaction routes through an action id, no raw `e.key`
  * outside this module.

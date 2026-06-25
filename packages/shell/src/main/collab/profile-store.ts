@@ -7,7 +7,7 @@
  * `{ displayName, avatarRef?, pubkey, sig }`, signed by the sovereign key. The
  * pubkey stays the sole identity; the name is a self-asserted hint a collaborator
  * can verify (the signature binds name+avatar to the pubkey) and override with a
- * local petname. Per docs/security/16-identity-orgs-encryption.md §Self-asserted
+ * local petname. Per §Self-asserted
  * display profile.
  *
  * The entity id is derived deterministically from the pubkey, so a second device

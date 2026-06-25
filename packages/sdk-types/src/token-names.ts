@@ -1,6 +1,6 @@
 /**
  * Canonical semantic-token namespace — the frozen set of `--kebab` CSS
- * variable names a `brainstorm/TokenSet/v1` may override (docs/apps/40-
+ * variable names a `brainstorm/TokenSet/v1` may override (
  * theme-store.md §Validation: "A token set defines only known semantic
  * tokens; unknown token names are rejected").
  *

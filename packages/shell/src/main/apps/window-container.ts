@@ -3,7 +3,7 @@
  * shell-drawn tab strip plus one app renderer per tab, each tab a
  * `WebContentsView`. Only the active tab's view is visible; switching tabs is a
  * show/hide of the child views, so per-tab renderer state (scroll, selection,
- * editor) is preserved — the Chrome model per docs/shell/33 + 37.
+ * editor) is preserved — the Chrome model per + 37.
  *
  * Tabs are intra-app in v1: every tab in a container belongs to the same app.
  * Each tab's `webContents` registers separately in the renderer-identity

@@ -1,5 +1,5 @@
 /**
- * The shell-owned cursor-following drag ghost (DND-2b, docs/platform/65
+ * The shell-owned cursor-following drag ghost (DND-2b,
  * §Part IV.2; OQ-DND-1 → option (a): a transparent click-through always-on-top
  * `BrowserWindow`). It is shell-owned precisely *because* it must paint OVER
  * other apps' windows as the cursor crosses them — an app renderer can only

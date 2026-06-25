@@ -4,7 +4,7 @@
  * field; the broker (here) verifies that stamp + checks capabilities +
  * routes to a service handler + ferries the reply back.
  *
- * Per docs/shell/12-shell-architecture.md §IPC architecture:
+ * Per §IPC architecture:
  *
  *   - Every host-service call passes through the broker.
  *   - The renderer is identified by `event.sender.id` (the WebContents id);

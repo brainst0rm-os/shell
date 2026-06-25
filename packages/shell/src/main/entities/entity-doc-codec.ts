@@ -1,7 +1,7 @@
 /**
  * entity-doc-codec — the pure Y.Doc ⇄ `entities.db`-row projection.
  *
- * The entity's Y.Doc is the source of truth (docs/editing/06-collaboration-yjs.md);
+ * The entity's Y.Doc is the source of truth;
  * `entities.db` is a derived index. This module is the single transform
  * between the two:
  *

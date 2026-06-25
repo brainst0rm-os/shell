@@ -4,7 +4,7 @@
  * always shows one note; "New note" creates + selects a fresh document.
  *
  * The shell handles multi-doc routing via the dashboard launcher, not from
- * inside this app — see docs/apps/notes/00-overview.md.
+ * inside this app — see.
  */
 
 import {
@@ -651,7 +651,7 @@ export function NotesApp() {
 
 	// Publish the open object's name + icon — the shell reads
 	// `page-title-updated` / `page-favicon-updated` to label this tab + the
-	// OS window (docs/shell/33).
+	// OS window.
 	const tabIcon = note?.icon ?? null;
 	useEffect(() => {
 		publishTabIdentity({ title: headerTitle, icon: tabIcon });

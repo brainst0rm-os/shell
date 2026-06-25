@@ -1,6 +1,6 @@
 /**
  * `brainstorm/BrowsingSession/v1` — the tab set + per-tab history of one
- * browser window (docs/apps/54-web-browser.md §Entity types).
+ * browser window (§Entity types).
  *
  * **Ephemeral and vault-local by default.** A closed tab leaves no trace
  * unless the user pins it or opts into history retention (`retainHistory`).

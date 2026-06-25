@@ -1,7 +1,7 @@
 /**
  * Optional manifest-signature verification seam (13.2).
  *
- * Per docs/security/09-security-and-sandbox.md §Update integrity:
+ * Per §Update integrity:
  *
  *   > v1 ships without mandatory app signing (apps may install from local
  *   > packages or URLs). v2 requires signatures.

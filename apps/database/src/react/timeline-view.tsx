@@ -1,5 +1,5 @@
 /**
- * Timeline view — React component. Per `docs/apps/database/20-views.md
+ * Timeline view — React component. Per `
  * §Timeline`.
  *
  * Thin React shell over the existing imperative `renderTimelineView`

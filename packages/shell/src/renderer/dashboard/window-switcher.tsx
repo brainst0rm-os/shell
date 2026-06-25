@@ -3,7 +3,7 @@
  * Tab / arrows. Opened by `Mod+\`` (shell shortcut `shell/switch-window`,
  * registered in `main/shortcuts/shortcut-registry.ts`).
  *
- * Per docs/shell/33-windows-and-menus.md §Window switcher overlay. This is
+ * Per §Window switcher overlay. This is
  * the v1 "list" mode — `grid` + `mru-strip` come later when the fancy-menus
  * surface lands (Stage 8). Live thumbnails are tracked in OQ-135.
  */

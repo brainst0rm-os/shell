@@ -1,7 +1,7 @@
 /**
  * Stage 3.1+3.2 — the four primary SQLite databases for a vault.
  *
- * Layout per docs/data/18-storage-and-search.md §Database layout:
+ * Layout per §Database layout:
  *
  *   <vault>/data/
  *     ├── ledger.db      (capability ledger)

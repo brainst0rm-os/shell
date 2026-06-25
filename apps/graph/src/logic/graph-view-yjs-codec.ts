@@ -41,7 +41,7 @@ export type NodeCoord = {
 };
 
 /** Per-view coordinate hard cap — matches the node cap in
- *  `docs/apps/graph/01-data-model.md §Hard caps`. Enforced at write time:
+ *  ` §Hard caps`. Enforced at write time:
  *  entries beyond the cap are dropped (the validator-side rejection lands
  *  with the entities-service write validation). */
 export const MAX_VIEW_COORDS = 50_000;

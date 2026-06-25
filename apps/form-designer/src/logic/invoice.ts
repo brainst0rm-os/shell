@@ -4,7 +4,7 @@
  * A focused, self-contained billing-document core: the data shape, the derived
  * totals (the "computed field" the form builder lacks), and a pure HTML render
  * that the existing `export.printToPdf` path turns into a sendable PDF (see
- * docs/platform/68-designer-app.md). Deliberately NOT built on the shared
+ * ). Deliberately NOT built on the shared
  * `Layout/v1` cell contract yet — invoices prove the document shape (repeating
  * line items + derived totals) before those become generic layout cells.
  *

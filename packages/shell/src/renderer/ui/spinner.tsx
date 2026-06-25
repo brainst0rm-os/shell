@@ -1,6 +1,6 @@
 /**
  * Spinner — the design-system primitive for every async-loading affordance.
- * Canonical spec: docs/shell/36-design-system.md §Async loading & busy state.
+ * Canonical spec: §Async loading & busy state.
  *
  * Any control that fires an async request and any region whose content is
  * loading shows this — nothing async sits visually idle while work is in

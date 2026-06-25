@@ -1,6 +1,6 @@
 /**
  * Registry rebuild-by-scan — recovery for the "Vault registry corrupted" row of
- * [docs/foundations/28-vault-and-onboarding.md §Recovery scenarios] (iteration
+ * [ §Recovery scenarios] (iteration
  * 12.8). When `registry.json` is missing or unparseable, `readRegistry()`
  * degrades to an empty registry — the vaults on disk are intact but the shell
  * has forgotten where they are. This module rebuilds the list by scanning the

@@ -3,7 +3,7 @@
  *
  * Why a sibling table rather than entity_fts?
  *
- *   - `services.search.query` stays vault-pure (per docs/data/18 §entity_fts).
+ *  - `services.search.query` stays vault-pure (per §entity_fts).
  *     Help content is corpus-static — identical across every vault — and
  *     mixing it with entity rows would bleed the corpus into broker search
  *     hits, with no scope filter that could cleanly separate the two.

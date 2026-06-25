@@ -1,5 +1,5 @@
 /**
- * Marketplace top-level navigation panels per docs/apps/47-marketplace.md
+ * Marketplace top-level navigation panels per
  * §The Marketplace surface. Discover / Browse / Library / Updates / Sources
  * is the canonical layout; v1 ships Browse / Library / Sources — Discover
  * (featured / curated) and Updates (saved filter on Library) land when

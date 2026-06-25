@@ -1,5 +1,5 @@
 /**
- * Cross-app drag transport (DND-3, docs/platform/65 §Part IV.4) — the renderer
+ * Cross-app drag transport (DND-3, §Part IV.4) — the renderer
  * half of the shell-mediated drag session. The shell `webContents.send`s
  * `app:drag-over` / `app:drag-leave` / `app:drop` to the window under the
  * cursor; the app-preload re-dispatches them as DOM CustomEvents on `window`

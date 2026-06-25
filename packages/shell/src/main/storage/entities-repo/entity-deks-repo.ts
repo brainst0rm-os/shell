@@ -6,8 +6,8 @@
  * lives here; the entities service / `EntityDekStore` (Stage 10.1) is pure
  * orchestration on top.
  *
- * Per docs/_review/2026-05-20-10.0-sync-spike.md §3.1 and
- * docs/security/16-identity-orgs-encryption.md, each row stores one
+ * Per §3.1 and
+ * , each row stores one
  * per-entity Data Encryption Key, sealed under the vault master key
  * (XChaCha20-Poly1305 via `sealSecret`). The wrap binds to the entity id
  * via AAD (defense vs. DEK-swap); enforcement of that binding lives in

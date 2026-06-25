@@ -1,5 +1,5 @@
 /**
- * Pure cheatsheet aggregator per docs/24-keyboard-shortcuts.md §Aggregation
+ * Pure cheatsheet aggregator per §Aggregation
  * across the sandbox boundary.
  *
  * The cheatsheet body (Stage 6.9, gated on design-system 8.8) renders the
@@ -23,7 +23,7 @@
  *     applied — every app binding is included.
  *
  * Cleared bindings (chord === null) are still part of the cheatsheet — per
- * docs/24 §Settings panel, the user can rebind them; only the chord is
+ *  §Settings panel, the user can rebind them; only the chord is
  * absent, the action is reachable.
  *
  * 6.10c.

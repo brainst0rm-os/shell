@@ -1,5 +1,5 @@
 /**
- * App-side translations per docs/foundations/35-code-conventions.md
+ * App-side translations per
  * §Localization — the shared `@brainstorm/sdk/i18n` `createT` (`{name}`
  * interpolation only, no ICU). Database predates the convention, so the
  * legacy strings in `app.ts` are tech debt migrating as adjacent code is
@@ -79,7 +79,7 @@ export const t = createT(DEFAULTS);
 
 /** Catalog-bound plural — picks `<base>.one` / `<base>.other`. The
  *  `count === 1` selection lives in the shared helper, never in component
- *  code (per docs/foundations/35-code-conventions.md §Localization). */
+ *  code (per §Localization). */
 export const plural = (
 	count: number,
 	oneKey: TranslationKey,

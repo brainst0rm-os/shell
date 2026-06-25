@@ -1,5 +1,5 @@
 /**
- * Calendar view — React component. Per `docs/apps/database/20-views.md
+ * Calendar view — React component. Per `
  * §Calendar`.
  *
  * Today this is a thin React shell over the existing imperative

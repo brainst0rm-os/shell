@@ -1,7 +1,7 @@
 /**
  * Multi-select state machine for the content pane.
  *
- * Per docs/apps/41-file-manager-ux.md §Selection. Pure logic — the
+ * Per §Selection. Pure logic — the
  * renderer dispatches click events with `{ id, mods }` and the reducer
  * returns the next selection state. The state-machine semantics:
  *

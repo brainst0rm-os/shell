@@ -2,7 +2,7 @@
  * Forward-only vault.json migration scaffold (Stage 10.8).
  *
  * `vault.json.format` is **frozen at 1.0** in this iteration (per the
- * v1.0 freeze, docs/foundations/28-vault-and-onboarding.md §"Freeze
+ * v1.0 freeze, §"Freeze
  * surface inventory at 10.8"). When a future iteration needs to bump the
  * shape — adding a required field, renaming an existing one — it appends
  * a `VaultMigration` here. The empty list at 10.8 is intentional: the

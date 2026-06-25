@@ -1,5 +1,5 @@
 /**
- * Multi-monitor helpers per docs/shell/12-shell-architecture.md §Multi-monitor:
+ * Multi-monitor helpers per §Multi-monitor:
  *
  *   Each window remembers which monitor it was on by `monitor_id` (a stable
  *   hash of the monitor's geometry/identifier). On launch, if that monitor

@@ -56,7 +56,7 @@ export type IconButtonProps = {
 	 *   2. `aria-keyshortcuts={chord}` is stamped so assistive tech
 	 *      announces the binding without parsing visual glyphs.
 	 * Unknown ids / unbound actions leave the tooltip + ARIA unchanged.
-	 * Per [24-keyboard-shortcuts.md](../../../../../docs/shell/24-keyboard-shortcuts.md) — Stage 6.10d.
+	 * Per 24-keyboard-shortcuts.md — Stage 6.10d.
 	 */
 	shortcutId?: string;
 	/** Override the Tab order. Set `-1` when the button lives behind a composite

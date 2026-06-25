@@ -2,7 +2,7 @@
  * Y.Doc ⇄ `GraphPattern` codec (9.13.2).
  *
  * Implements the persisted shape of `brainstorm/Graph/v1` per the resolved
- * OQ-GR-1 (`docs/reference/11-open-questions.md`):
+ * OQ-GR-1 :
  *
  *   - `subjects` → `Y.Map<subjectName, Y.Map>`; each subject map carries
  *     `kind` (string), `types` (`Y.Array<string>`), `where` (JSON value —

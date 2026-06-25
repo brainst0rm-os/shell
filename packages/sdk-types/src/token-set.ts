@@ -1,6 +1,6 @@
 /**
  * `brainstorm/TokenSet/v1` — concrete values for the semantic design
- * tokens (docs/apps/40-theme-store.md §What's distributed). One of the
+ * tokens (§What's distributed). One of the
  * three composable theme pieces alongside IconPack + Typography (a
  * `brainstorm/Theme/v1` points at all three); the theme-editor (9.9)
  * authors these and the render layer applies the resolved values.

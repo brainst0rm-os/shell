@@ -5,7 +5,7 @@
  * unpacks it, and hands the unpacked bundle to `AppInstaller.install` stamped
  * with `InstallOrigin.Catalog` provenance.
  *
- * Per docs/apps/59-app-lifecycle-and-catalog.md §The catalog client + install
+ * Per §The catalog client + install
  * engine. Every side-effecting dependency (download / hash / verify / unpack /
  * install) is injected, so the orchestration + the two security gates are
  * unit-testable with no network, no crypto, and no filesystem. The engine adds

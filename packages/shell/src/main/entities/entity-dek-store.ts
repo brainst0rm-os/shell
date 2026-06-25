@@ -1,8 +1,8 @@
 /**
  * EntityDekStore — per-entity Data Encryption Key management (Stage 10.1).
  *
- * Per docs/_review/2026-05-20-10.0-sync-spike.md §3.1 and
- * docs/security/16-identity-orgs-encryption.md §"Per-entity DEK":
+ * Per §3.1 and
+ *  §"Per-entity DEK":
  *
  *   - The DEK is generated locally on entity create (`generateSymmetricKey`
  *     → 32 random bytes; XChaCha20-Poly1305 256-bit per OQ-25).

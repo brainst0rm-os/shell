@@ -1,11 +1,11 @@
 /**
  * 14.33 — UpdateEngine: reconcile catalog-tracked installs against the cached
  * catalog index and apply updates. This is the **app-update plane** (per
- * docs/apps/59 §Two update planes) — installed apps, **first-party included**,
+ *  §Two update planes) — installed apps, **first-party included**,
  * update from the catalog on this cadence, independent of the Electron shell's
  * own binary update (13.6).
  *
- * Two-stage by design (per docs/apps/14 §Update behavior):
+ * Two-stage by design (per §Update behavior):
  *   - `check()` finds candidates with a newer version and **classifies** each
  *     by capability delta: a version requesting **no new capabilities** is
  *     auto-eligible; one requesting **new capabilities** needs an explicit

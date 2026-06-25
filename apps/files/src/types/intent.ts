@@ -4,7 +4,7 @@
  * Mirrors `INTENT_VERBS` in packages/shell/src/main/apps/manifest.ts. The
  * Files app dispatches `open` (single-click navigation to non-Folder
  * entities) and `quick-look` (Space-bar peek); it handles `open`,
- * `compose`, `move`, and `quick-look` per docs/apps/42-file-manager-
+ * `compose`, `move`, and `quick-look` per
  * implementation.md.
  */
 

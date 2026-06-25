@@ -1,7 +1,7 @@
 /**
  * IntentsBus — shell-mediated dispatch for the curated intent verbs per
- * docs/platform/17-interoperability.md and the navigation resolver per
- * docs/shell/37-cross-app-navigation.md.
+ *  and the navigation resolver per
+ * .
  *
  * Stage 7.5 lands the minimum-viable surface:
  *   - `suggest(query)` — list registered handlers for a (verb, payload) pair.
@@ -14,7 +14,7 @@
  *     open). Other verbs return a structured no-channel error in v1 — the
  *     full delivery surface lands per-verb when they need it.
  *
- * Navigation modes + focus-existing (per docs/shell/37) live in `launchInto`:
+ * Navigation modes + focus-existing (per) live in `launchInto`:
  * the open payload's `navMode` (replace / new-tab / new-window) chooses the
  * placement, and a route-equivalent already-open tab is focused instead of
  * duplicated. Tab routes are seeded from the launch context at open time;
@@ -176,7 +176,7 @@ function buildOpenWithCandidates(
 	return ordered;
 }
 
-/** Payload shape the SDK ships over the wire — same as docs/17. */
+/** Payload shape the SDK ships over the wire — same as */
 export type IntentEnvelope = {
 	verb: string;
 	payload: Record<string, unknown>;
@@ -193,7 +193,7 @@ function stampRung(result: IntentDispatchResult, rung: OpenRung): IntentDispatch
 	return { ...result, rung };
 }
 
-/** Full dispatch result. `handled` mirrors docs/17 §Failure modes.
+/** Full dispatch result. `handled` mirrors §Failure modes.
  *
  *  **OpenRes-1c "Why did this open here?" data layer (2026-05-23)**: both
  *  variants carry an optional `rung: OpenRung` so a consumer (the future
@@ -602,7 +602,7 @@ export class IntentsBus {
 	/** new-tab mode: add a tab to the source window's container when it's the
 	 *  same app (the Chrome model — Cmd+Click opens next to where you clicked);
 	 *  otherwise to the target app's existing container, or a fresh window when
-	 *  the target app isn't open yet (tabs are intra-app per docs/shell/33). */
+	 *  the target app isn't open yet (tabs are intra-app per). */
 	private async openInNewTab(
 		appId: string,
 		launchContext: LaunchContext,
@@ -1037,7 +1037,7 @@ function navModeFromPayload(payload: Record<string, unknown>): NavigationMode {
 /**
  * Handler selection. Precedence:
  *   1. A user-set default for this (verb, type) — the Settings → Defaults
- *      override (docs/17 §Default handlers). It wins over everything,
+ *  override (§Default handlers). It wins over everything,
  *      including a same-app dispatch, but only when that app actually
  *      claims the (verb, type) — a stale override (app uninstalled, no
  *      longer a handler) is ignored so navigation never dead-ends.

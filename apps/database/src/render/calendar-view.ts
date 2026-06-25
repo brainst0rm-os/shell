@@ -1,6 +1,6 @@
 /**
  * Calendar view renderer — entities placed on a date axis. Per
- * `docs/apps/database/20-views.md §Calendar`.
+ * ` §Calendar`.
  *
  * Range switch (week / month / year) drives both the grid layout and the
  * prev/next semantics. Week renders a horizontal 7-cell row; month renders

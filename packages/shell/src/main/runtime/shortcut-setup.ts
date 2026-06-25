@@ -11,7 +11,7 @@
  *     windows). This module's `attach(webContents)` is the entry point.
  *
  * Why not `globalShortcut`? It registers OS-wide; that conflicts with the
- * principle from docs/foundations/01-vision.md that Brainstorm is a
+ * principle from that Brainstorm is a
  * desktop-citizen, not a Spotlight clone. `before-input-event` is the
  * focus-scoped alternative recommended by Electron's docs for shortcuts
  * that should "work in the app but not steal the chord globally".
@@ -143,7 +143,7 @@ export function matchShellShortcut(registry: ShortcutRegistry, input: Input): st
  *  so `Cmd+Shift+L` keeps working on AZERTY / Cyrillic / Dvorak without the
  *  user re-binding per layout. Semantic keys (Space, Enter, Escape, Arrow*,
  *  Tab, punctuation) match on `input.key` — they're physically
- *  locale-independent in practice. Per docs/shell/24-keyboard-shortcuts.md
+ *  locale-independent in practice. Per
  *  §Delivery mechanics. */
 export function chordMatchesInput(chord: string, input: Input): boolean {
 	const parts = chord.split("+").map((p) => p.trim());

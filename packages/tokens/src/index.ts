@@ -1,7 +1,7 @@
 /**
  * @brainstorm/tokens — semantic design tokens.
  *
- * Per docs/shell/13-frontend-stack.md §Themes and docs/shell/36-design-system.md:
+ * Per §Themes and :
  * apps reference tokens by semantic name, never raw values. Token sets define
  * concrete values per theme. v0 ships the default-dark / default-light pair
  * plus a small set of opinionated built-in themes (Midnight, Sepia, High

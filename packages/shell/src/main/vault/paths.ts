@@ -10,7 +10,7 @@ import { app } from "electron";
  * - Linux:   $XDG_CONFIG_HOME/brainstorm (or ~/.config/brainstorm)
  *
  * This is the only state Brainstorm keeps outside of vaults themselves.
- * (Per docs/foundations/28-vault-and-onboarding.md.)
+ * (Per.)
  */
 export function appConfigDir(): string {
 	return app.getPath("userData");

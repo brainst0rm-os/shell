@@ -4,8 +4,8 @@
  * `EntitiesRepository`. Replaces, type-for-type, the `entities.*` SDK
  * placeholder.
  *
- * Capability model (per docs/security/09-security-and-sandbox.md +
- * docs/apps/08-app-sdk.md): `entities` is **type-scoped**. The entity
+ * Capability model (per +
+ * ): `entities` is **type-scoped**. The entity
  * type isn't known until a row is fetched, so the per-call broker gate is
  * a no-op (`caps: []`) and this handler is the sole authority — it checks
  * the per-vault capability ledger for `entities.read:<type>` /

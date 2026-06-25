@@ -1,7 +1,7 @@
 /**
  * Create-flow template selection (B11.10b) — the pure decision layer behind the
  * shared "+ New" template picker described in
- * [66-templates.md §The shared surfaces](../../../docs/platform/66-templates.md).
+ * 66-templates.md §The shared surfaces.
  *
  * When "+ New" / `Cmd+N` resolves a `targetType` (and optionally a view /
  * collection that set a `defaultTemplate`), this assembles the picker model:

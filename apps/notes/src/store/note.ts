@@ -7,7 +7,7 @@ import type { SerializedEditorState } from "lexical";
 
 /** What we store under `note:<id>` in `storage.kv`. v1 — single blob per
  *  note; migrates to one-entity-per-block at Stage 9 (see
- *  docs/apps/notes/01-data-model.md). */
+ * ). */
 export type StoredNote = {
 	id: string;
 	title: string;

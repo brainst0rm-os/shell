@@ -1,5 +1,5 @@
 /**
- * IPC envelope shape per docs/shell/12-shell-architecture.md §IPC architecture.
+ * IPC envelope shape per §IPC architecture.
  *
  *   {
  *     v: 1,                              // protocol version
@@ -45,7 +45,7 @@ const METHOD_PATTERN = /^[a-zA-Z][a-zA-Z0-9_-]{0,63}$/;
  */
 const MSG_ID_PATTERN = /^[A-Za-z0-9._-]{1,128}$/;
 
-/** Capability strings — see docs/security/09-security-and-sandbox.md. */
+/** Capability strings — see. */
 const CAPABILITY_PATTERN = /^[a-z][a-z0-9._-]*(?::[\S]+)?$/;
 
 export type Envelope = {

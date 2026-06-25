@@ -24,7 +24,7 @@
  *     same sync transport every entity doc uses (10.4 WebSocket relay).
  *
  * Persists via `YDocStore` at the fixed id `brainstorm-VaultProperties`
- * (file lands at `<vault>/data/docs/bra/brainstorm-VaultProperties.ydoc`).
+ * (file lands at `<vault>/data/`).
  *
  * Pure module (no Electron imports) so it's testable under Bun's vitest.
  */

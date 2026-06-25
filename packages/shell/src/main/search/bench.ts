@@ -32,7 +32,7 @@
  *   - Tantivy itself. The bench takes a `BenchEngine` so the swap is
  *     one constructor; the NAPI binding is the gate, not this harness.
  *
- * Spec: docs/data/18-storage-and-search.md §Performance budgets.
+ * Spec: §Performance budgets.
  */
 
 import { applyMigrations } from "../storage/migrations";

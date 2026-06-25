@@ -2,7 +2,7 @@
  * `PreviewKind` — closed enumeration of the renderer modules Preview
  * dispatches on. The MIME → kind mapping is centralised in
  * `previewKindFor(mime)` so the manifest's `registrations.intents`
- * (broad MIME list, per docs/implementation-plan.md §9.20) and the
+ * (broad MIME list, per §9.20) and the
  * runtime module registry agree on which renderer wins.
  *
  * v1 ships first-party preview blocks for the seven kinds below. Third-

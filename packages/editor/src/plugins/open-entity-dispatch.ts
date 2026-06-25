@@ -1,6 +1,6 @@
 /**
  * `dispatchOpenEntity` — the single editor-side entry to the host's
- * open-entity navigation (per docs/shell/37-cross-app-navigation.md §The
+ * open-entity navigation (per §The
  * Link component — one navigation path, not a per-surface hand-roll).
  *
  * Every in-editor surface that renders a `brainstorm://entity/<id>` link

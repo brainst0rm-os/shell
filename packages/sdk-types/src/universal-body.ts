@@ -11,7 +11,7 @@
  * was confirmed. Migration cost was zero because no production data
  * exists on either name yet.
  *
- * Invariants (per docs/data/21-objects-and-collections.md §Universal
+ * Invariants (per §Universal
  * rich-text body):
  *  - **Universal** — present on every entity regardless of type or
  *    collection. Not a per-type opt-in property.

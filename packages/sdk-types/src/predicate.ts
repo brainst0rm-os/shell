@@ -5,7 +5,7 @@
  * `apps/database/src/types/predicate.ts` so there is ONE canonical shape.
  *
  * Mirrors `PropertyPredicate` from
- * [18-storage-and-search.md](../../../docs/data/18-storage-and-search.md);
+ * 18-storage-and-search.md;
  * the entities service compiles this same shape to SQL
  * (`packages/shell/src/main/storage/entities-repo`). The pre-9.3.5.1b
  * `EntityQuery.where` in `index.ts` declared a thin 7-operator subset
@@ -19,7 +19,7 @@
 
 /** A path into an entity's properties. For multi-value properties stored as
  *  arrays of `{value, label?}`, paths can target `phones.value` / `phones.label`
- *  per docs/data/19-properties-and-schemas.md §Querying. */
+ *  per §Querying. */
 export type PropertyPath = string;
 
 /** Scalar values that show up on the right-hand side of a predicate. */

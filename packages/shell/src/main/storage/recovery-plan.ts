@@ -1,6 +1,6 @@
 /**
  * Corruption-recovery policy for the four domain SQLite databases — the
- * "Corrupted SQLite file" row of [docs/foundations/28-vault-and-onboarding.md
+ * "Corrupted SQLite file" row of [
  * §Recovery scenarios] (iteration 12.8).
  *
  * Per the doc: *"rebuild from Yjs sources where possible (entities, search);

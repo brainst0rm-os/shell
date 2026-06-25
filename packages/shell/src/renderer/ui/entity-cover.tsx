@@ -1,7 +1,7 @@
 /**
  * EntityCover — single rendering primitive for an object's wide banner
  * cover (image / gradient / colour), the visual companion to
- * `<EntityIcon>`. Per docs/foundations/50-object-covers.md every card /
+ * `<EntityIcon>`. Per every card /
  * header surface in the shell routes through this; no inline `<img>` for
  * a cover in feature code.
  *
@@ -18,7 +18,7 @@
  * Never a broken-image square.
  *
  * Aspect is the caller's responsibility — the layout chrome cell
- * (docs/shell/27-layouts.md) owns the per-context band height.
+ *  owns the per-context band height.
  */
 
 import type { Cover } from "@brainstorm/sdk-types";

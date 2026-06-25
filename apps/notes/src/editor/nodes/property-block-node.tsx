@@ -8,7 +8,7 @@
  * read through `<NoteContextProvider>` inside the editor tree. The
  * PropertyDef comes from `<PropertiesProvider>` (`useProperty(key)`).
  *
- * Per `docs/apps/notes/20-blocks/property-list.md §Block state`. Plays
+ * Per ` §Block state`. Plays
  * with the existing block-level machinery for free:
  *   - Top-level → `BlockSelectionPlugin` Cmd-click / Shift-click work.
  *   - `exportJSON` / `importJSON` → clipboard + duplicate + move

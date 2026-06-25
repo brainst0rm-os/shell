@@ -1,6 +1,6 @@
 /**
  * `brainstorm/open-resolution/v1` — the pure half of the open-resolution
- * contract (docs/platform/57-open-resolution.md).
+ * contract.
  *
  * Opening any piece of content is a **total function**: every openable
  * target has exactly one defined resolution; "nothing happens" is not a

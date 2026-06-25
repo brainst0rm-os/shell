@@ -14,7 +14,7 @@
  *     the underlying target actually fires a change.
  *   - Many synchronous Yjs mutations (a transaction touching N keys) must
  *     not cause N renders → we coalesce notifications into one per
- *     microtask (per docs/shell/13-frontend-stack.md §State management:
+ *  microtask (per §State management:
  *     "They batch updates per microtask to avoid thrash").
  *   - Idle docs shouldn't carry observers → we ref-count subscribers and
  *     bind/unbind the Yjs observer lazily.

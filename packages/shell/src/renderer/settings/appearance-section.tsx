@@ -1,5 +1,5 @@
 /**
- * Settings → Appearance section. Implements docs/shell/36-design-system.md
+ * Settings → Appearance section. Implements
  * §Appearance modes & pair slots.
  *
  * Layout:

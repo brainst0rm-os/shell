@@ -1,7 +1,7 @@
 /**
  * Layout resolver (Stage 8.2) — picks the winning `brainstorm/Layout/v1`
  * for a `(entity, context)` render request by the **same layered scope
- * precedence as PropertySchema** (docs/shell/27-layouts.md §Resolution):
+ * precedence as PropertySchema** (§Resolution):
  *
  *   entity > collection > type > user > org > app-shipped default > shell fallback
  *

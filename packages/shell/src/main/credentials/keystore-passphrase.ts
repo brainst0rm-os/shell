@@ -1,7 +1,7 @@
 /**
  * PassphraseBackend — fallback when no OS keystore is available.
  *
- * Per docs/security/29-credentials-storage.md §Fallback chain:
+ * Per §Fallback chain:
  *
  *   The vault master key is held only in memory; on vault-open the user
  *   enters a passphrase, an Argon2id-derived key decrypts the master key

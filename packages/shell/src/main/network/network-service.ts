@@ -8,7 +8,7 @@
  * step 3 (the dev-MCP service handler) — this module stays pure-logic +
  * injectable so unit tests can drive it with a fake fetch.
  *
- * Per `docs/security/38-network-and-proxy.md §The network broker`:
+ * Per ` §The network broker`:
  *
  *   1. Pre-DNS SSRF check on the URL (scheme, port, local-hostname).
  *   2. Resolve hostname → IPs via injected `lookupHost`. Reject the

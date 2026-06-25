@@ -3,7 +3,7 @@
  * view of this install (iteration 14.1).
  *
  * This DB is the product (data-plane) side of the billing boundary
- * ([docs/platform/45-payments-architecture.md], [docs/implementation-plan.md
+ * (, [
  * §Commercial backend]). It holds NO vault content and NO payment details —
  * only the *account link* (which control-plane account, if any, this vault is
  * signed in as) and a cached *entitlement* (the offline-verifiable plan + feature

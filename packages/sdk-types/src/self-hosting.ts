@@ -1,5 +1,5 @@
 /**
- * Self-hosting entity types (SH-5 per docs/foundations/49-self-hosting.md).
+ * Self-hosting entity types (SH-5 per).
  *
  * Type-level contract for the four vault-level entity types that turn
  * Brainstorm's own project state — the implementation plan, OQ ledger,
@@ -123,7 +123,7 @@ export interface StageEntity {
 
 export interface DesignDocEntity {
 	id: string;
-	/** Repo-relative path, e.g. `docs/foundations/49-self-hosting.md`. */
+	/** Repo-relative path, e.g.. */
 	path: string;
 	/** Filename slug — the part after the numeric prefix. */
 	slug: string;

@@ -1,5 +1,5 @@
 /**
- * IconPack glyph **SVG sanitizer** (docs/apps/40-theme-store.md §Validation).
+ * IconPack glyph **SVG sanitizer** (§Validation).
  * A `brainstorm/IconPack/v1` ships raw SVG markup that the renderer injects
  * verbatim into a `dangerouslySetInnerHTML` / `innerHTML` sink in EVERY app
  * renderer AND the privileged dashboard — so, like the sibling StylePack CSS

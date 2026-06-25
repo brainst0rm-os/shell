@@ -1,7 +1,7 @@
 /**
  * Read-only preview renderer.
  *
- * Per docs/editing/07-editing-lexical.md §read-only renderer: search-result
+ * Per §read-only renderer: search-result
  * previews, launcher snippets and graph labels must render rich text
  * **without instantiating Lexical** (a much heavier dependency than a read
  * path needs). This is a pure recursive walk of the serialized state →

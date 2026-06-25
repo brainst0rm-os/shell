@@ -5,7 +5,7 @@
  * per-panel chrome (`.network-egress__segmented`, `.feedback-dialog__
  * segmented`) so focus, hover, and active state stay consistent.
  *
- * Pattern (per `docs/foundations/35-code-conventions.md` + `docs/shell/61`):
+ * Pattern (per +):
  *   - A horizontal `radiogroup` via `useCompositeKeyboard` — ←/→/Home/End move
  *     the roving cursor and select (selection follows focus), `aria-checked`
  *     marks the active option. Roles flow through the hook, not literals.

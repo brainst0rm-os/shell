@@ -1,6 +1,6 @@
 /**
  * Device X25519 keypair (Stage 10.2) — the recipient half of HPKE member
- * wraps per docs/_review/2026-05-20-10.0-sync-spike.md §3.2/§3.3.
+ * wraps per §3.2/§3.3.
  *
  * Distinct from the sovereign Ed25519 identity:
  *   - Ed25519 (`identity.ts`) signs add-device records + envelope headers.

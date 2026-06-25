@@ -1,6 +1,6 @@
 /**
  * Demo dataset exercising the canonical example from
- * docs/apps/graph/10-pattern-filters.md (Persons sharing a Berlin school).
+ *  (Persons sharing a Berlin school).
  *
  * Used by the scaffold renderer until the entities service lands
  * (Stage 9.3) — this is the "ship a plain-DOM minimum rather than wait

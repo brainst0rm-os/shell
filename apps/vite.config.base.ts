@@ -2,7 +2,7 @@ import { resolve } from "node:path";
 
 /**
  * Shared per-app Vite build settings — the React app track every first-party
- * app uses (see docs/apps/notes/40-app-build.md). All 19 app configs were
+ * app uses (see). All 19 app configs were
  * byte-identical in shape; this is the single source of truth for everything
  * except the `react()` plugin (each app keeps that one line, since
  * `@vitejs/plugin-react` resolves from the app's own node_modules, not here).

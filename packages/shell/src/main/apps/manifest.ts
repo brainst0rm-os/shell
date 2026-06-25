@@ -1,6 +1,6 @@
 /**
- * App manifest schema + validator per docs/apps/03-app-model.md §Manifest and
- * docs/apps/08-app-sdk.md.
+ * App manifest schema + validator per §Manifest and
+ * .
  *
  *   {
  *     "id": "io.example.text-editor",
@@ -88,7 +88,7 @@ export type WidgetRegistration = {
 };
 
 /**
- * Curated intent-verb namespace per docs/platform/17-interoperability.md.
+ * Curated intent-verb namespace per.
  * Apps cannot invent new verbs at runtime; the shell ships the namespace.
  */
 export const INTENT_VERBS = [
@@ -141,7 +141,7 @@ export type ShortcutRegistration = {
 	label: string;
 	scope?: string;
 	/** App opt-in to shadow a shell-layer binding for the same chord (per
-	 *  docs/24 §App opt-in shadowing). Without this flag, an install whose
+	 *  §App opt-in shadowing). Without this flag, an install whose
 	 *  manifest chord collides with a shell binding is rejected. */
 	shadowsShell?: boolean;
 };
@@ -693,7 +693,7 @@ function validateShortcuts(value: unknown): ValidationResult | null {
 
 /**
  * Install-time check: manifest shortcuts that collide with a shell-layer
- * chord must declare `shadowsShell: true` (per docs/24 §App opt-in
+ * chord must declare `shadowsShell: true` (per §App opt-in
  * shadowing). Pure — `shellChords` is the normalized-chord snapshot taken
  * from the live `ShortcutRegistry` at install time, so a user-rebound shell
  * binding frees its original chord for apps.
@@ -808,7 +808,7 @@ function checkNonEmptyString(value: unknown, name: string): ValidationResult | n
 /**
  * Compare two manifests' capability sets. Used by the update flow to know
  * what's newly-requested (needs user re-consent) and what's gone (can be
- * dropped silently per docs/03 §Update).
+ * dropped silently per §Update).
  */
 export function diffCapabilities(
 	previous: readonly string[],

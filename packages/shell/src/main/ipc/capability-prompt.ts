@@ -1,5 +1,5 @@
 /**
- * Capability-prompt host service per docs/security/09-security-and-sandbox.md
+ * Capability-prompt host service per
  * §Granting:
  *
  *   - Two ways to grant: at install OR at runtime via

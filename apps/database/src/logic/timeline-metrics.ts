@@ -3,7 +3,7 @@
  * so the density → row-geometry mapping is unit-testable under the node
  * vitest env (same split as `timeline-mode.ts`).
  *
- * Spec: docs/apps/database/20-views.md §Timeline §Density.
+ * Spec: §Timeline §Density.
  */
 
 import { TimelineDensity } from "../types/list-view";

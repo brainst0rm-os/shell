@@ -1,5 +1,5 @@
 /**
- * StylePack CSS **bundle validator** (docs/apps/40-theme-store.md
+ * StylePack CSS **bundle validator** (
  * §Validation; OQ-183). A `brainstorm/StylePack/v1` ships raw CSS, so —
  * unlike the passive token/icon/typography pieces — it must be scanned for
  * the script / network / exfil vectors that CSS can still carry. A pack

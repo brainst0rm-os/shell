@@ -1,6 +1,6 @@
 /**
  * EntityIcon — single rendering primitive for every `Icon` shape (pack /
- * emoji / image). Per docs/foundations/39-universal-icons.md, every entity-
+ * emoji / image). Per, every entity-
  * like surface in the shell routes through this; no inline `<img>` or
  * inline `<PhosphorComponent>` outside of this file (the dashboard
  * `<AppIcon>` is the legacy exception — it renders APP icons specifically

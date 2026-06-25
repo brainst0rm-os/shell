@@ -3,7 +3,7 @@
  *
  * Properties + dictionaries are vault-scoped foundations shared across
  * every first-party app (Notes, Database, Graph) and future apps — per
- * [`docs/data/19-properties-and-schemas.md`](../../../../../docs/data/19-properties-and-schemas.md)
+ * 
  * and the [[properties-are-vault-level]] memory. Their authoritative
  * store lives here in the shell; apps consume them through the SDK
  * service surface (VP-3).
@@ -25,7 +25,7 @@
  *
  * Persists via the existing YDocStore (one file per logical doc) at a
  * fixed id `brainstorm-Properties` — file lands at
- * `<vault>/data/docs/bra/brainstorm-Properties.ydoc`.
+ * `<vault>/data/`.
  *
  * Stage-9 promotion: each entry becomes a `PropertySchema/v2` or
  * `Vocabulary/v1` entity via a one-shot read-and-store importer. The

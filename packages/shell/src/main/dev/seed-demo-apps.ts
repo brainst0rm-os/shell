@@ -22,7 +22,7 @@
  * tree of prebuilt `dist/` outputs, with no vite spawn.
  *
  * The first-party list grows as Stage 9 iterations land. Files joined in
- * 9.8.1 per docs/apps/42-file-manager-implementation.md.
+ * 9.8.1 per.
  */
 
 import { spawn } from "node:child_process";

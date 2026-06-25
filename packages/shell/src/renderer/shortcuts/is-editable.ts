@@ -1,6 +1,6 @@
 /**
  * `isEditableElement` — true when focus on `el` should suppress single-key
- * shortcut delivery (Stage 6.10e per [24-keyboard-shortcuts.md §Cross-layer suppression](../../../../../docs/shell/24-keyboard-shortcuts.md)).
+ * shortcut delivery (Stage 6.10e per 24-keyboard-shortcuts.md §Cross-layer suppression).
  *
  * Cross-layer policy:
  *   - **Single-key chords** (no modifier, e.g. `?`, `/`, `Escape`) are

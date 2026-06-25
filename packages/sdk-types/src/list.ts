@@ -10,9 +10,9 @@
  * `COLLECTION_TYPE_URL`) was promoted in 9.3.5.1 and lives in
  * `./collections`; this file owns the rest now that the `Icon` /
  * `PropertyPredicate` reconciliation (9.3.5.1b) cleared the app-local-dep
- * blocker. See docs/apps/database/01-data-model.md,
- * docs/apps/database/10-lists-sets-collections.md and
- * docs/apps/database/20-views.md.
+ * blocker. See,
+ *  and
+ * .
  */
 
 import type { MemberOverrides } from "./collections";
@@ -242,7 +242,7 @@ export enum TimelineDensity {
 }
 
 /** Derived from data + config; not stored on the entity.
- *  See docs/apps/database/20-views.md §Timeline. */
+ *  See §Timeline. */
 export enum TimelineMode {
 	Event = "event",
 	Span = "span",
@@ -313,7 +313,7 @@ export type List = {
 	/** Entity id of this Collection's default `Template/v1` for "+ New", or
 	 *  `null`. Second rung of the default-template ladder
 	 *  (`view.defaultTemplate → collection.defaultTemplate → type-default →
-	 *  blank`); see [66-templates.md](../../../docs/platform/66-templates.md). */
+	 *  blank`); see 66-templates.md. */
 	defaultTemplate: string | null;
 	createdAt: number;
 	updatedAt: number;

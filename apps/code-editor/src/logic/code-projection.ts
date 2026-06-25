@@ -32,7 +32,7 @@ export interface CodeFileRow extends CodeFile {
 	/** The object's OWN universal icon, validated off the property bag
 	 *  via the shared `parseIcon` — `null` when absent/malformed, in
 	 *  which case the renderer falls back to the type glyph (per
-	 *  docs/foundations/39-universal-icons.md §Per-object icons
+	 *  §Per-object icons
 	 *  everywhere). Never derived from `type`. */
 	icon: Icon | null;
 }

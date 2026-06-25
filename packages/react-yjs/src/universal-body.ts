@@ -1,7 +1,7 @@
 /**
  * Helpers for the universal rich-text body root — the `Y.XmlText` named
  * `"root"` in every entity's Y.Doc (per
- * docs/data/21-objects-and-collections.md §Universal rich-text body).
+ *  §Universal rich-text body).
  * This is the well-known root `@lexical/yjs`'s `createBinding` binds to
  * (`doc.get('root', XmlText)`); carrying the universal body via
  * Lexical's own root keeps a single source of truth without forking

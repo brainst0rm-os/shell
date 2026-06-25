@@ -6,7 +6,7 @@
  *
  * Digits are masked (`type="password"`) — a PIN is a secret, not a one-time
  * code. Navigation keys route through `matchesChord` (never raw `e.key`, per
- * docs/foundations/35-code-conventions.md §Keyboard handling); digit entry
+ *  §Keyboard handling); digit entry
  * rides `onChange` so no key handling is needed for the common path.
  *
  * `value` is the controlled digit string (0–`length` digits, always left-packed

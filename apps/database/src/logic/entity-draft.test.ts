@@ -1,6 +1,6 @@
 /**
  * Tests for `draftForList` — the entity-draft computer used by "+ New" on a
- * view. Spec table from docs/apps/database/40-create-flow.md §Criteria
+ * view. Spec table from §Criteria
  * inheritance:
  *
  *   - type comes from view.defaultTypeUrl OR a single-type byType source.

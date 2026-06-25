@@ -1,6 +1,6 @@
 /**
  * Pure security-policy decisions for the partitioned web session (Browser-2,
- * docs/apps/54-web-browser.md §Privacy & security). The Electron glue in
+ *  §Privacy & security). The Electron glue in
  * `locked-session.ts` applies these to a real `Session` / `WebContents`; this
  * module holds only the *decisions* so they're exhaustively unit-testable
  * without Electron (the same pure-core split `network/` uses).

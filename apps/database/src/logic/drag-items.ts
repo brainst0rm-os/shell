@@ -1,5 +1,5 @@
 /**
- * Build the cross-app drag payload (`ObjectDragItem[]`, docs/platform/65 §Part
+ * Build the cross-app drag payload (`ObjectDragItem`, §Part
  * III) for a drag starting on a Database row. Reference-only by construction —
  * ids + label + optional icon glyph, never the row's property values.
  *

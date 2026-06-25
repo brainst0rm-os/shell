@@ -2,7 +2,7 @@
  * The pre-configured Lexical editor contract. One place defines the
  * namespace default, the baseline node set, the theme, and the error
  * handler so every Brainstorm editor surface is configured identically
- * (docs/editing/07-editing-lexical.md §A pre-configured Lexical factory).
+ * (§A pre-configured Lexical factory).
  *
  * `editorState` is intentionally absent: Brainstorm Lexical is *always*
  * Yjs-backed (07 §Decision: there is no non-collaborative mode), so the

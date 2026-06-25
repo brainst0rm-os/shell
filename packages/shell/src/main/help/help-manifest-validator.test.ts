@@ -1,8 +1,8 @@
 /**
- * Build-time fence — every file declared in `docs/help-manifest.json`
+ * Build-time fence — every file declared in
  * exists on disk under `packages/shell/help-content/`. The new user-
  * facing corpus lives outside `docs/` (rewritten 2026-05-25, see
- * implementation-log.md / Help-1 content rewrite); the prior `docs/_review`
+ * implementation-log.md / Help-1 content rewrite); the prior
  * / `implementation-plan*` / threat-model exclusion fences became
  * irrelevant once the source moved out of the org-repo docs tree.
  */

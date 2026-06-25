@@ -3,7 +3,7 @@
  * observed on its visible members. The mode is not stored — same pattern
  * as `deriveListMode`.
  *
- * Spec: docs/apps/database/20-views.md §Timeline §Item shape — three derived
+ * Spec: §Timeline §Item shape — three derived
  * modes.
  *
  *   endDateProperty   any member has end?   any member missing end?   → mode

@@ -1,5 +1,5 @@
 /**
- * Menu-action dispatch per docs/shell/33-windows-and-menus.md §Triggering:
+ * Menu-action dispatch per §Triggering:
  *
  *   When the user clicks a menu item:
  *     1. The shell's menu handler resolves the click to the contributing app's id.

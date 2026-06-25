@@ -1,7 +1,7 @@
 /**
  * `.bsbundle` — the canonical, lossless vault round-trip format (IE-1).
  *
- * Realises [docs/platform/45-import-export.md §Bundle format]. A `.bsbundle`
+ * Realises [ §Bundle format]. A `.bsbundle`
  * is a compressed tar archive: a small self-describing outer container
  * (magic + format version + compression algo) wrapping a deterministic tar
  * whose layout is the one doc 45 pins. This module owns the *shared

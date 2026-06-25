@@ -3,7 +3,7 @@
  * an entity's DEK, stored inside the entity's Yjs doc and replicated to
  * paired devices through the blind relay.
  *
- * Per docs/_review/2026-05-20-10.0-sync-spike.md §3.2:
+ * Per §3.2:
  *
  *   "Inside the entity's Y.Doc, at root.meta.wraps = Y.Array<WrapPayload>.
  *    Each WrapPayload is {recipientPub, nonce, ciphertext, senderX25519Pub}.

@@ -1,7 +1,7 @@
 /**
  * Pure evaluator for `PropertyPredicate` against a single entity. Mirrors
  * the semantics the entities service compiles to SQL, per
- * docs/apps/database/30-filters-sorts.md §Predicate semantics.
+ *  §Predicate semantics.
  *
  * Promoted from `apps/database/src/logic/evaluate-predicate.ts` (9.12.3):
  * the shell's `ListSource` query path runs THIS evaluator for the

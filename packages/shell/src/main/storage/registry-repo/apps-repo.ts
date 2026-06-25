@@ -4,7 +4,7 @@
  * All SQL for the `apps` table lives here. Feature code (AppInstaller, future
  * launcher) calls typed methods; SQL strings never escape this file.
  *
- * Per docs/apps/03-app-model.md §Uninstall: rows are soft-deleted via
+ * Per §Uninstall: rows are soft-deleted via
  * `uninstalled_at`. Re-installing the same id reactivates the row (the
  * primary key is stable; INSERT OR REPLACE clears `uninstalled_at`).
  */

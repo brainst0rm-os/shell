@@ -1,6 +1,6 @@
 /**
  * Updates panel — available catalog updates for installed apps (the app-update
- * plane, per docs/apps/59 §Two update planes). Each row shows the version bump;
+ * plane, per §Two update planes). Each row shows the version bump;
  * an update requesting new capabilities is gated behind an explicit consent
  * confirm before applying (capabilities never grow silently). Uses the shared
  * `<Button>` + `confirm` + toast primitives, no bespoke chrome.

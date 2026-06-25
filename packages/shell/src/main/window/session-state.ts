@@ -1,6 +1,6 @@
 /**
  * `session.json` — last running apps + window placement, per
- * docs/shell/12-shell-architecture.md §Persistence layout.
+ *  §Persistence layout.
  *
  *   {
  *     "version": 1,

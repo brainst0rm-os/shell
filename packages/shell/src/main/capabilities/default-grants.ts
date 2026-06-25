@@ -1,12 +1,12 @@
 /**
- * Default-minimum capability grants per docs/security/09-security-and-sandbox.md §Capabilities:
+ * Default-minimum capability grants per §Capabilities:
  *
  *   Decision: capabilities are granted by the user, never inferred. There is
  *   no "implicit" capability beyond a default minimum: `storage.kv`
  *   (own keyspace), `intents.dispatch:open`, and the right to render UI in
  *   the app's own window.
  *
- * Plus, per docs/security/29-credentials-storage.md §SDK surface:
+ * Plus, per §SDK surface:
  *
  *   Apps receive `credentials.read:self` and `credentials.write:self` as part
  *   of default-minimum capabilities. Cross-app credential access is not
@@ -96,14 +96,14 @@ export const DEFAULT_APP_CAPABILITIES: ReadonlyArray<{ capability: string; scope
 	{ capability: "export.print-to-pdf" },
 	// Runtime-registered shortcuts (6.10c) — register / unregister
 	// state-dependent dynamic shortcuts + report the current active scope
-	// for cheatsheet filtering. Default-minimum per docs/24 §Capabilities:
+	// for cheatsheet filtering. Default-minimum per §Capabilities:
 	// "it's part of being an app". Apps register dynamic shortcuts that
 	// publish to the shell-side `ShortcutRegistry` and survive only for the
 	// app's lifetime (cleared on the app's last window close). The far more
 	// dangerous `shortcuts.global` (system-wide hotkey hijack) stays out of
 	// the default set and gates on explicit user grant (v2).
 	{ capability: "shortcuts.register" },
-	// Publish-own-selection (DND-1, docs/platform/65). Default-minimum on the
+	// Publish-own-selection (DND-1,). Default-minimum on the
 	// same "part of being an app" rationale as `dashboard.pin` /
 	// `shortcuts.register`: an app telling the shell "here is what I have
 	// selected" is its own state, low-risk and reference-only (ids + labels,
@@ -111,7 +111,7 @@ export const DEFAULT_APP_CAPABILITIES: ReadonlyArray<{ capability: string; scope
 	// manifest bump (the ratchet). The far-more-sensitive READ side
 	// (`selection.read`, cross-app) stays scarce + shell-only below.
 	{ capability: "selection.publish" },
-	// Cross-app drag participation (DND-2, docs/platform/65). Both default-
+	// Cross-app drag participation (DND-2,). Both default-
 	// minimum on the "part of being an app" rationale: `dnd.drag` starts a drag
 	// of your OWN selection (reference-only, like `selection.publish`); `dnd.drop`
 	// lets you RECEIVE a drop over your own window. Neither is the real
@@ -179,7 +179,7 @@ export const SHELL_CAPABILITIES: ReadonlyArray<{ capability: string; scope?: str
 	// (14.6) is shell-rendered, and an app that gates a feature on the plan
 	// must hold this explicitly. The `billing` service re-checks it server-side.
 	{ capability: "billing.read" },
-	// DND-1 — read the focused app's published selection (docs/platform/65).
+	// DND-1 — read the focused app's published selection.
 	// Scarce (NOT default-minimum): reading another app's selection crosses the
 	// app boundary, so only the shell's privileged consumers (action surface,
 	// keyboard "move to…", the future drag-session begin) hold it. The

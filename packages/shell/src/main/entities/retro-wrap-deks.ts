@@ -13,7 +13,7 @@
  * under the per-entity DEK. A null-DEK row at that point is ambiguous:
  * either the wire path silently skips it (rows go un-replicated, the
  * partial-state bug) or it leaks the plaintext bytes to the relay (data
- * leak). The de-risk review (`docs/_review/2026-05-20-10.0-sync-spike.md`)
+ * leak). The de-risk review
  * picked the only safe answer — **every live entity must carry a DEK
  * before 10.3 ships**.
  *

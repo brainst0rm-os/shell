@@ -3,7 +3,7 @@
  * at Stage 8.8.
  *
  * In-context keyboard reference. The Settings → Keyboard panel is the
- * persistent twin ([26-help-and-onboarding.md §Help vs Settings split](../../../../../docs/shell/26-help-and-onboarding.md));
+ * persistent twin (26-help-and-onboarding.md §Help vs Settings split);
  * this overlay is the "show me what I can press right now" surface, bound
  * to `shell/cheatsheet` (default chord `CmdOrCtrl+Shift+K`).
  *

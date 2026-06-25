@@ -5,7 +5,7 @@
  * `main/shortcuts/shortcut-registry.ts` `DEFAULT_SHELL_SHORTCUTS`) plus the
  * component-scoped ids that aren't surfaced as user-rebindable shortcuts in
  * the cheatsheet but still go through the registry per the workflow rule
- * in docs/foundations/35-code-conventions.md §Keyboard handling.
+ * in §Keyboard handling.
  *
  * When the main-process registry's per-renderer push lands, this file
  * becomes the seed and the live override stream takes over. The action id

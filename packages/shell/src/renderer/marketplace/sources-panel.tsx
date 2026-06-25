@@ -1,5 +1,5 @@
 /**
- * Sources panel per docs/apps/47-marketplace.md §The Marketplace surface.
+ * Sources panel per §The Marketplace surface.
  * v1 only the built-in source is listed; future iterations let the user
  * subscribe to additional remote catalogs (§Distribution channels).
  */

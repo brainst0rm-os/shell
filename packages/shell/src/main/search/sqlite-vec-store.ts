@@ -2,7 +2,7 @@
  * `SqliteVecStore` — the production `VectorStore`, backed by a sqlite-vec
  * `vec0` virtual table in `search.db`. Co-located with FTS5 so the vector
  * index rides the same encryption-at-rest envelope and the same
- * rebuildable-from-sources invariant (per docs/data/18-storage-and-search.md
+ * rebuildable-from-sources invariant (per
  * §vector index).
  *
  * NOT unit-tested in this repo's harness: vitest runs under `bun:sqlite`,

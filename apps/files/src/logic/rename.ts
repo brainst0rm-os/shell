@@ -1,7 +1,7 @@
 /**
  * Inline-rename state machine.
  *
- * Four states per docs/apps/41-file-manager-ux.md §Rename flow:
+ * Four states per §Rename flow:
  *
  *   Idle ── start(id, initial) ──▶ Editing ── commit() ──▶ Committing ──▶ Idle
  *                                  │              │

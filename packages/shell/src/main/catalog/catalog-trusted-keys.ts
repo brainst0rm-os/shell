@@ -1,7 +1,7 @@
 /**
  * 14.32 — the official Brainstorm catalog's trusted signing keys, baked into the
  * shell binary (with rotation, mirroring the entitlement-token issuer key in
- * docs/platform/45-payments-architecture.md). The `CatalogClient` verifies the
+ * ). The `CatalogClient` verifies the
  * signed index against these before trusting any listing — a hijacked origin
  * can't inject apps.
  *

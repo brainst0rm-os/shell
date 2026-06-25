@@ -43,7 +43,7 @@ function EntryIcon({ entry, size }: { entry: AppEntry; size: number }) {
 }
 
 /**
- * Capability grants panel per docs/security/09 §Capability ledger surface.
+ * Capability grants panel per §Capability ledger surface.
  *
  * One row per app that holds live grants — its real icon + display name, not
  * a raw app id — with the permission count as the at-a-glance summary. Opening

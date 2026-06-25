@@ -1,5 +1,5 @@
 /**
- * Renderer identity registry per docs/shell/12-shell-architecture.md §IPC architecture:
+ * Renderer identity registry per §IPC architecture:
  *
  *   The `app` field is **stamped at preload**, not by the app's JS. The app
  *   cannot forge it; it's set by trusted code in the renderer's preload

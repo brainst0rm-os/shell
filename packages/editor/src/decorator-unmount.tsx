@@ -1,6 +1,6 @@
 /**
  * `<OffscreenGate>` — IntersectionObserver-gated decorator wrapper
- * (docs/editing/52 §Phase 1.3). Heavy decorator children — block
+ * (§Phase 1.3). Heavy decorator children — block
  * embeds, image figures, code-block highlighters — render only while
  * intersecting the viewport (or within the overscan margin). When
  * offscreen the gate renders a height-correct placeholder `<div>` so

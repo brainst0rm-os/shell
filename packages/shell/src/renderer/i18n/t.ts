@@ -1,6 +1,6 @@
 /**
- * Renderer-side translate function per docs/foundations/35-code-conventions.md
- * §Localization and docs/platform/21-localization.md.
+ * Renderer-side translate function per
+ * §Localization and.
  *
  * Stage 12.1 wires the real runtime: FormatJS (`@formatjs/intl`) over an
  * ICU MessageFormat catalog. The source-language catalog lives in `en.json`

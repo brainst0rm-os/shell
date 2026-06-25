@@ -226,7 +226,7 @@ export function BookmarkDetail({
 			(bookmark.coverImageUrl ? { kind: CoverKind.Image, value: bookmark.coverImageUrl } : null),
 		[bookmark.cover, bookmark.coverImageUrl],
 	);
-	// Parity with Notes (docs/foundations/50-object-covers.md): the band shows
+	// Parity with Notes : the band shows
 	// only when the bookmark has a real cover (its own or a scraped OG image) —
 	// a coverless bookmark shows no band at all (no seeded-gradient placeholder,
 	// no always-on "Add cover" button). Adding a cover lives in the object ⋯

@@ -244,7 +244,7 @@ export type SceneOptions = {
 };
 
 /** Half-width of the fade window around the cutoff. The design spec
- *  (`docs/apps/graph/30-history-animation.md §Eased`) calls for a 24h
+ *  (` §Eased`) calls for a 24h
  *  total fade — entities go from invisible → fully visible across the
  *  24h centred on their `created_at`. With `easeWindowMs = 12h` and the
  *  `(delta + easeWindowMs) / (2 * easeWindowMs)` formula in

@@ -4,7 +4,7 @@
  * dev hook exactly like `seedPlanProperties`, kept separate so Task/plan
  * semantics and Person semantics don't bleed into one catalog.
  *
- * Per the composable property model (docs/data/19, OQ-CT): there is NO
+ * Per the composable property model (, OQ-CT): there is NO
  * "Email"/"Phone" value-kind — Email/Phone are `Text` + a semantic
  * `PropertyFormat`; "multiple" is a `Cardinality.max > 1`, not a list
  * type. So a contact's emails = `text` + `format: email` + `count`. `name`

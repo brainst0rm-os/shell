@@ -1,5 +1,5 @@
 /**
- * Uniform listing card per docs/apps/47-marketplace.md §The Marketplace
+ * Uniform listing card per §The Marketplace
  * surface — the same chrome across every content kind, with the kind
  * descriptor's metadata steering badges and previews.
  *

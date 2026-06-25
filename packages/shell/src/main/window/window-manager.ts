@@ -2,7 +2,7 @@
  * WindowManager — tracks every window the shell owns and persists their
  * placement so the next launch can restore them.
  *
- * Per docs/shell/12-shell-architecture.md §Window manager:
+ * Per §Window manager:
  *
  *   - Maps each `BrowserWindow` to its `(app_id, window_id)`.
  *   - Persists position, size, maximized state per

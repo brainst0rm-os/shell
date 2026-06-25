@@ -1,5 +1,5 @@
 /**
- * Build the cross-app drag payload (`ObjectDragItem[]`, docs/platform/65 §Part
+ * Build the cross-app drag payload (`ObjectDragItem`, §Part
  * III, DND-4) for a drag starting on a Files content row. Reference-only by
  * construction — ids + label + optional icon glyph, never the entity's bytes or
  * property values.

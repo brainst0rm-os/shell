@@ -49,7 +49,7 @@ export type BinServiceOptions = {
 };
 
 /** Retention window (days) for soft-deleted entities — 9.8.8 per
- *  docs/apps/41-file-manager-ux.md §Delete: items stay restorable for a
+ *  §Delete: items stay restorable for a
  *  configurable window (default 30 days), then purge lazily on the next
  *  Bin listing. `RETENTION_FOREVER` (0) disables the sweep entirely. */
 export const DEFAULT_BIN_RETENTION_DAYS = 30;

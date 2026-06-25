@@ -1,5 +1,5 @@
 /**
- * `brainstorm/Typography/v1` — a theme's font choice (docs/shell/13-
+ * `brainstorm/Typography/v1` — a theme's font choice (
  * frontend-stack.md §Typography). One of the three composable theme
  * pieces alongside TokenSet + IconPack (a `brainstorm/Theme/v1` points
  * at all three); the theme-editor (9.9) edits these and the app-preload

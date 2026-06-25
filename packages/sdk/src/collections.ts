@@ -1,7 +1,7 @@
 /**
  * Pure Collection membership resolver (9.3.5.1). The canonical
  * implementation of `effective(L) = (source ∪ include) \ exclude` from
- * docs/apps/database/10-lists-sets-collections.md, shared so every
+ * , shared so every
  * downstream rung (per-app store migration, multi-membership UX, the
  * entities-service `list`-scoped effective-schema composition) computes
  * membership identically.
@@ -49,7 +49,7 @@ export function effectiveMembers(resolved: Iterable<string>, members: MemberRefs
  * already match this entity?"), so the same code serves the source-aware
  * Database inspector and the manual-only cross-app surface (which passes
  * `matchesSource: false` — it toggles only the explicit `include` layer).
- * Spec: docs/apps/database/10-lists-sets-collections.md §Operations on a List.
+ * Spec: §Operations on a List.
  */
 
 export enum AddOutcome {

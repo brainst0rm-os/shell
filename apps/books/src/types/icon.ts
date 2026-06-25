@@ -1,5 +1,5 @@
 /**
- * Canonical universal icon shape (docs/foundations/39-universal-icons.md),
+ * Canonical universal icon shape,
  * re-exported from `@brainstorm/sdk-types` — the 9.21.1-scaffold local
  * mirror is gone now that the React conversion wires the real SDK types
  * (the swap the mirror's comment always promised). Existing imports keep

@@ -3,7 +3,7 @@
  * broker envelopes. Used by app preload scripts (to expose
  * `window.brainstorm`) and by tests / mock-shell-dock.
  *
- * See docs/apps/08-app-sdk.md for the contract and docs/implementation-plan.md
+ * See for the contract and
  * Stage 5 for the current state. Full service surface (entities, files,
  * intents, ui.openWindow) arrives in subsequent stages; this package's
  * placeholder methods throw `Unavailable` with a pointer to the stage that

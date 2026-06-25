@@ -1,7 +1,7 @@
 /**
  * Semantic token namespace.
  *
- * Per docs/shell/36-design-system.md, all design variables in Brainstorm live in a theme.
+ * Per, all design variables in Brainstorm live in a theme.
  * This file is the source-of-truth for the semantic token shape. Concrete values are in
  * themes.ts; this file declares only the structure that every theme must populate.
  */

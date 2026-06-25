@@ -1,5 +1,5 @@
 /**
- * Unified `MarketplaceListing` type per docs/apps/47-marketplace.md
+ * Unified `MarketplaceListing` type per
  * §The Marketplace surface.
  *
  * Every kind (app, theme, …) flattens into this shape so the renderer

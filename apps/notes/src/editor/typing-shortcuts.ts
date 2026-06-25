@@ -20,7 +20,7 @@ import type { TextNode } from "lexical";
  *  single (or short) unicode replacement. */
 export type TypingShortcut = { ascii: string; glyph: string };
 
-/** The v1 set (docs/editing — B11.1). Order is irrelevant: each becomes its
+/** The v1 set (— B11.1). Order is irrelevant: each becomes its
  *  own transformer keyed by its trailing trigger char. */
 export const TYPING_SHORTCUTS: readonly TypingShortcut[] = [
 	{ ascii: "->", glyph: "→" },

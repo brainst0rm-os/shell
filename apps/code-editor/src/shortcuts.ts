@@ -2,7 +2,7 @@
  * Declared keyboard surface for the Code-Editor renderer. The Code-Editor
  * had NO keyboard path before this — every binding routes through
  * `@brainstorm/sdk/shortcut` `attachShortcut` (no raw `e.key`, per
- * docs/foundations/35-code-conventions.md §Keyboard handling). Chord
+ *  §Keyboard handling). Chord
  * syntax is the shared shell registry syntax.
  *
  * Save is wired but inert in this preview drop: write-through to the

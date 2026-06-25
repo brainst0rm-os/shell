@@ -1,6 +1,6 @@
 /**
  * Conversation / messaging contracts (`brainstorm/Conversation/v1` and
- * `brainstorm/Message/v1`) per docs/apps/55-agent-app.md, plus the
+ * `brainstorm/Message/v1`) per, plus the
  * app-facing AI-broker request/result surface (`ai.generate`) the
  * Conversation surface drives.
  *

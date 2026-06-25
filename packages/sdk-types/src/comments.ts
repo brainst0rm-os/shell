@@ -1,7 +1,7 @@
 /**
  * Comments + suggestions contract (`brainstorm/Comment/v1`) — the B11.9
- * collaboration-overlays data leaf, per docs/apps/05-notes-and-editor.md
- * §Comments and docs/data/06-block-protocol.md (annotations are entities, not
+ * collaboration-overlays data leaf, per
+ * §Comments and (annotations are entities, not
  * editor-only state, so they get the shared backlinks / Graph / sync treatment
  * every other entity does).
  *

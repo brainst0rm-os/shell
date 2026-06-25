@@ -80,7 +80,7 @@ export type PatternQueryResult = {
 
 /** Structured cost-cap rejection, surfaced verbatim to the Graph
  *  renderer (it shows a "Narrow the source" banner). Mirrors
- *  docs/apps/graph/10-pattern-filters.md §Compilation. */
+ *  §Compilation. */
 export type PatternCostError = {
 	code: "pattern-too-expensive";
 	estimatedRows: number;
@@ -100,7 +100,7 @@ export type QueryPatternOptions = CompileOptions & {
 };
 
 /** Default estimated-row ceiling per
- *  docs/apps/graph/10-pattern-filters.md §Compilation. Env-overridable so
+ *  §Compilation. Env-overridable so
  *  it can be tuned on real data without a rebuild. */
 export const DEFAULT_PATTERN_COST_CEILING = ((): number => {
 	const raw = Number(process.env.GRAPH_PATTERN_COST_CEIL);
@@ -588,7 +588,7 @@ export class EntitiesRepository {
 	 * service) calls this typed method and never sees SQL (Stage 5
 	 * repository-pattern rule).
 	 *
-	 * Cost-cap guard (docs/apps/graph/10-pattern-filters.md §Compilation):
+	 * Cost-cap guard (§Compilation):
 	 * before executing, a rough joined-row estimate is computed as the
 	 * product of each subject's live candidate count (a `COUNT(*)` over
 	 * `entities` constrained by the subject's type set), multiplied up by

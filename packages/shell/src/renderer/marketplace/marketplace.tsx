@@ -1,5 +1,5 @@
 /**
- * Marketplace overlay — privileged shell view per docs/apps/47-marketplace.md
+ * Marketplace overlay — privileged shell view per
  * §The Marketplace surface. Lists every installable kind side-by-side
  * (apps + themes today; plugin / layout-pack / wallpaper-pack / locale-pack /
  * workflow-pack / shortcut-pack later).

@@ -1,7 +1,7 @@
 /**
  * BlockSelectionPlugin — Brainstorm's block-level selection layer.
  *
- * Surface (`docs/apps/notes/30-selection.md`):
+ * Surface :
  *   - Vanilla store per editor (kept in a ref, exposed via context).
  *   - `useBlockSelection()` hook for consumers (gutter, action menu).
  *   - Mouse (B3b): `Cmd/Ctrl+click` toggles, `Shift+click` extends

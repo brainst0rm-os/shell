@@ -1,5 +1,5 @@
 /**
- * Shortcut bindings persistence per docs/shell/24-keyboard-shortcuts.md
+ * Shortcut bindings persistence per
  * §Shortcut bindings as a personal entity:
  *
  *   User customizations are stored as a `brainstorm/ShortcutBindings/v1`

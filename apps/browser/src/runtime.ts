@@ -1,6 +1,6 @@
 /**
  * The slice of `window.brainstorm` the Web Browser chrome reads. The chrome is
- * *only* chrome (docs/apps/54 §The core tension): it drives the shell-side
+ * *only* chrome (§The core tension): it drives the shell-side
  * `WebView` host service and receives metadata events — it never touches the
  * page DOM or bytes. Outside the shell (`window.brainstorm` absent) the chrome
  * renders an explanatory placeholder.

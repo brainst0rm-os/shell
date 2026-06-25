@@ -1,7 +1,7 @@
 /**
  * Pattern compiler — turns a `GraphPattern` (named subjects + typed edge
  * constraints) into a parametrized SQL plan against `entities.db` per
- * docs/data/18-storage-and-search.md §Schema.
+ *  §Schema.
  *
  * Lives in the shell because the entities service owns SQL compilation
  * (apps never write SQL — they call `entities.subscribe({graphPattern})`).

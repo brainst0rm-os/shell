@@ -1,6 +1,6 @@
 /**
  * Resolve which date property a cross-app drop should write (DND-4,
- * docs/platform/65 §Part III "set-property"). When an object dragged from
+ *  §Part III "set-property"). When an object dragged from
  * another app lands on a Calendar day cell, the calendar sets one of the
  * object's date properties to that day. This module decides *which* key, purely
  * (no DOM, no service) so the decision is unit-testable.

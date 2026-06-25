@@ -5,7 +5,7 @@
  * `../types/list` re-exports the promoted collection types); the canonical
  * source + tests live in `packages/sdk/src/collections.ts`.
  *
- * Spec: docs/apps/database/10-lists-sets-collections.md §Operations on a List.
+ * Spec: §Operations on a List.
  */
 
 export {

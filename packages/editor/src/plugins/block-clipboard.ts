@@ -1,6 +1,6 @@
 /**
  * Block-selection clipboard. Mirrors the design in
- * `docs/apps/notes/30-selection.md §Clipboard format`:
+ * ` §Clipboard format`:
  *
  *   - **application/x-brainstorm-blocks** — Brainstorm-specific JSON
  *     `{ version, blocks: SerializedLexicalNode[] }`. Round-trips full

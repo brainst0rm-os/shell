@@ -13,7 +13,7 @@ import { BrokerContext } from "./runtime/broker-context";
 type WorkerName = "storage" | "ydoc" | "extraction" | "mailbox";
 
 /**
- * Wire worker processes per docs/shell/12-shell-architecture.md.
+ * Wire worker processes per.
  *
  *   Each worker is a `utilityProcess.fork`. The shell main process is the
  *   router — every host-service call goes through the broker, which forwards

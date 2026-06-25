@@ -1,7 +1,7 @@
 /**
  * The React surface: `useYDoc`, `useYMap`, `useYText`, `useYXmlFragment`,
  * `useAwareness`. These are *the* way React touches Yjs (per
- * docs/shell/13-frontend-stack.md §State management) and are deliberately
+ *  §State management) and are deliberately
  * read-only — mutations go through the SDK's `entities.update`.
  *
  * Each hook is a thin `useSyncExternalStore` binding over a pure `YStore`

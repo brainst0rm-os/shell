@@ -1,5 +1,5 @@
 /**
- * Drag-session state (DND-2, docs/platform/65 §Part IV.2). Pure holder of the
+ * Drag-session state (DND-2, §Part IV.2). Pure holder of the
  * ONE active cross-app drag session — like `SelectionStore`, no IPC / Electron
  * here, so the lifecycle is trivially unit-tested; the `dnd` service handler
  * wraps it with capability gates, ghost painting, hit-testing, and broadcasts.

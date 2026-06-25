@@ -1,7 +1,7 @@
 /**
  * HPKE base-mode single-shot Seal/Open (RFC 9180).
  *
- * Cipher suite, pinned for v1 (matches docs/_review/2026-05-20-10.0-sync-spike.md §3.3):
+ * Cipher suite, pinned for v1 (matches §3.3):
  *   - KEM:  DHKEM(X25519, HKDF-SHA256)   kem_id  = 0x0020
  *   - KDF:  HKDF-SHA256                  kdf_id  = 0x0001
  *   - AEAD: ChaCha20-Poly1305            aead_id = 0x0003

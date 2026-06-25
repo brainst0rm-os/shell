@@ -7,8 +7,8 @@
  * transport layer carries the BP wire envelope over the host's `window`
  * message channel with identity + channel-id + phase gates. See
  * {@link ./block-frame.ts} / {@link ./transport.ts} for the security
- * posture; the rungs in `docs/implementation-plan.md` (9.5.1 / 9.5.2)
- * for the why-now, and `docs/editing/15-embedding-and-composition.md`
+ * posture; the rungs in (9.5.1 / 9.5.2)
+ * for the why-now, and
  * for the design.
  */
 

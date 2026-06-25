@@ -1,6 +1,6 @@
 /**
  * Tests for `deriveTimelineMode`. Truth table from
- * docs/apps/database/20-views.md §Timeline §Item shape — three derived modes.
+ *  §Timeline §Item shape — three derived modes.
  */
 
 import { describe, expect, it } from "vitest";

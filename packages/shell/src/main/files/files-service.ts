@@ -1,7 +1,7 @@
 /**
  * Broker service handler for `files` (9.10) — the capability-gated,
  * app-reachable filesystem surface every app uses to open / save / read /
- * write user-chosen files. **Apps never see absolute paths** (docs/security/09
+ * write user-chosen files. **Apps never see absolute paths** (
  * §Filesystem); the registry mints opaque tokens and this handler is the
  * single gate that swaps token → path inside the trusted main process.
  *

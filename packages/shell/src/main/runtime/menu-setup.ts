@@ -7,7 +7,7 @@
  *     trusted `shell:action` channel — the renderer's Dashboard component
  *     opens the Settings overlay, dispatches the New Vault flow, etc.
  *   - Forwards app-targeted clicks to the focused app's renderer via the
- *     private `menu:invoke` channel (the same channel docs/33 calls out).
+ *  private `menu:invoke` channel (the same channel calls out).
  *
  * Pure orchestration — every external dependency is injected so the file
  * is testable without an Electron app context.

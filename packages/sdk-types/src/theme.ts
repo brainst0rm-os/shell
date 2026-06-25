@@ -1,7 +1,7 @@
 /**
  * `brainstorm/Theme/v1` — the composite that references one TokenSet,
  * one IconPack, one Typography (and optionally one StylePack), per
- * docs/apps/40-theme-store.md §What's distributed. The theme-editor
+ *  §What's distributed. The theme-editor
  * (9.9) composes these; the shell resolves the references and applies
  * the union to its surfaces.
  *

@@ -1,5 +1,5 @@
 /**
- * Sovereign identity per docs/security/16-identity-orgs-encryption.md.
+ * Sovereign identity per.
  *
  *   Every vault gets an Ed25519 keypair on first launch. The private key
  *   never leaves the main process — apps that need signing call

@@ -1,5 +1,5 @@
 /**
- * Per-editor height cache for top-level blocks (docs/editing/52 §shared
+ * Per-editor height cache for top-level blocks (§shared
  * mechanics). A `Map<id, measured-px>` populated by a single shared
  * `ResizeObserver` over every block element the editor stamps. The
  * cache feeds both Phase-1's `contain-intrinsic-size` (so the browser

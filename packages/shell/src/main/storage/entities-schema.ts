@@ -3,7 +3,7 @@
  * that drives the FTS5 and vector indexing pipelines, and (v2) the
  * per-entity DEK wrap-table that backs G2 sync.
  *
- * Per docs/data/18-storage-and-search.md §Schema (entities.db):
+ * Per §Schema (entities.db):
  *   - `entities` — canonical record per entity; properties as JSON.
  *   - `links` — typed edges between entities.
  *   - `change_log` — write-time append for indexing workers to consume.
@@ -13,7 +13,7 @@
  * Stage 3 lands the base tables; subscription-driven indexing and selective
  * property indexes arrive in Stage 9 (entities service / queries).
  *
- * Per docs/security/16-identity-orgs-encryption.md §"Per-entity DEK", the
+ * Per §"Per-entity DEK", the
  * `entities` row carries the live `dek_id`; the wrapped DEK (sealed under
  * the vault master key) lives in the `entity_deks` table added in v2 (Stage
  * 10.1). Multi-row support is forward-allocated for the rotation path
@@ -72,7 +72,7 @@ export const ENTITIES_MIGRATIONS: SqliteMigration[] = [
 		version: 2,
 		description: "entities.db v2 — entity_deks (per-entity wrapped DEKs, Stage 10.1)",
 		up: (db) => {
-			// Per docs/_review/2026-05-20-10.0-sync-spike.md §3.1 + §5 (10.1):
+			// Per §3.1 + §5 (10.1):
 			// the DEK is XChaCha20-Poly1305 256-bit, sealed at-rest under the
 			// vault master key. `sealed_dek_json` is the JSON-encoded
 			// `SealedSecret` (`{v, nonceB64, ciphertextB64}`). `version` is
@@ -114,7 +114,7 @@ export const ENTITIES_MIGRATIONS: SqliteMigration[] = [
 			// `asset_refs` binds an asset to its owning entity (favicon/cover/
 			// inline) with ON DELETE CASCADE, so deleting the owner drops the
 			// ref and the GC sweep can reclaim a now-unreferenced asset
-			// (docs/data/18-storage-and-search.md §attachment GC).
+			// (§attachment GC).
 			db.exec(`
 				CREATE TABLE assets (
 					asset_id      TEXT PRIMARY KEY,

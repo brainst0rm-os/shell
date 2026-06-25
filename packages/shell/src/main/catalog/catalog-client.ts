@@ -3,7 +3,7 @@
  * caches the last good copy, and answers listing/version queries for the
  * install + update engines (14.32 / 14.33) and the Marketplace surface.
  *
- * Per docs/apps/59-app-lifecycle-and-catalog.md §The catalog client. Mirrors the
+ * Per §The catalog client. Mirrors the
  * 13.6 `UpdateService` discipline: every IO dependency is injected, and the
  * service is **total** — a fetch/parse/verify failure resolves to a status +
  * keeps the last good cached index, never throws and never installs from an

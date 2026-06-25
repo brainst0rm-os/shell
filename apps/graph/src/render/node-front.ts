@@ -10,7 +10,7 @@
  * icon (the seed writes none), so at a normal fit-zoom (k well below 1)
  * the entire icon-less majority rendered as anonymous discs while only
  * the handful with an explicit emoji showed identity. Per
- * `docs/foundations/39-universal-icons.md` every object must render an
+ *  every object must render an
  * identifying mark; the type glyph is the fallback, not an optional
  * extra. There is no legibility reason a rasterised type glyph needs
  * more zoom than a rasterised emoji own-icon — node-size legibility is

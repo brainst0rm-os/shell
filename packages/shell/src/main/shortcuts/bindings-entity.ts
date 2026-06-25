@@ -3,7 +3,7 @@
  * and the one-shot, idempotent, boot-independent migration of the legacy
  * flat `<vault>/shell/shortcut-bindings.json` file into `entities.db`.
  *
- * Per docs/shell/24-keyboard-shortcuts.md §"Shortcut bindings as a personal
+ * Per §"Shortcut bindings as a personal
  * entity": user customizations live as a single `user`-scoped
  * `brainstorm/ShortcutBindings/v1` entity. Stage 6 shipped the shape +
  * file-backed store; **this is the Stage 9 migration** the plan promised:
@@ -33,7 +33,7 @@
 import type { EntitiesRepository } from "../storage/entities-repo/entities-repo";
 import { type BindingOverride, type BindingsFile, readBindings } from "./bindings-store";
 
-/** Reverse-DNS entity type per docs/shell/24-keyboard-shortcuts.md. */
+/** Reverse-DNS entity type per. */
 export const SHORTCUT_BINDINGS_TYPE = "brainstorm/ShortcutBindings/v1" as const;
 
 /** Singleton-per-vault entity id. Fixed (not random) so idempotence /
@@ -46,7 +46,7 @@ export const SHORTCUT_BINDINGS_ENTITY_ID = "brainstorm:shortcut-bindings" as con
  *  registry, the `type` string is opaque per OQ-7). */
 export const SHORTCUT_BINDINGS_OWNER = "io.brainstorm.shell" as const;
 
-/** Binding-scope kinds per docs/24 §"Shortcut bindings as a personal
+/** Binding-scope kinds per §"Shortcut bindings as a personal
  *  entity". Personal-by-default; `org` is a v2 addition. Enum, not a raw
  *  literal, per the project discriminator convention. */
 export enum ShortcutBindingsScopeKind {
@@ -133,7 +133,7 @@ export async function migrateBindingsFileToEntity(
 
 	// A fresh vault (no file / no overrides) just has no custom bindings —
 	// defaults apply. Don't create an empty row (the entity is created
-	// lazily per docs/24 §"Storage and sync"); the registry save path
+	// lazily per §"Storage and sync"); the registry save path
 	// creates it on the first rebind.
 	if (file.overrides.length === 0) {
 		return { migrated: false, reason: "no-overrides" };

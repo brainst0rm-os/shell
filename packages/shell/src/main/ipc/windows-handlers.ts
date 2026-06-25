@@ -1,6 +1,6 @@
 /**
  * `windows:*` IPC handlers — surface the WindowIndex to the dashboard
- * renderer per docs/shell/33-windows-and-menus.md §The window index.
+ * renderer per §The window index.
  *
  * Privileged: only the dashboard renderer talks to these channels. App
  * renderers go through the broker (and the `shell.windows.*` capabilities are

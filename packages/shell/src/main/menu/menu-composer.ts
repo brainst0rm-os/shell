@@ -1,5 +1,5 @@
 /**
- * Application-menu composer per docs/shell/33-windows-and-menus.md §Logical structure:
+ * Application-menu composer per §Logical structure:
  *
  *   The menu is composed by the shell at runtime from three sources:
  *     1. Shell-owned items (Brainstorm > About / Settings / Quit; File > New Vault,
@@ -15,7 +15,7 @@
  * is a typed `MenuTemplate`. The Electron `Menu.buildFromTemplate` wrapper
  * lives in `menu-installer.ts`; this file is fully unit-testable.
  *
- * Menu items + shortcut bindings share a namespace per docs/33 §Triggering —
+ * Menu items + shortcut bindings share a namespace per §Triggering —
  * a menu item with a shortcut binds the shortcut automatically, and a
  * shortcut rebinding updates the menu item's accelerator. The composer
  * accepts an `overrideAccelerator(itemId)` hook so the shortcut subsystem
@@ -237,7 +237,7 @@ function macAppMenuItems(): MenuTemplateItem[] {
 
 /**
  * Compose the full menu. Returns an ordered list of top-level menus per
- * docs/33 §Logical structure.
+ *  §Logical structure.
  */
 export function composeMenu(options: ComposeMenuOptions): ComposedMenu {
 	const menus: TopLevelMenu[] = [];
@@ -253,7 +253,7 @@ export function composeMenu(options: ComposeMenuOptions): ComposedMenu {
 	// App-contributed menus (excluding File/Edit/View/Window/Help which the
 	// shell owns; app additions to those land via dedicated registration in a
 	// future iteration if needed). For Stage 6 we slot app menus straight into
-	// new top-level positions after View per docs/33.
+	// new top-level positions after View per
 	if (options.focusedAppMenus && options.focusedAppId) {
 		const shellOwnedLabels = new Set(["File", "Edit", "View", "Window", "Help", "Brainstorm"]);
 		for (const m of options.focusedAppMenus) {

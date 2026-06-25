@@ -111,7 +111,7 @@ export function registerShortcutsHandlers(options: ShortcutsHandlersOptions): vo
 			}
 
 			// `null` is "clear binding to nothing" (the action stays accessible
-			// via menus / palette per docs/24 §Shell layer "never disabled out
+			// via menus / palette per §Shell layer "never disabled out
 			// of existence"). A non-string non-null is malformed.
 			if (chordArg !== null && typeof chordArg !== "string") {
 				return { ok: false, reason: SetOverrideErrorReason.EmptyChord };

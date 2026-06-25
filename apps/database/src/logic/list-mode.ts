@@ -1,6 +1,6 @@
 /**
  * Derive the user-facing mode label for a List from its shape.
- * See docs/apps/database/10-lists-sets-collections.md §The three modes.
+ * See §The three modes.
  *
  * The mode is never stored — it's a function of `source` + `members`. The
  * UI shows a mode badge ("Query" / "Manual" / "Hybrid") computed via this

@@ -87,7 +87,7 @@ function catalogLinkType(entityType: string, propertyKey: string): string {
 }
 
 /** Pull the entity ids a stored property value carries. Handles the two
- *  storage shapes per docs/data/19: a bare scalar id (`count.max === 1`)
+ *  storage shapes per : a bare scalar id (`count.max === 1`)
  *  or an array of `{ value, label? }` envelopes / bare strings
  *  (`count.max > 1`). Non-string / empty values contribute nothing. */
 function readEntityRefIds(raw: unknown): string[] {

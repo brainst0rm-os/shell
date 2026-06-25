@@ -1,6 +1,6 @@
 /**
  * `@brainstorm/sdk/object-dnd` — the renderer half of cross-app object
- * drag-and-drop (DND-3, docs/platform/65). `useDropTarget` gives an app ONE
+ * drag-and-drop (DND-3,). `useDropTarget` gives an app ONE
  * drop handler over BOTH transports: native intra-renderer HTML5 DnD and the
  * shell-mediated cross-app drag session. The wire helpers
  * (`serializeObjectDragPayload` / `readObjectDragData` / …) live in

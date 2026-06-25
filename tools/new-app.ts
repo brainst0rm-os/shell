@@ -1,7 +1,7 @@
 /**
  * `bun run new-app <id> "<Display Name>"` — scaffold a first-party app on
  * the recommended track, so it starts COMPLIANT instead of drifting:
- *   - React (createRoot) — the one ecosystem (docs/shell/13-frontend-stack.md).
+ *  - React (createRoot) — the one ecosystem.
  *   - the shared `.app-header` chrome (44px baseline, object ⋯ slot).
  *   - a LIVE entity list via `@brainstorm/react-yjs`'s `useVaultEntities` —
  *     never a hand-rolled `vaultEntities.onChange` loop (the reactivity

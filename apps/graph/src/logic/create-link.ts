@@ -1,6 +1,6 @@
 /**
  * Drag-to-create-link logic (9.13.11) — the pure half of the canvas
- * gesture per docs/apps/graph/20-views-and-rendering.md §Interaction
+ * gesture per §Interaction
  * ("Drag from a node's edge handle to another node → Create a typed link.
  * Picks the link type from a fancy-menus popover.").
  *

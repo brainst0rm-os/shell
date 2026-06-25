@@ -1,5 +1,5 @@
 /**
- * Marketplace service per docs/apps/47-marketplace.md §The Marketplace
+ * Marketplace service per §The Marketplace
  * surface — collects unified listings across content kinds.
  *
  * v1 sources:
@@ -19,7 +19,7 @@
  *
  * The service is pure orchestration on top of existing primitives — it
  * doesn't own state. The active theme comes from the dashboard snapshot
- * (single source of truth, per docs/shell/04-shell.md §Dashboard).
+ * (single source of truth, per §Dashboard).
  */
 
 import { type ThemeName, themeCatalog } from "@brainstorm/tokens";

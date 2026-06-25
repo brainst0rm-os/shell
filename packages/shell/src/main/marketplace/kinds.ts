@@ -1,5 +1,5 @@
 /**
- * Content-kind registry foundation per docs/apps/47-marketplace.md
+ * Content-kind registry foundation per
  * §The content-kind registry.
  *
  * The shell stores every installable piece of content under a `ContentKind`
@@ -59,7 +59,7 @@ export enum SignaturePolicy {
  */
 export type ContentKindDescriptor = {
 	kind: ContentKind;
-	/** i18n key — never bare text per docs/35 §Localization. */
+	/** i18n key — never bare text per §Localization. */
 	labelKey: string;
 	/** i18n key for a 1-sentence description shown in store filters. */
 	descriptionKey: string;

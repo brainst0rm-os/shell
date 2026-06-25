@@ -49,7 +49,7 @@ export function emptyVault(): InMemoryVault {
  *  inspect arrays of `{value, label?}` envelopes, returning the matching
  *  field across every entry (so `phones.value` returns `["+1…", "+2…"]`).
  *  Mirrors the path semantics documented at
- *  docs/data/19-properties-and-schemas.md §Querying. */
+ *  §Querying. */
 export function readPropertyPath(entity: EntityRow, path: string): unknown {
 	const dot = path.indexOf(".");
 	if (dot === -1) return entity.properties[path];

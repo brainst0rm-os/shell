@@ -1,5 +1,5 @@
 /**
- * `brainstorm/Layout/v1` — layouts as data (docs/shell/27-layouts.md).
+ * `brainstorm/Layout/v1` — layouts as data.
  *
  * A Layout describes how an entity is *visually presented* in a given
  * context: which cells appear, how they're grouped, in what mode

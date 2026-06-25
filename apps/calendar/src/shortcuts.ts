@@ -1,5 +1,5 @@
 /**
- * App-side keyboard delivery per docs/foundations/35-code-conventions.md
+ * App-side keyboard delivery per
  * §Keyboard handling. Every keyboard interaction routes through an
  * action id; no raw `e.key` outside this module. Chord *matching* is the
  * shared `@brainstorm/sdk/shortcut` parser (the per-app chord parser

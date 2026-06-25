@@ -1,6 +1,6 @@
 /**
  * `brainstorm-cli pack` — the non-GUI path to validate + bundle a theme
- * package (docs/apps/40-theme-store.md §CLI; 9.9.6). A distributable theme
+ * package (§CLI; 9.9.6). A distributable theme
  * is self-contained: it inlines its component data (token set, optional
  * style pack) rather than referencing installed entities, so the pack runs
  * the SAME validators the theme-editor does — token namespace, WCAG contrast

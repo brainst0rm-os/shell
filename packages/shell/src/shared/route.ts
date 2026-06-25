@@ -2,7 +2,7 @@
  * Cross-app route helpers shared between main, preload, and renderer.
  *
  * A route is the `brainstorm://` URI a window/tab currently shows (per
- * docs/shell/37-cross-app-navigation.md). The shell tracks routes per tab so
+ * ). The shell tracks routes per tab so
  * navigation can focus an existing tab instead of opening a duplicate.
  *
  * No `electron` import here — the renderer imports these too.

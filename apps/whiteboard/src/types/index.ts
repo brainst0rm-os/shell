@@ -4,7 +4,7 @@
  * node-kind + handle-side + edge-path + arrowhead enums.
  *
  * Stage 9.17.1 ships the surface; subsequent iterations land per
- * `docs/implementation-plan.md §Stage 9.17`:
+ * ` §Stage 9.17`:
  *   - 9.17.1.5 preview drop (in-memory whiteboard + SVG renderer + the
  *     handle-based edge engine)
  *   - 9.17.2 real entities + per-board YDoc

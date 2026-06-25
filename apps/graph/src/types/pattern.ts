@@ -1,6 +1,6 @@
 /**
  * Graph patterns — the multi-subject, multi-edge filter shape per
- * docs/apps/graph/10-pattern-filters.md. This is the differentiator vs
+ * . This is the differentiator vs
  * the Database app's row-shaped predicate filter: a pattern lets the user
  * select "Persons connected to each other via a shared School *and* both
  * linked to City=Berlin" — a query the row-filtering language cannot
@@ -64,7 +64,7 @@ export type GraphPattern = {
 	primarySubject: string;
 };
 
-/** Per-pattern hard caps per docs/apps/graph/01-data-model.md §Hard caps. */
+/** Per-pattern hard caps per §Hard caps. */
 export const PATTERN_MAX_SUBJECTS = 16 as const;
 export const PATTERN_MAX_EDGES = 32 as const;
 export const PATTERN_MAX_HOPS = 6 as const;

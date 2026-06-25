@@ -1,6 +1,6 @@
 /**
  * The `WebView` host-service contract — the **chrome-only / shell-engine
- * split keystone** (docs/apps/54-web-browser.md §The core tension).
+ * split keystone** (§The core tension).
  *
  * Browser-1 first froze this contract here as app-local types. Browser-2
  * lifted it to a shared wire-types home (`@brainstorm/sdk-types`) so the

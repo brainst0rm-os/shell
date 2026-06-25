@@ -5,7 +5,7 @@
  *   - With the ledger up + grants present, calls succeed.
  *   - With the ledger up + grants missing, calls return CapabilityDenied.
  *   - With the ledger DB closed (corruption proxy), calls return
- *     Unavailable — the broker MUST NOT fail open per docs/09 §Failure-open
+ *  Unavailable — the broker MUST NOT fail open per §Failure-open
  *     vs fail-closed.
  */
 
@@ -115,7 +115,7 @@ describe("capability enforcement (end-to-end)", () => {
 	it("fail-closed: closed ledger DB causes Unavailable, never approval", async () => {
 		// Simulate ledger corruption / unavailability by closing the underlying DB.
 		// The CapabilityLedger will throw LedgerUnavailableError on has(); the
-		// broker MUST map that to Unavailable per docs/09.
+		// broker MUST map that to Unavailable per
 		env.stores.close();
 		const reply = await env.broker.dispatch(
 			mk("io.example.app", "storage", "ping", ["storage.kv"]),

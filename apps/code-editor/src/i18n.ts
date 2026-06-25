@@ -4,7 +4,7 @@
  * Every user-visible string in the renderer flows through `t(key)` from
  * `@brainstorm/sdk/i18n` (the shared app-side translator — `{name}`
  * interpolation, override-able per locale). No bare literals in `app.ts`
- * per docs/foundations/35-code-conventions.md §Localization. Object-menu
+ * per §Localization. Object-menu
  * chrome is localised through the same manifest where it overlaps.
  */
 

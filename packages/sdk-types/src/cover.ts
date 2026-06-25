@@ -1,7 +1,7 @@
 /**
  * Universal cover model — every object (note, bookmark, book, person,
  * task, List) can carry a wide banner backdrop, the visual companion to
- * the universal icon. See docs/foundations/50-object-covers.md.
+ * the universal icon. See.
  *
  * Exactly one shape, drawn from one of three sources:
  *

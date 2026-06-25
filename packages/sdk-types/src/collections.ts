@@ -1,7 +1,7 @@
 /**
  * Collection contract (9.3.5.1) — the cross-app, dependency-free core of
  * the single-object-space / collections model
- * ([21-objects-and-collections.md](../../../docs/data/21-objects-and-collections.md)).
+ * (21-objects-and-collections.md).
  *
  * A **Collection** is `brainstorm/List/v1` promoted product-wide: a
  * schema-bearing, membership-defining, view-owning object. This file owns
@@ -41,12 +41,12 @@ export type MemberOverrides = {
 };
 
 /** Hard cap on `members.include.length + members.exclude.length` per
- *  Collection. See docs/apps/database/01-data-model.md §The `members`
+ *  Collection. See §The `members`
  *  overrides. */
 export const MEMBERS_HARD_CAP = 5000 as const;
 
 /** Derived UX label for a Collection's shape — never stored; a function
- *  of `source` + `members`. See docs/apps/database/10-lists-sets-collections.md
+ *  of `source` + `members`. See
  *  §The three modes. */
 export enum ListMode {
 	Query = "query",

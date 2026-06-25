@@ -7,7 +7,7 @@
  * that crypto substrate: who is a member, with what role, granted/revoked by
  * whom and when. This module is that layer's foundation.
  *
- * Per the resolved **OQ-29** (docs/reference/11-open-questions.md): membership
+ * Per the resolved **OQ-29** : membership
  * lives **inside the entity's Y.Doc** at `root.meta.access`, as an
  * **append-only**, **signed** log; revocation sets `revokedAt` rather than
  * deleting, so audit can always answer "who had access between X and Y". The

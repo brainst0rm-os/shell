@@ -1,6 +1,6 @@
 /**
  * WindowIndex — the dashboard-facing view of every open app window per
- * docs/shell/33-windows-and-menus.md §The window index.
+ *  §The window index.
  *
  * Source of truth = `AppLauncher.windowsFor(...)`. The index attaches focus /
  * blur / title-update / minimize / move / resize / close listeners to each

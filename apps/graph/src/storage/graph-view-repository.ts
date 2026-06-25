@@ -5,7 +5,7 @@
  * owns the layout coordinates (a `coords` Y.Map keyed by node entity-id,
  * see `logic/graph-view-yjs-codec.ts`); the property bag carries the view
  * metadata (`graphId`, `name`, `kind`, layout/visibility/settings/history
- * defaults per `docs/apps/graph/01-data-model.md`).
+ * defaults per).
  *
  * v1 surface: one default view per Graph (`ensureDefaultView`), coordinate
  * load/save through the Y.Doc transport. The multi-view lifecycle (view

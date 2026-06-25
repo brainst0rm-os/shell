@@ -4,7 +4,7 @@
  * shape; the SDK-types surface will re-export from here once the entities
  * service ships (Stage 9.3).
  *
- * For the design rationale see docs/apps/graph/10-pattern-filters.md.
+ * For the design rationale see.
  *
  * Defining the surface here (rather than in `apps/graph/`) keeps the
  * compiler shell-side. The Graph app's renderer never compiles SQL —
@@ -74,7 +74,7 @@ export type GraphPattern = {
 	primarySubject: string;
 };
 
-/** Per-pattern hard caps per docs/apps/graph/01-data-model.md §Hard caps. */
+/** Per-pattern hard caps per §Hard caps. */
 export const PATTERN_MAX_SUBJECTS = 16;
 export const PATTERN_MAX_EDGES = 32;
 export const PATTERN_MAX_HOPS = 6;

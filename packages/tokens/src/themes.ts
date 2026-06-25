@@ -1,5 +1,5 @@
 /**
- * Built-in themes. Per docs/shell/13-frontend-stack.md §Themes — Brainstorm
+ * Built-in themes. Per §Themes — Brainstorm
  * ships light / dark token sets plus a small set of opinionated variants
  * (Midnight, Sepia, High Contrast). Third-party theme bundles install
  * through the same package format (`manifest.kind: "theme"`) once the theme
@@ -1543,7 +1543,7 @@ export const DEFAULT_THEME: ThemeName = ThemeName.Rose;
  * filter (a dark theme cannot land in the Light slot and vice versa) and
  * the dashboard's effective-pair resolution.
  *
- * Per docs/shell/36-design-system.md §Appearance modes & pair slots.
+ * Per §Appearance modes & pair slots.
  */
 export enum ThemeAppearance {
 	Light = "light",

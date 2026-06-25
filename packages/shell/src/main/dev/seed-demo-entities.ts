@@ -136,7 +136,7 @@ function todayAt(now: number, hour: number): number {
  * `parentId`-nested sub-issues, so the team tracks its own beta launch in
  * Tasks / Database / Graph like any other project. Each issue is a launch
  * workstream; each sub-issue is a concrete action with a descriptive
- * `notes` body. The narrative lives in `docs/ops/launch-plan.md`.
+ * `notes` body. The narrative lives in.
  *
  * Own marker (`seed_proj_beta_launch`) so it lands even on a vault seeded
  * before this project existed; returns whether it added rows.
@@ -783,7 +783,7 @@ export async function seedDemoEntities(session: VaultSession): Promise<SeedEntit
 	// The commercial backend lives in its own out-of-product repo
 	// (../brainstorm-cloud) but is tracked AS vault entities so the infra
 	// work shows up in Tasks / Database / Graph like any other project —
-	// the team dogfoods its own tracker. Mirrors brainstorm-cloud/docs/plan.md.
+	// the team dogfoods its own tracker. Mirrors brainstorm-cloud/.
 	// Undated (backlog) so the Calendar demo window is unaffected.
 	const cloudProjectId = "seed_proj_cloud";
 	mk(cloudProjectId, PROJECT_TYPE, TASKS_APP, {

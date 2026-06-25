@@ -1,5 +1,5 @@
 /**
- * Grid view — React rewrite. Per `docs/apps/database/20-views.md §Grid`
+ * Grid view — React rewrite. Per ` §Grid`
  * and the 9.12.R1 plan rung.
  *
  * Replaces the imperative `render/grid-view.ts` (HTML5 column DnD, no

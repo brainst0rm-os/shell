@@ -2,7 +2,7 @@ import { appendFile, mkdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
 /**
- * Per docs/security/09-security-and-sandbox.md §Logging and audit:
+ * Per §Logging and audit:
  *
  *   The shell keeps a per-vault audit log of security-relevant events. Format
  *   is JSON-lines (one event per line). Metadata only — no entity payloads,

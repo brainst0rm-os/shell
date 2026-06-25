@@ -2,7 +2,7 @@
  * The baseline node set, defined once so the editor factory, the headless
  * editor (tests + serialization), and any consumer register exactly the
  * same nodes — the set that "round-trips through Yjs cleanly" per
- * docs/editing/07-editing-lexical.md.
+ * .
  *
  * `ParagraphNode` + `TextNode` are Lexical built-ins (always registered)
  * so they are intentionally not listed. Custom app nodes (Notes' Title /

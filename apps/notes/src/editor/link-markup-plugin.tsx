@@ -23,7 +23,7 @@
  * Click path:
  *   We attach a single capture-phase click listener to the editor's
  *   root element. It routes two shapes through the shared SDK
- *   `openEntity` primitive (per docs/shell/37-cross-app-navigation.md
+ *  `openEntity` primitive (per
  *   §The Link component — one navigation path, not a per-surface
  *   hand-roll):
  *     - an `<a>` whose href resolves to `brainstorm://entity/<id>`

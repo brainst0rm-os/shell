@@ -2,7 +2,7 @@
  * `Book/v1` — an imported book in the vault (EPUB or PDF). The binary
  * (the .epub / .pdf) lives outside the entity via the Files host service
  * (`fileId`, wired in 9.21.2); this entity is the catalog record + the
- * per-book reading state. See docs/apps/books and the implementation plan
+ * per-book reading state. See and the implementation plan
  * 9.21 ladder.
  */
 

@@ -11,7 +11,7 @@
  *     separator / `..` / control char / leading dot, so a hostile
  *     `../../.ssh/authorized_keys` collapses to a bare basename — the
  *     user's chosen directory is the only directory (the opaque-handle
- *     model, docs/security/09 §Filesystem).
+ *  model, §Filesystem).
  *  2. **Filters are well-formed + bounded.** Extensions are lower-cased,
  *     dot-stripped, charset-restricted, de-duped and capped; malformed
  *     filter entries are dropped, not thrown on — a bad `filters` array

@@ -1,6 +1,6 @@
 /**
  * Vault icon store — content-addressed user-uploaded image icons for the
- * universal icon model (docs/foundations/39-universal-icons.md). Extracted
+ * universal icon model. Extracted
  * from `ipc/icons-handlers.ts` so BOTH the dashboard `icons:*` IPC and the
  * app-facing `icons` broker service (B11.14 custom emoji upload) share one
  * implementation rather than duplicating the sha + thumbnail logic.

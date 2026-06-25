@@ -9,9 +9,9 @@
  * The redactor is correctness-critical: every code path that lands a
  * user-typed body / log excerpt on the wire MUST flow through
  * `redactPayload`. The redaction rules are positioned in
- * [`docs/platform/48-admin-panel.md`](../../../../docs/platform/48-admin-panel.md)
+ * 
  * §Posture rules ("data minimisation") and
- * [`docs/security/38-network-and-proxy.md`](../../../../docs/security/38-network-and-proxy.md)
+ * 
  * §The shell's own network traffic ("Feedback — Opt-in path").
  *
  * Rules enforced here:

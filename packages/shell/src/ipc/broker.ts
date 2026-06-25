@@ -2,7 +2,7 @@
  * The IPC broker — main-process router that accepts envelopes and dispatches
  * to the right service (worker process or in-process handler).
  *
- * Per docs/shell/12-shell-architecture.md §IPC architecture, the broker:
+ * Per §IPC architecture, the broker:
  *   1. Validates the envelope structure.
  *   2. Verifies `app` matches the originating renderer (preload-stamped).
  *   3. Resolves the target service to a worker (MessagePort).
@@ -16,9 +16,9 @@
  *     in the envelope must be a live grant for the calling app.
  *   - **Fail-closed**: if the capability check *throws* (e.g. the ledger
  *     DB is corrupt or locked), the broker returns `Unavailable` — never
- *     "approved by default". This matches docs/09 §Failure-open vs fail-closed.
+ *  "approved by default". This matches §Failure-open vs fail-closed.
  *
- * Stage 4 also wires per-app **backpressure** per docs/12 §Backpressure:
+ * Stage 4 also wires per-app **backpressure** per §Backpressure:
  *   - Each app has a fixed-depth pending queue (`maxPendingPerApp`).
  *   - When the queue is full, the oldest non-streaming request is dropped
  *     and rejected with `Unavailable`. The new request proceeds.
@@ -72,7 +72,7 @@ export type BrokerOptions = {
 	checkCapability?: CapabilityChecker;
 	/**
 	 * Max in-flight requests per app id. When exceeded, the oldest non-stream
-	 * request is dropped and the new one proceeds. Default 256 (per docs/12).
+	 * request is dropped and the new one proceeds. Default 256 (per).
 	 */
 	maxPendingPerApp?: number;
 	/** Called on every denial (Invalid, CapabilityDenied, Unavailable, Error). */
@@ -150,7 +150,7 @@ export class Broker {
 		try {
 			capOk = this.checkCapability(envelope.app, envelope.service, envelope.method, envelope.caps);
 		} catch (error) {
-			// Fail-closed per docs/09: ledger errors become Unavailable, not approved.
+			// Fail-closed per : ledger errors become Unavailable, not approved.
 			const reply = makeErrorReply(envelope.msg, {
 				kind: "Unavailable",
 				message: `capability ledger unavailable: ${(error as Error).message}`,

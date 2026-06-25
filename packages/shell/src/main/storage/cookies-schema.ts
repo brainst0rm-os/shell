@@ -15,7 +15,7 @@
  * key is the RFC 6265 cookie identity tuple `(name, domain, path)`.
  *
  * Per-device and never synced — this joins the per-device tier alongside
- * `settings.db` (docs/data/20-database-growth-and-sync.md).
+ * `settings.db`.
  */
 
 import type { SqliteMigration } from "./migrations";

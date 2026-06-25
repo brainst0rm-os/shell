@@ -1,6 +1,6 @@
 /**
  * Mail contracts (`brainstorm/MailAccount|MailFolder|Email/v1`) per
- * docs/apps/53-mailbox.md.
+ * .
  *
  * Mailbox brings email **inside the vault as entities** in the one shared
  * object space (doc 21): a received `Email/v1` is a normal object, so

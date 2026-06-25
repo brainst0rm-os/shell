@@ -1,6 +1,6 @@
 /**
  * `WebView` host-service wire contract — the **chrome-only / shell-engine
- * split keystone** (docs/apps/54-web-browser.md §The core tension).
+ * split keystone** (§The core tension).
  *
  * Shared home (Browser-2): both the shell-side host service and the Browser
  * app's chrome import these enums/types from here, so the two sides speak one

@@ -18,7 +18,7 @@
  * how `notify-host` keeps Electron out of the testable core.
  *
  * v1 renders OS-native; the `fancy-menus` app-rendered tray
- * (docs/shell/33-windows-and-menus.md §Tray menu) is the later upgrade
+ * (§Tray menu) is the later upgrade
  * once that Stage-8 dep lands — see OQ-TRAY-1.
  */
 

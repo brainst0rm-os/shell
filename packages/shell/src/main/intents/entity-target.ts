@@ -9,7 +9,7 @@
  * opener (Notes for `Note/v1`, Files for `Folder/v1`, Preview for an image)
  * is never selected. Resolution is shell-side so apps never need read
  * capability on the target just to navigate to it (per
- * docs/platform/31-linking-protocol.md §Resolution — resolution is always
+ *  §Resolution — resolution is always
  * shell-mediated).
  */
 

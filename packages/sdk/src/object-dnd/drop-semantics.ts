@@ -1,5 +1,5 @@
 /**
- * Drop-semantic vocabulary + defaults (DND-4, docs/platform/65 §Part III "the
+ * Drop-semantic vocabulary + defaults (DND-4, §Part III "the
  * meaning matrix"). What a dropped object BECOMES is the target's decision; this
  * module centralises the shared vocabulary (so it's an enum, not raw strings —
  * per CLAUDE.md), maps each semantic to its cursor affordance, and picks the

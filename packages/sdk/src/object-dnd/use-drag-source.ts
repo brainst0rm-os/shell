@@ -1,5 +1,5 @@
 /**
- * `useDragSource` (DND-2b/DND-3 source tail, docs/platform/65 §Part IV.2) — the
+ * `useDragSource` (DND-2b/DND-3 source tail, §Part IV.2) — the
  * renderer that STARTS a cross-app drag. Native HTML5 `dragstart` can't drive a
  * cross-renderer drag (its `DataTransfer` doesn't cross the process boundary),
  * so the source drives the shell session with POINTER events: on a press-drag

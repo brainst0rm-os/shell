@@ -2,7 +2,7 @@
 /**
  * App-reactivity ratchet.
  *
- * The architecture decision (docs/shell/13-frontend-stack.md): a reactive
+ * The architecture decision : a reactive
  * app — anything backed by vault entities that updates from other
  * devices/users — reads live entity lists through the ONE shared stack,
  * `@brainstorm/react-yjs`'s `useVaultEntities` / `useLiveEntities`. It must

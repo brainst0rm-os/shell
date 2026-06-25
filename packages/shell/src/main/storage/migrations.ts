@@ -1,5 +1,5 @@
 /**
- * SQLite migration runner per docs/data/18-storage-and-search.md §Schema migration.
+ * SQLite migration runner per §Schema migration.
  *
  *   Each domain DB tracks its schema version in a `_schema_version` table:
  *

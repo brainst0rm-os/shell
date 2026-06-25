@@ -1,7 +1,7 @@
 /**
  * The set of UI languages the shell ships. English is the source language and
  * always complete; the rest are seed packs (machine-translated first pass,
- * human review later — see docs/platform/21-localization.md). Track A's
+ * human review later — see). Track A's
  * locale-pack loader resolves a pack per entry; the Language picker lists them.
  *
  * Pure (no Electron / React) so the renderer + main + preload share it.

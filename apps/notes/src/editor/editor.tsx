@@ -4,7 +4,7 @@
  * here; 9.3.5.N3 reconciled selection/IME/autosave parity on top).
  * Lexical state is bound to the entity's Y.Doc via the universal body
  * root (`Y.XmlText` named `"root"`, per
- * docs/data/21-objects-and-collections.md §Universal rich-text body)
+ *  §Universal rich-text body)
  * through the shared `<BrainstormEditor>` wrapper from
  * `@brainstorm/editor`. Persistence flows through the 9.3.2b
  * `loadDoc`/`applyDoc` resolver, not the per-note kv silo.

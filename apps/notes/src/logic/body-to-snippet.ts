@@ -2,7 +2,7 @@
  * body-to-snippet — pure helper that pulls a whitespace-collapsed,
  * length-capped plain-text snippet from the universal body Y.XmlText
  * (the `Y.XmlText` named `"root"` per
- * docs/data/21-objects-and-collections.md §Universal rich-text body).
+ *  §Universal rich-text body).
  *
  * Walker — NOT `body.toString()`. The @lexical/yjs binding encodes
  * Lexical's tree as nested `Y.XmlText` blocks (paragraph / heading /

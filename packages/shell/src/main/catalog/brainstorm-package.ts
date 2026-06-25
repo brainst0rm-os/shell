@@ -4,14 +4,14 @@
  * Resolves the package compression to **tar + gzip**, reusing the deterministic
  * `.bsbundle` codec (`main/bundle/bundle-archive.ts`: tar via `bundle-tar.ts`
  * with a zip-slip guard, gzip via node:zlib) rather than the tar+zstd sketch in
- * docs/apps/14 — zstd needs a runtime the shell can't guarantee, gzip is Node
+ *  — zstd needs a runtime the shell can't guarantee, gzip is Node
  * core and already on the beta path. Gzip is **forced** here (not the codec's
  * zstd-preferred default) so any client runtime can always decompress a
  * published bundle.
  *
  * This is the single source the CI packer (sign side) and the shell
  * InstallEngine (verify + unpack side) both speak, so they agree by
- * construction. Per docs/apps/59 §The install/update engines + §14.34.
+ * construction. Per §The install/update engines + §14.34.
  *
  * Crypto: sha256 (node:crypto — hashing, not keystore) + Ed25519 over the
  * bundle content hash (`@brainstorm/native`, the same verify primitive the

@@ -1,6 +1,6 @@
 /**
  * Feedback-3 — bundled curated changelog. Build-time-included (no
- * network, no runtime feed) per docs/implementation-plan.md
+ * network, no runtime feed) per
  * §Help, feedback & changelog. The renderer's Settings → What's new
  * view + the dashboard auto-popup both consume the parsed shape via
  * IPC, then render with a shared editorial-page component.

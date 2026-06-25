@@ -1,6 +1,6 @@
 /**
  * Iteration 12.8 — recovery-scenario coverage for the "Vault registry corrupted"
- * row of docs/foundations/28-vault-and-onboarding.md §Recovery scenarios:
+ * row of §Recovery scenarios:
  * rebuild the vault list by scanning standard locations + known paths, offering
  * the found vaults back to the user. The scan is read-only (prompt-before-mutate
  * decision), so these tests assert it never writes — they exercise the pure core

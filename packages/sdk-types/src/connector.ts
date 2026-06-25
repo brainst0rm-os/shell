@@ -1,6 +1,6 @@
 /**
  * Connector contracts (`brainstorm/Connector|ConnectorAccount|SyncMapping|SyncRun/v1`)
- * per docs/apps/56-connector-framework.md.
+ * per.
  *
  * One signed bridge-app contract + one shell-side OAuth / credential /
  * sync broker turns any external system (Gmail, GitHub, Slack, an

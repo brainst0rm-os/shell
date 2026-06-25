@@ -3,7 +3,7 @@
  * `../../../brainstorm-cloud/services/catalog-edge`. Renderer-safe (no Electron,
  * no native): pure data shapes shared by the pure core + the client.
  *
- * Per docs/apps/59-app-lifecycle-and-catalog.md §The catalog API contract.
+ * Per §The catalog API contract.
  * The index is delivered inside a detached-payload signed envelope
  * (`SignedCatalog`): `payload` is base64url of the JSON `CatalogIndex`, and the
  * signature is Ed25519 over the exact `payload` ASCII — the same JWS discipline

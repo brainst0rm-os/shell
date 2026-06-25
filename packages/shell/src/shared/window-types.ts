@@ -28,7 +28,7 @@ export enum TilePreset {
 
 /** What to do with a navigation result — the four browser-identical modes
  *  (panels are post-v1). Plain click = Replace; Cmd/Ctrl+Click = NewTab;
- *  Shift+Click = NewWindow. Per docs/shell/37-cross-app-navigation.md. */
+ *  Shift+Click = NewWindow. Per. */
 export enum NavigationMode {
 	Replace = "replace",
 	NewTab = "new-tab",
@@ -45,7 +45,7 @@ export type WindowEntry = {
 	windowId: string;
 	title: string;
 	/** The cross-app route the (active tab of the) window currently shows, or
-	 *  null for landing/empty state. Per docs/shell/37. */
+	 *  null for landing/empty state. Per */
 	route: string | null;
 	monitorId: string;
 	bounds: WindowBounds;

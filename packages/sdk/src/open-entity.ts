@@ -7,7 +7,7 @@
  * `runtime.services.intents`), inconsistent error handling, and a
  * client-supplied `source` the shell ignores anyway (the broker stamps
  * the calling app id from the envelope; a client `source` is not trusted).
- * Per docs/shell/37-cross-app-navigation.md §The Link component, every
+ * Per §The Link component, every
  * internal navigation goes through one primitive. The four navigation
  * *modes* (`new-tab` / `new-window` / …), `ui.navigate`, and route-aware
  * focus-existing are a Stage 8 commitment per that doc's phasing — this is
@@ -37,7 +37,7 @@ export type OpenCapableRuntime =
 /** What the shell does with a navigation result. Browser-identical: a plain
  *  click replaces in place; Cmd/Ctrl+click opens a new tab; Shift+click opens a
  *  new window. The wire value is the string; the shell mirrors this enum in its
- *  navigation resolver. Per docs/shell/37-cross-app-navigation.md §Navigation modes. */
+ *  navigation resolver. Per §Navigation modes. */
 export enum NavigationMode {
 	Replace = "replace",
 	NewTab = "new-tab",

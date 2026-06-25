@@ -1,5 +1,5 @@
 /**
- * App installer per docs/apps/03-app-model.md §Install / §Update / §Uninstall.
+ * App installer per §Install / §Update / §Uninstall.
  *
  * Inputs:
  *   - A directory containing `manifest.json` + the app's bundle assets.
@@ -127,7 +127,7 @@ export class AppInstaller {
 		private readonly ledger: CapabilityLedger,
 		/** Optional. When supplied, install/update validates manifest-vs-shell
 		 *  chord collisions and mirrors `manifest.shortcuts: [...]` into the
-		 *  registry under `app/<app-id>/<id>` (per docs/24 §Manifest is the
+		 *  registry under `app/<app-id>/<id>` (per §Manifest is the
 		 *  source of truth, iteration 6.10b). Callers that don't have a
 		 *  registry on hand (tests, seed scripts pre-shell-boot) may omit it;
 		 *  registry mirroring then happens at shell startup via the
@@ -446,7 +446,7 @@ export class AppInstaller {
 		return join(this.vaultPath, "apps", appId, version);
 	}
 
-	/** Manifest-vs-shell chord collision check (per docs/24 §App opt-in
+	/** Manifest-vs-shell chord collision check (per §App opt-in
 	 *  shadowing). No-op when no shortcut registry was wired in (tests /
 	 *  seed-time install — the boot-time mirror pass enforces the rule
 	 *  the next time the registry is alive). */
@@ -460,7 +460,7 @@ export class AppInstaller {
 	}
 
 	/** Mirror the manifest's `shortcuts: [...]` into the shortcut registry
-	 *  under `app/<app-id>/<id>` (per docs/24 §Manifest is the source of
+	 *  under `app/<app-id>/<id>` (per §Manifest is the source of
 	 *  truth). No-op when no registry was wired in. */
 	private mirrorShortcuts(manifest: AppManifest): void {
 		if (!this.shortcutRegistry) return;

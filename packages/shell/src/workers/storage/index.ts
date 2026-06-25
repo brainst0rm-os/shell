@@ -1,5 +1,5 @@
 /**
- * Storage worker — Node-based `utilityProcess` per docs/shell/12-shell-architecture.md.
+ * Storage worker — Node-based `utilityProcess` per.
  *
  *   Owns: filesystem I/O for app-scoped key/value data. SQLite + Yjs snapshot
  *   surfaces land in later Stage 3 iterations.

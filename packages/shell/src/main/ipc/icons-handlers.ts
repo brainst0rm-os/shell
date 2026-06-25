@@ -1,6 +1,6 @@
 /**
  * `icons:*` IPC handlers — the dashboard (privileged renderer) face of the
- * user-uploaded image-icon store (docs/foundations/39-universal-icons.md).
+ * user-uploaded image-icon store.
  * The store itself lives in `main/icons/icon-store.ts`, shared with the
  * app-facing `icons` broker service (B11.14).
  */

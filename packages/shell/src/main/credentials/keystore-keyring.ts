@@ -1,7 +1,7 @@
 /**
  * KeyringBackend — wraps `@napi-rs/keyring` for real OS-keystore access.
  *
- * Per docs/security/29-credentials-storage.md:
+ * Per :
  *   - macOS:   Keychain Services
  *   - Windows: Credential Manager (DPAPI under the hood)
  *   - Linux:   Secret Service via libsecret (GNOME Keyring / KWallet)

@@ -5,7 +5,7 @@ import { defineConfig, externalizeDepsPlugin } from "electron-vite";
 // Dev keeps bundles unminified for readable main/renderer stacks in the error
 // log; production minifies (sourcemaps stay on, so stacks still resolve to
 // original frames). `size-limit` measures the production artifact, so the
-// budgets in docs/shell/13-frontend-stack.md are scored against minified output.
+// budgets in are scored against minified output.
 export default defineConfig(({ command }) => {
 	const minify = command === "build";
 	return {

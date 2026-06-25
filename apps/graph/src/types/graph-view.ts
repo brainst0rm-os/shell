@@ -1,7 +1,7 @@
 /**
  * `GraphView/v1` — a rendering of a Graph: layout kind, settings,
- * history-animation state. See docs/apps/graph/01-data-model.md and
- * docs/apps/graph/20-views-and-rendering.md.
+ * history-animation state. See and
+ * .
  */
 
 import type { Icon } from "./icon";
@@ -172,7 +172,7 @@ export type GraphView = {
 	settings: GraphSettings;
 	history: HistoryAnimationState;
 	cameraPolicy: CameraPolicy;
-	/** `true` for the seeded built-in views (per docs/apps/graph/01-data-model.md
+	/** `true` for the seeded built-in views (per
 	 *  §Default views shipped with the app); cannot be deleted. */
 	system?: boolean;
 	createdAt: number;

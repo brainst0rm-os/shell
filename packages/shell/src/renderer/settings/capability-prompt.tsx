@@ -1,5 +1,5 @@
 /**
- * Capability-prompt modal per docs/security/09 §Granting. The main process
+ * Capability-prompt modal per §Granting. The main process
  * pushes a `capabilities:prompt` over IPC; the dashboard renderer subscribes
  * via `window.brainstorm.capabilityPrompt.on(...)`, surfaces this modal, and
  * `respond(requestId, accept)` resolves the pending grant in main.

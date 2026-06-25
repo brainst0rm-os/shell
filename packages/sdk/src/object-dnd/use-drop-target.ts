@@ -1,5 +1,5 @@
 /**
- * `useDropTarget` (DND-3, docs/platform/65 §Part IV.4) — one drop handler,
+ * `useDropTarget` (DND-3, §Part IV.4) — one drop handler,
  * BOTH transports. Spread `dropProps` on a drop-zone element and the hook wires
  * native intra-renderer HTML5 DnD (reading `application/vnd.brainstorm.entity+json`
  * off the `DataTransfer`); register the same target and it also receives the

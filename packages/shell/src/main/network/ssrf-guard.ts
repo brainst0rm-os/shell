@@ -1,6 +1,6 @@
 /**
  * Net-1a — SSRF (Server-Side Request Forgery) hardening primitive for the
- * shell-mediated network broker (`docs/security/38-network-and-proxy.md`).
+ * shell-mediated network broker.
  *
  * The broker's job is to accept app-originated network requests and
  * execute them from the main process so the renderer never sees the

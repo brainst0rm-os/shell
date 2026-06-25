@@ -4,13 +4,13 @@
  * tabs; each tab is a sandboxed app renderer (`WebContentsView`) with the
  * app-specific preload that stamps the app's identity.
  *
- * Per docs/apps/03-app-model.md §Launch, docs/security/09-security-and-sandbox.md
- * §Isolation, and docs/shell/33+37 (shell-owned tabs):
+ * Per §Launch,
+ * §Isolation, and +37 (shell-owned tabs):
  *
  *   - Tabs are intra-app (v1) — every tab in a container is the same app.
  *   - Each tab's renderer has its own `webContents.id`, registered in the
  *     renderer-identity registry, so the broker scopes capabilities per tab.
- *   - Sandbox on; nodeIntegration off; contextIsolation on. Per docs/09.
+ *  - Sandbox on; nodeIntegration off; contextIsolation on. Per
  *   - The preload reads the app id + per-tab handshake from `additionalArguments`
  *     and stamps it into every envelope before app JS runs.
  *

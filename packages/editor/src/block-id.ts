@@ -3,7 +3,7 @@
  *
  *   - `stableBlockId(node)` — a *session*-scoped id derived from the
  *     Lexical `NodeKey`, used by editor virtualization (per
- *     docs/editing/52 §Phase 1) and the StylePack selector hooks
+ *  §Phase 1) and the StylePack selector hooks
  *     (OQ-183). Both surfaces read `data-bs-block` from a top-level
  *     block element so they share one DOM-side hook. The height cache is
  *     a *perf cache*, not data, so a session-scoped id is sufficient: a

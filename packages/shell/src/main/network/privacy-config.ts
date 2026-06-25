@@ -1,6 +1,6 @@
 /**
  * Net-1e — per-vault privacy + per-vault proxy-override keystone for
- * the shell-mediated network broker (`docs/security/38-network-and-proxy.md`
+ * the shell-mediated network broker (
  * §User control + §Per-vault override).
  *
  * Defines the user-facing link-preview policy (Off / On / Allowlist /

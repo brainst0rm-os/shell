@@ -1,7 +1,7 @@
 /**
  * Schema-version comparison + forward-only migration runner.
  *
- * Used in two places (per docs/implementation-plan.md Stage 0.7 + 0.8, then
+ * Used in two places (per Stage 0.7 + 0.8, then
  * reused in Stage 3 for SQLite migrations):
  *
  *   1. Vault format check on open — `vault.json.format` is compared against
@@ -11,7 +11,7 @@
  *      ordered migrations; `runMigrations` applies the ones above the stored
  *      version.
  *
- * The format is `<major>.<minor>` for vault.json (per docs/foundations/28-vault-and-onboarding.md);
+ * The format is `<major>.<minor>` for vault.json (per);
  * SQLite migrations use a monotonic integer. Both are handled here.
  */
 

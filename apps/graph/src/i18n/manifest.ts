@@ -1,7 +1,7 @@
 /**
  * Graph app i18n manifest — every user-visible string the renderer builds
  * in JS (textContent / title / aria-label / status pill / cycle-button
- * labels). Per `docs/foundations/35-code-conventions.md §Localization` and
+ * labels). Per ` §Localization` and
  * the shared-fundamentals contract §C: no bare literal in app logic; the
  * default-English manifest lives here and every site goes through `t()`
  * from `./t`.

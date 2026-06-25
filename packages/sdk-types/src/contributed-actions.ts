@@ -1,7 +1,7 @@
 /**
  * The action surface — pure logic shared by the shell (which resolves
  * contributions from the registry) and the SDK host primitive (which renders
- * them). Per docs/platform/63-action-surface.md §Anti–menu-rot: relevance is
+ * them). Per §Anti–menu-rot: relevance is
  * the shell's job (discriminator matching, OQ-AS-2); this module owns the
  * *restraint* — mapping a verb to its grouping bucket, deduping near-identical
  * rows, ranking, capping inline, and trust-tier quarantine.

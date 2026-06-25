@@ -39,7 +39,7 @@ export enum SettingsSection {
 	Contributions = "contributions",
 	/** Keyboard shortcuts reference — read-only listing of shell-layer
 	 *  action ids + their default chords, per the Help-vs-Settings split
-	 *  in docs/shell/26-help-and-onboarding.md. Rebinding lands later
+	 *  in. Rebinding lands later
 	 *  (gated on the per-renderer registry push). */
 	Keyboard = "keyboard",
 	/** AI (11.9) — BYO cloud provider API keys (Tier-2 credentials, 11.6).

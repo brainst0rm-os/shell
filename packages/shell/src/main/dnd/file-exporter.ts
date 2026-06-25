@@ -1,5 +1,5 @@
 /**
- * Drag-a-file-out binding (DND-5, docs/platform/65 §Part V — scope D). The one
+ * Drag-a-file-out binding (DND-5, §Part V — scope D). The one
  * native cross-boundary drag Electron supports is `webContents.startDrag`, which
  * carries a FILE + icon, nothing else. So a Files entry dragged to Finder is:
  * renderer reads the (decrypted) bytes → `dnd.exportFile({ name, bytes })` →

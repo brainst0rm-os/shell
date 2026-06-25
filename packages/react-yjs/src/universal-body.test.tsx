@@ -35,7 +35,7 @@ describe("getUniversalBody", () => {
 		// Property: for every fresh doc, calling getUniversalBody (which
 		// materialises the in-memory Yjs root handle) MUST NOT change the
 		// encoded state. The unused body is zero on-disk cost — pinned by
-		// docs/data/21 §Universal rich-text body. clientID is held fixed
+		//  §Universal rich-text body. clientID is held fixed
 		// across the pair so the VarUint encoding of the doc id is
 		// byte-identical between baseline and observed. The type change
 		// from XmlFragment to XmlText preserves the invariant — Yjs only

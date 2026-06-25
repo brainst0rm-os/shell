@@ -1,7 +1,7 @@
 /**
  * Host keyboard wiring — file navigation + inspector toggle through the
  * app-side shortcut registry (no raw `e.key` per
- * docs/foundations/35-code-conventions.md §Keyboard handling). The image /
+ *  §Keyboard handling). The image /
  * PDF renderer modules bind their own zoom / pan / page chords with
  * `capture: true` and stand down to these when not applicable.
  *

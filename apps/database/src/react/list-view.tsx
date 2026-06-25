@@ -1,7 +1,7 @@
 /**
  * List view — React port. Row-per-entity stack with no fixed columns;
  * each row shows a type glyph + title + inline property chips.
- * Per `docs/apps/database/20-views.md §List`.
+ * Per ` §List`.
  *
  * Rows are windowed with `@tanstack/react-virtual` (mirroring grid-view):
  * only on-screen rows mount, so a list bounded by vault volume stays cheap

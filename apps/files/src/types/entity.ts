@@ -7,7 +7,7 @@
  * against the in-memory mirror; the Stage 9.3 swap replaces only the data
  * source.
  *
- * Per docs/apps/30-file-manager-and-folders.md the canonical shapes are:
+ * Per the canonical shapes are:
  *
  *   - `brainstorm/Folder/v1`: { name, members[], view?, sortBy?, createdAt, updatedAt }
  *   - `brainstorm/File/v1`:   { name, mime, size, hash, attachment, ... }

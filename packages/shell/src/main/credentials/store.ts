@@ -1,5 +1,5 @@
 /**
- * Tier 2 credential store per docs/security/29-credentials-storage.md.
+ * Tier 2 credential store per.
  *
  *   Tier 1 = OS-keystore items (identity + master key + optional recovery).
  *   Tier 2 = bulk app-private secrets encrypted under the vault master key.

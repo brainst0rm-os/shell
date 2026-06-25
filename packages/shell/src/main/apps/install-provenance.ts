@@ -3,7 +3,7 @@
  * stays current. Recorded per-row on `registry.db.apps` (schema v9) so the
  * update engine can reason about update sources and trust per install.
  *
- * Per docs/apps/59-app-lifecycle-and-catalog.md §Registry schema changes.
+ * Per §Registry schema changes.
  *
  * This is distinct from the existing `InstallSource` *input* type in
  * `installer.ts` (which is "the bundle dir to install from") and from the
@@ -38,7 +38,7 @@ export type InstallProvenance = {
 	origin: InstallOrigin;
 	/** Catalog this install is tracked against; null for sideload/local-file/dev. */
 	catalogId: string | null;
-	/** Update channel this install follows (per-app, per docs/apps/14 §Update channels). */
+	/** Update channel this install follows (per-app, per §Update channels). */
 	channel: UpdateChannel;
 	/** Ed25519 publisher key the install is TOFU-bound to for future updates; null when unsigned. */
 	publisherKey: string | null;

@@ -1,6 +1,6 @@
 /**
  * `brainstorm/StylePack/v1` — the optional fourth composable theme piece
- * (docs/apps/40-theme-store.md §What's distributed; OQ-183). A StylePack
+ * (§What's distributed; OQ-183). A StylePack
  * is user-authored **raw CSS** that skins the shell + app chrome on top of
  * the token/icon/typography model, targeting the frozen `data-bs-*` hook
  * surface (see `style-hooks.ts`) rather than private class names.

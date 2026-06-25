@@ -6,7 +6,7 @@
  * The vault exposes entity-list state as `VaultEntitiesService`: a
  * `list()` that resolves the authoritative snapshot and an `onChange`
  * staleness signal that fires on *any* write without saying which entity
- * changed (per docs/sdk-types `VaultEntitiesService` — "a bare staleness
+ * changed (per `VaultEntitiesService` — "a bare staleness
  * signal; the app calls `list()` to fetch the authoritative snapshot").
  * Every app re-implemented the same dance around that signal — subscribe,
  * trailing-debounce the bursts, refetch, short-circuit when the snapshot

@@ -1,7 +1,7 @@
 /**
  * Shared import engine (IE-2) — vocabulary.
  *
- * Realises [docs/platform/45-import-export.md §The import flow + §Parse/Map
+ * Realises [ §The import flow + §Parse/Map
  * split]: the pluggable **Source → Parse → Map → Project → Dedupe → Write**
  * pipeline every migration importer builds on. This module owns the types the
  * stages exchange; the stages themselves are separate, mostly-pure files so

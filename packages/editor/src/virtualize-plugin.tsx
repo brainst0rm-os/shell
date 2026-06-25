@@ -1,6 +1,6 @@
 /**
  * `<VirtualizePlugin>` — Phase 1 of editor virtualization
- * (docs/editing/52 §Phase 1, OQ-185 keystones, unconditional).
+ * (§Phase 1, OQ-185 keystones, unconditional).
  *
  * Single `registerUpdateListener` per editor. On every committed update
  * that touched root's children, walks `getAllBlocks(root)` and for each

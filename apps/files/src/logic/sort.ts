@@ -2,7 +2,7 @@
  * Sort options for the folder-contents list.
  *
  * Wire values mirror the `Folder/v1.sortBy` schema in
- * `docs/apps/30-file-manager-and-folders.md`. `Manual` preserves the
+ * . `Manual` preserves the
  * current member order (i.e. drop the comparator) so future drag-to-
  * reorder + per-folder ordering can land without changing this surface.
  */

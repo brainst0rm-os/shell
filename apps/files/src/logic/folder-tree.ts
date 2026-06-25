@@ -17,7 +17,7 @@
  *   - softDelete / restore / permanentDelete
  *
  * Cycle detection on move runs a DFS up to depth 32 (per
- * docs/apps/30-file-manager-and-folders.md) so a folder cannot end up
+ * ) so a folder cannot end up
  * containing itself transitively.
  */
 

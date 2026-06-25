@@ -4,7 +4,7 @@
  * shell surfaces use `<EntityCover>`; `createEntityCoverElement` is its
  * imperative twin so Database / Files / Bookmarks / search-result cards /
  * the dashboard pin all paint a cover identically (per
- * docs/foundations/50-object-covers.md §Per-object covers everywhere —
+ *  §Per-object covers everywhere —
  * the object's OWN cover, an id-seeded gradient as the only fallback,
  * never a broken-image square).
  *
@@ -318,7 +318,7 @@ export function resolveCoverForView(
 }
 
 /** Neutral banner aspect (width / height). The layout chrome cell
- *  (docs/shell/27-layouts.md) owns the real per-context band height;
+ *  owns the real per-context band height;
  *  this is just a sensible default when a caller doesn't pin one. */
 export const DEFAULT_COVER_ASPECT = 16 / 9;
 

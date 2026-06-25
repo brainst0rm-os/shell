@@ -1,5 +1,5 @@
 /**
- * Listing detail page per docs/apps/47-marketplace.md §The Marketplace
+ * Listing detail page per §The Marketplace
  * surface — uniform across kinds, with kind-specific action rows.
  *
  * Theme detail: live-preview-style palette swatch + Activate action that

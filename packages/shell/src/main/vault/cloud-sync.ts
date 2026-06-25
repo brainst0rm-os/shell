@@ -2,7 +2,7 @@ import { homedir } from "node:os";
 import { sep } from "node:path";
 
 /**
- * Per docs/foundations/28-vault-and-onboarding.md §Vault portability:
+ * Per §Vault portability:
  *
  *   File-level cloud sync (Dropbox, iCloud Drive, OneDrive, Google Drive) does
  *   not survive Yjs snapshot+tail files or SQLite WAL. The shell warns at vault

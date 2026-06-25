@@ -1,5 +1,5 @@
 /**
- * Shortcut registry per docs/shell/24-keyboard-shortcuts.md.
+ * Shortcut registry per.
  *
  *   Two layers:
  *     - Shell layer — always active. Owns `<shell/...>` ids. The chord can be
@@ -37,10 +37,10 @@ export type ShortcutAction = {
 	defaultChord: string | null;
 	/** Display label. */
 	label: string;
-	/** Optional scope hint per docs/24: "window" | "editor" | "selection" | custom. */
+	/** Optional scope hint per : "window" | "editor" | "selection" | custom. */
 	scope?: string;
 	/** App layer only — manifest declared this binding *intentionally* shadows
-	 *  a shell binding (per docs/24 §App opt-in shadowing). Shell still wins
+	 *  a shell binding (per §App opt-in shadowing). Shell still wins
 	 *  delivery at runtime; the flag is metadata for UI surfaces (install
 	 *  prompt, settings panel) so the user can see what an app is claiming. */
 	shadowsShell?: boolean;
@@ -85,7 +85,7 @@ export type ConflictReport = {
 	bindings: Array<{ id: string; layer: "shell" | "app"; appId?: string }>;
 };
 
-/** Built-in shell shortcuts per docs/24-keyboard-shortcuts.md §Shell layer. */
+/** Built-in shell shortcuts per §Shell layer. */
 export const DEFAULT_SHELL_SHORTCUTS: readonly Omit<ShortcutAction, "layer">[] = [
 	{ id: "shell/launcher", defaultChord: "CmdOrCtrl+Space", label: "Open Launcher" },
 	// Browse-first start-menu grid of every installed app (the launcher palette
@@ -225,7 +225,7 @@ export class ShortcutRegistry {
 
 	/** 6.10c — clear ALL dynamic shortcuts + active-scope state for an app.
 	 *  Called on the app's last-window-close (the dynamic lifetime contract
-	 *  per docs/24 §Aggregation). Idempotent. */
+	 *  per §Aggregation). Idempotent. */
 	unregisterAllDynamic(appId: string): void {
 		const prefix = `${appId}/`;
 		for (const id of this.dynamic.keys()) {
@@ -370,7 +370,7 @@ export class ShortcutRegistry {
 /**
  * Snapshot of effective shell-layer chords (default + any user override),
  * normalized for comparison. Consumed by the install-time validator to
- * detect manifest-vs-shell collisions (per docs/24 §App opt-in shadowing).
+ * detect manifest-vs-shell collisions (per §App opt-in shadowing).
  *
  * Resolves through the same `listAll()` path the matcher uses, so a user
  * who has rebound `shell/launcher` frees the original chord for apps.

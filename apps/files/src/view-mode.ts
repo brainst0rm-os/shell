@@ -1,5 +1,5 @@
 /**
- * View-mode enum per docs/apps/41-file-manager-ux.md §View modes.
+ * View-mode enum per §View modes.
  *
  * v1 ships four content layouts: list / icon-list / grid / gallery. Column
  * (Finder miller-columns) stays deferred to v2 per OQ-174 — it interacts
@@ -13,7 +13,7 @@
  * tiled Grid. It shares List's row machinery (group headers, columns,
  * single-lane virtualisation) and only scales the glyph + row height.
  *
- * Per docs/foundations/35-code-conventions.md §Enums, every kind / mode /
+ * Per §Enums, every kind / mode /
  * status string lives behind a named symbol. Raw `case "list":` is rejected.
  */
 

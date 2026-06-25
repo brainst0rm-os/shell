@@ -1,7 +1,7 @@
 /**
  * Canonical entity Y.Doc layout — `brainstorm/EntityDoc/v1`.
  *
- * Per docs/editing/06-collaboration-yjs.md §Granularity, the unit of CRDT
+ * Per §Granularity, the unit of CRDT
  * state is **the entity**: each entity is backed by exactly one Y.Doc, and
  * that doc — not the SQLite row — is the source of truth. `entities.db` is
  * a *derived projection* rebuilt from the doc on every update (local or

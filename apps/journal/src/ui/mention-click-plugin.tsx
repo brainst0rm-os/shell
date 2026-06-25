@@ -5,7 +5,7 @@
  * The shared `MentionNode` renders an inline chip carrying `data-entity-id`
  * + `data-entity-type` but no click handler — by design, the host wires
  * navigation so it travels the one shared path (`dispatchOpenEntity`, per
- * docs/shell/37-cross-app-navigation.md). Notes does this via its
+ * ). Notes does this via its
  * `LinkMarkupPlugin`'s editor-root interceptor; the Journal editor is the
  * light baseline (no Mod+K link markup), so it carries the slimmer
  * mention-only interceptor here. Without it, inserting a link rendered a

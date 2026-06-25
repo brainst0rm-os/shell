@@ -1,6 +1,6 @@
 /**
  * Automations contracts (`brainstorm/Workflow|Trigger|WorkflowRun|Reminder/v1`)
- * per docs/apps/39-automations-and-workflows.md.
+ * per.
  *
  * The automations app composes the four interop mechanisms (shared
  * entities · intents · block-embedding · format I/O) into one

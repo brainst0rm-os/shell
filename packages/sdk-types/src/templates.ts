@@ -1,7 +1,7 @@
 /**
  * Templates contract (B11.10) — the cross-app, dependency-free core of the
  * platform templating foundation
- * ([66-templates.md](../../../docs/platform/66-templates.md)).
+ * (66-templates.md).
  *
  * A **template** is its own Block-Protocol entity type,
  * `brainstorm/Template/v1` — *not* a regular entity tagged `isTemplate`

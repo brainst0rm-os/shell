@@ -2,7 +2,7 @@
  * Template ⇄ `brainstorm/Template/v1` entity codec + instantiation (B11.10).
  *
  * The pure, dependency-free keystone the templating foundation
- * ([66-templates.md](../../../docs/platform/66-templates.md)) goes through:
+ * (66-templates.md) goes through:
  *  - `templateToEntityProperties` / `entityToTemplate` — serialize a `Template`
  *    to/from the property bag on a `brainstorm/Template/v1` `Entity`. `id` and
  *    timestamps are carried by the `Entity`, never duplicated into properties.
@@ -75,7 +75,7 @@ export type SaveObjectAsTemplateOptions = {
 /**
  * Build the `Template/v1` property bag for "Save as template" — clone an
  * existing object `entity` into an object template (the object-⋯ affordance in
- * [66-templates.md §The shared surfaces](../../../docs/platform/66-templates.md)).
+ * 66-templates.md §The shared surfaces).
  *
  * The object's `name`/`icon`/`cover` become the **template's** picker
  * presentation (not seeded onto instances per OQ-TPL-1); every other property
@@ -169,7 +169,7 @@ export type DefaultTemplateLadder = {
 /** Resolve the default template for "+ New" — first non-null rung of
  *  `view.defaultTemplate → collection.defaultTemplate → type-default`, else
  *  `null` (blank draft). More-specific-wins per the layered precedence in
- *  docs/data/19-properties-and-schemas.md. */
+ * . */
 export function resolveDefaultTemplate(ladder: DefaultTemplateLadder): string | null {
 	return ladder.viewDefault ?? ladder.collectionDefault ?? ladder.typeDefault ?? null;
 }

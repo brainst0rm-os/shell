@@ -4,7 +4,7 @@
  * tests inject). The engine *chain* is proven in
  * `catalog-install-pipeline.test.ts`; this module is the glue that wires it to
  * real egress (`net.fetch`), the `.brainstorm` codec, and a session's
- * `AppInstaller`. Per docs/apps/59 §The catalog client + install engine.
+ * `AppInstaller`. Per §The catalog client + install engine.
  */
 
 import { readFileSync } from "node:fs";

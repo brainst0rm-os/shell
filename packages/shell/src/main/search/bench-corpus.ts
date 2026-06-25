@@ -27,7 +27,7 @@
  *   - **Owner app** maps from type so the bench's IPC shape mirrors real
  *     deploys.
  *
- * Spec: docs/data/18-storage-and-search.md §Performance budgets.
+ * Spec: §Performance budgets.
  */
 
 import type { IndexableEntity } from "./search-indexer";

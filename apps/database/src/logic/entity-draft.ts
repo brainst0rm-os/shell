@@ -3,7 +3,7 @@
  * created from "+ New" on a List/view, by pulling pinnable property values
  * out of the List's source and the View's filter overlay.
  *
- * Spec: docs/apps/database/40-create-flow.md §Criteria inheritance.
+ * Spec: §Criteria inheritance.
  *
  * Rules in one paragraph: walk the AND-chain of `source ∪ view.filters`,
  * pulling out predicates that pin a property to a single value. Predicates
@@ -31,7 +31,7 @@ import {
  *  scalar array for multi-value properties (whose schema has `count.max > 1`).
  *
  *  Property *value envelopes* (the `{ value, ...meta }` shape introduced in
- *  docs/data/19-properties-and-schemas.md §Value envelopes) are wrapped by
+ *  §Value envelopes) are wrapped by
  *  the entities service at write time using the PropertySchema's
  *  `valueMeta`. The draft computer emits the bare scalar / scalar[] form
  *  because criteria predicates only carry scalars — the envelope's meta
@@ -51,7 +51,7 @@ export type DraftInputs = {
 
 /**
  * Build the entity draft for a new item created from "+ New" on a view.
- * See docs/apps/database/40-create-flow.md §Criteria inheritance.
+ * See §Criteria inheritance.
  *
  * Type resolution: the view's `defaultTypeUrl` wins; if absent, fall back
  * to a single-type `byType` source's type. With neither, `type` is omitted

@@ -3,7 +3,7 @@
  *
  * Stage 9.3.3.1 — every `@blockprotocol/*` import in the shell goes
  * through this file so the security-review surface is enumerable
- * (mirrors the crypto-routing rule in `docs/security/29-credentials-storage.md`).
+ * (mirrors the crypto-routing rule in).
  * The four packages we depend on are pinned to exact versions in
  * `packages/shell/package.json` — protocol-version-sensitive wire format,
  * a silent minor bump is a contract risk.

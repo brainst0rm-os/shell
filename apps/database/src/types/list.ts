@@ -6,7 +6,7 @@
  * (`MemberOverrides` et al.) was promoted in 9.3.5.1. The ~dozens of
  * in-app `../types/list` import sites are untouched while the single
  * source of truth lives in sdk-types. See
- * docs/apps/database/10-lists-sets-collections.md.
+ * .
  */
 
 export {

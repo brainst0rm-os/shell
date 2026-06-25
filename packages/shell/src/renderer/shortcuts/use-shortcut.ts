@@ -1,6 +1,6 @@
 /**
- * Renderer-side shortcut delivery hook per docs/shell/24-keyboard-shortcuts.md
- * and the workflow rule in docs/foundations/35-code-conventions.md
+ * Renderer-side shortcut delivery hook per
+ * and the workflow rule in
  * §Keyboard handling.
  *
  * This module is the **only** place in the renderer that translates browser

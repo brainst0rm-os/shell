@@ -1,5 +1,5 @@
 /**
- * Cover-image content store (docs/foundations/50-object-covers.md, B7.2).
+ * Cover-image content store (, B7.2).
  * ONE audited store, two entry points:
  *   - `registerCoversHandlers` — dashboard-trusted `covers:*` ipcMain
  *     handlers (Settings → Covers library; mirrors `icons-handlers.ts` /

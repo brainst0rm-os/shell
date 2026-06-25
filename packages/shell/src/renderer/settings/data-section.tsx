@@ -141,7 +141,7 @@ const PRESET_TINT: Record<PropertyKindPreset, string> = {
  * Picker collapses the eleven internal presets into seven primary kinds.
  * Text covers URL / Email / Phone via a "Format" sub-option; Select
  * covers single + multi via the "Allow multiple values" toggle. Matches
- * the composable model in `docs/data/19-properties-and-schemas.md`.
+ * the composable model in.
  */
 enum PrimaryKind {
 	Text = "text",

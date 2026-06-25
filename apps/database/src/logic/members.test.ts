@@ -1,6 +1,6 @@
 /**
  * Tests for the members-override algorithm. The truth tables this test pins
- * down come from docs/apps/database/10-lists-sets-collections.md §Operations
+ * down come from §Operations
  * on a List. The algorithm treats include and exclude as independent layers
  * of `effective(L) = ((sourceMatches) ∪ include) \ exclude`, so:
  *

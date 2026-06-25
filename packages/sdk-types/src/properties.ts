@@ -2,7 +2,7 @@
  * Vault-level property + dictionary contract — composable model.
  *
  * A property is **a base value type plus modifiers** per the canonical
- * design in `docs/data/19-properties-and-schemas.md`. The six base value
+ * design in. The six base value
  * types are `text` / `number` / `boolean` / `date` / `entityRef` /
  * `richText`. URL / Email / Phone collapse into `text + format`;
  * Select / Multi-select into `text + vocabulary + count`; File / Link
@@ -11,7 +11,7 @@
  * label for the Settings constructor) derived from def shape via
  * `presetOf(def)`.
  *
- * Storage shape (per [§Storage shape](../../../docs/data/19-properties-and-schemas.md#storage-shape)):
+ * Storage shape (per §Storage shape):
  *   - `count.max === 1` → bare scalar in the entity's property field.
  *   - `count.max  >  1` → `Array<{ value, label? }>` envelope, regardless
  *     of how many values are present at any moment.
@@ -489,10 +489,10 @@ export type Dictionary = {
 // ─── PropertySchema scope ────────────────────────────────────────────────────
 
 /**
- * The effective domain of a `PropertySchema` overlay (docs/data/19
+ * The effective domain of a `PropertySchema` overlay (
  * §Layered scopes). `{ kind: "list", target }` **is** the
  * "adding an object to a collection makes it inherit that collection's
- * properties" mechanism (docs/data/21-objects-and-collections.md): an
+ * properties" mechanism : an
  * object's effective schema is its Block-Protocol type's canonical
  * schema ∪ every member collection's `list`-scoped overlay. Precedence
  * (most→least specific, per 19 §Conflict resolution): entity > list >
