@@ -26,11 +26,18 @@
  * and emphasis markers — enough for the FTS5 indexer to tokenise on words.
  */
 
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
 const ROOT = new URL("../../..", import.meta.url).pathname;
-const MANIFEST_PATH = join(ROOT, "docs/help-manifest.json");
+// `docs/` relocated from `app/docs/` to the harness root in the 2026-06
+// restructure. Prefer the legacy in-app location (a standalone checkout), then
+// fall back to the harness-root sibling.
+const MANIFEST_CANDIDATES = [
+	join(ROOT, "docs/help-manifest.json"),
+	join(ROOT, "../docs/help-manifest.json"),
+];
+const MANIFEST_PATH = MANIFEST_CANDIDATES.find((p) => existsSync(p)) ?? MANIFEST_CANDIDATES[0];
 const CONTENT_DIR = join(ROOT, "packages/shell/help-content");
 const OUT_PATH = join(ROOT, "packages/shell/help-corpus/corpus.json");
 
