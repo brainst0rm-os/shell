@@ -209,6 +209,8 @@ export class VaultSession {
 	private dekStoreOpening: Promise<EntityDekStore> | null = null;
 	private cachedAssetStore: AssetStore | null = null;
 	private assetStoreOpening: Promise<AssetStore> | null = null;
+	private cachedAssetDekStore: AssetDekStore | null = null;
+	private assetDekStoreOpening: Promise<AssetDekStore> | null = null;
 	/** Deterministic media at-rest key (OQ-240), derived lazily from the master
 	 *  key and zeroed on dispose. Encrypts the content-addressed cover/icon/
 	 *  wallpaper blobs that were the last plaintext-on-disk binary stores. */
@@ -388,9 +390,16 @@ export class VaultSession {
 		this.assertOpen();
 		if (this.cachedAssetStore) return this.cachedAssetStore;
 		if (this.assetStoreOpening) return this.assetStoreOpening;
-		this.assetStoreOpening = this.dataStores.open("entities").then(
-			(db) => {
-				const dekStore = new AssetDekStore(new AssetDeksRepository(db), this.masterKey);
+		// Two awaits (entities.db + the shared AssetDekStore), so the in-flight
+		// promise is built in an async IIFE with a `finally` reset — a rejection
+		// from EITHER await must clear `assetStoreOpening` or a poisoned rejected
+		// promise would be returned to every later caller (no self-heal). The
+		// `.then(onF, onRej)` shape used by the single-await accessors can't catch
+		// a rejection thrown inside an async onF, so it is not reused here.
+		this.assetStoreOpening = (async () => {
+			try {
+				const db = await this.dataStores.open("entities");
+				const dekStore = await this.assetDekStore();
 				const store = new AssetStore(
 					new AssetsRepository(db),
 					dekStore,
@@ -398,15 +407,38 @@ export class VaultSession {
 					(fn) => db.transaction(fn)(),
 				);
 				this.cachedAssetStore = store;
+				return store;
+			} finally {
 				this.assetStoreOpening = null;
+			}
+		})();
+		return this.assetStoreOpening;
+	}
+
+	/**
+	 * Per-vault `AssetDekStore` — the master-key wrap layer for per-asset DEKs.
+	 * Shared by `assetStore()` (the at-rest seal/open) and the Asset-B1 re-home
+	 * pass (which reads the master-key DEK to re-seal it under the entity DEK).
+	 * The master key rides by reference (zeroed on dispose), same as
+	 * `entityDekStore`. One instance per session via the in-flight-Promise idiom.
+	 */
+	async assetDekStore(): Promise<AssetDekStore> {
+		this.assertOpen();
+		if (this.cachedAssetDekStore) return this.cachedAssetDekStore;
+		if (this.assetDekStoreOpening) return this.assetDekStoreOpening;
+		this.assetDekStoreOpening = this.dataStores.open("entities").then(
+			(db) => {
+				const store = new AssetDekStore(new AssetDeksRepository(db), this.masterKey);
+				this.cachedAssetDekStore = store;
+				this.assetDekStoreOpening = null;
 				return store;
 			},
 			(error) => {
-				this.assetStoreOpening = null;
+				this.assetDekStoreOpening = null;
 				throw error;
 			},
 		);
-		return this.assetStoreOpening;
+		return this.assetDekStoreOpening;
 	}
 
 	/** The deterministic media at-rest key, derived once from the master key
@@ -822,6 +854,8 @@ export class VaultSession {
 		this.dekStoreOpening = null;
 		this.cachedAssetStore = null;
 		this.assetStoreOpening = null;
+		this.cachedAssetDekStore = null;
+		this.assetDekStoreOpening = null;
 		if (this.cachedMediaKey) {
 			zero(this.cachedMediaKey);
 			this.cachedMediaKey = null;

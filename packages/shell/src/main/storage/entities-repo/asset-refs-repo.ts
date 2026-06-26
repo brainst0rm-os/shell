@@ -26,6 +26,14 @@ export type CreateAssetRefInput = {
 	now: number;
 };
 
+/** A distinct (entity, asset) binding awaiting DEK re-homing (Asset-B1). Role
+ *  is collapsed out — the asset DEK is re-homed once per (entity, asset), keyed
+ *  by assetId in the entity's Y.Doc map regardless of how many roles bind it. */
+export type AssetRefPair = {
+	entityId: string;
+	assetId: string;
+};
+
 type DbAssetRefRow = {
 	entity_id: string;
 	asset_id: string;
@@ -79,6 +87,26 @@ export class AssetRefsRepository {
 
 	deleteByEntity(entityId: string): number {
 		const result = this.stmt("DELETE FROM asset_refs WHERE entity_id = ?").run(entityId);
+		return Number(result.changes);
+	}
+
+	/** Asset-B1 — every distinct (entity, asset) binding whose DEK has not yet
+	 *  been re-homed into the entity's Y.Doc. Steady state returns nothing (the
+	 *  re-home pass stamps `rehomed_at`), so the open-time drain is one query.
+	 *  Ordered for determinism. */
+	listUnrehomedPairs(): AssetRefPair[] {
+		const rows = this.stmt(
+			"SELECT DISTINCT entity_id, asset_id FROM asset_refs WHERE rehomed_at IS NULL ORDER BY entity_id, asset_id",
+		).all() as Array<{ entity_id: string; asset_id: string }>;
+		return rows.map((r) => ({ entityId: r.entity_id, assetId: r.asset_id }));
+	}
+
+	/** Asset-B1 — stamp every role-row of a (entity, asset) pair re-homed.
+	 *  Returns the number of rows stamped. */
+	markRehomed(entityId: string, assetId: string, now: number): number {
+		const result = this.stmt(
+			"UPDATE asset_refs SET rehomed_at = ? WHERE entity_id = ? AND asset_id = ? AND rehomed_at IS NULL",
+		).run(now, entityId, assetId);
 		return Number(result.changes);
 	}
 }

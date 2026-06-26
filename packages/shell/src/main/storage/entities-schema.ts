@@ -248,4 +248,19 @@ export const ENTITIES_MIGRATIONS: SqliteMigration[] = [
 			}
 		},
 	},
+	{
+		version: 7,
+		description: "entities.db v7 — asset_refs.rehomed_at marker (Asset-B1 DEK re-homing)",
+		up: (db) => {
+			// Asset-B1 — the open-time pass that re-homes a per-asset DEK from the
+			// vault-master-key wrap (`asset_deks`) into the referencing entity's
+			// Y.Doc (sealed under the entity DEK) stamps `rehomed_at` once a
+			// (entity, asset) ref's DEK has been installed on the doc. NULL ⇒ not
+			// yet re-homed; the pass enumerates only NULL rows so steady-state boot
+			// is a single empty-result query (the schema is the idempotency marker,
+			// exactly like the 10.x retro-wrap null-DEK drain). This is LOCAL
+			// derived state — it never syncs and never crosses the wire.
+			db.exec("ALTER TABLE asset_refs ADD COLUMN rehomed_at INTEGER");
+		},
+	},
 ];

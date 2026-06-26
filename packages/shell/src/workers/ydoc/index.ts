@@ -73,6 +73,21 @@ function isWorkerMemberWrap(value: unknown): value is WorkerMemberWrap {
 	);
 }
 
+/** Asset-B1 — key in the entity meta map for the re-homed asset-DEK wraps
+ *  (a Y.Map keyed by assetId). Sibling of the member-wraps array. */
+const WORKER_ENTITY_ASSET_DEKS_KEY = "assetDeks";
+
+/** Worker-side shape of a re-homed asset-DEK wrap — the opaque `SealedSecret`
+ *  envelope produced on main by `sealAssetDekUnderEntity`. The worker stores it
+ *  verbatim and validates only the shape; all crypto stays on the main side. */
+type WorkerSealedSecret = { v: 1; nonceB64: string; ciphertextB64: string };
+
+function isWorkerSealedSecret(value: unknown): value is WorkerSealedSecret {
+	if (!value || typeof value !== "object") return false;
+	const s = value as Partial<WorkerSealedSecret>;
+	return s.v === 1 && typeof s.nonceB64 === "string" && typeof s.ciphertextB64 === "string";
+}
+
 /** Electron's `process.parentPort` delivers a `MessageEvent`-shaped object to
  *  the 'message' listener — the actual payload lives on `.data`. This is
  *  asymmetric with the parent's `UtilityProcess.on('message', ...)`, which
@@ -201,6 +216,12 @@ type SetStateArgs = {
 	seedProps?: Record<string, unknown>;
 };
 type InstallWrapArgs = { vaultPath: string; entityId: string; wrap: WorkerMemberWrap };
+type InstallAssetDekWrapArgs = {
+	vaultPath: string;
+	entityId: string;
+	assetId: string;
+	wrap: WorkerSealedSecret;
+};
 
 const handlers: Record<string, (envelope: Envelope) => Promise<unknown> | unknown> = {
 	load: async (envelope) => {
@@ -321,6 +342,45 @@ const handlers: Record<string, (envelope: Envelope) => Promise<unknown> | unknow
 					}
 				}
 				current.push([args.wrap]);
+				appended = true;
+			});
+		} finally {
+			doc.off("update", captureUpdate);
+		}
+		if (appended && installUpdate) {
+			await storeFor(args.vaultPath).appendAndMaybeCompact(args.entityId, installUpdate);
+		}
+		return { appended };
+	},
+	// Asset-B1 — set a pre-sealed asset-DEK wrap (sealed under the entity DEK on
+	// main; no crypto here) into the entity Y.Doc's `assetDeks` map, keyed by
+	// assetId, and persist the resulting update. Idempotent: a wrap already
+	// present for that assetId is a no-op (no second update). The re-home wire
+	// path reads this back to recover the per-asset DEK on a paired device.
+	installAssetDekWrap: async (envelope) => {
+		const args = parseArgs<InstallAssetDekWrapArgs>(envelope, "installAssetDekWrap");
+		if (typeof args.assetId !== "string" || args.assetId === "") {
+			throw new Error("ydoc.installAssetDekWrap: assetId must be a non-empty string");
+		}
+		if (!isWorkerSealedSecret(args.wrap)) {
+			throw new Error("ydoc.installAssetDekWrap: invalid wrap payload shape");
+		}
+		const { doc } = await ensureDoc(args.vaultPath, args.entityId);
+		const meta = doc.getMap<unknown>(WORKER_ENTITY_META_TOP);
+		let installUpdate: Uint8Array | null = null;
+		const captureUpdate = (update: Uint8Array): void => {
+			installUpdate = update;
+		};
+		doc.on("update", captureUpdate);
+		let appended = false;
+		try {
+			doc.transact(() => {
+				if (!(meta.get(WORKER_ENTITY_ASSET_DEKS_KEY) instanceof Y.Map)) {
+					meta.set(WORKER_ENTITY_ASSET_DEKS_KEY, new Y.Map<WorkerSealedSecret>());
+				}
+				const map = meta.get(WORKER_ENTITY_ASSET_DEKS_KEY) as Y.Map<WorkerSealedSecret>;
+				if (map.has(args.assetId)) return;
+				map.set(args.assetId, args.wrap);
 				appended = true;
 			});
 		} finally {

@@ -127,6 +127,58 @@ describe("ydoc worker", () => {
 		expect(truncatedTail).toBe(false);
 	});
 
+	it("installAssetDekWrap() stores a wrap keyed by assetId, idempotent on re-call", async () => {
+		const wrap = { v: 1 as const, nonceB64: "AAAA", ciphertextB64: "BBBB" };
+		const first = await handleYDocEnvelope(
+			mk("installAssetDekWrap", {
+				vaultPath: vaultDir,
+				entityId: "ent_assets",
+				assetId: "asset-1",
+				wrap,
+			}),
+		);
+		if (!first.ok) throw new Error("expected ok");
+		expect((first.value as { appended: boolean }).appended).toBe(true);
+
+		// A second call for the same assetId is a no-op (no second update).
+		const second = await handleYDocEnvelope(
+			mk("installAssetDekWrap", {
+				vaultPath: vaultDir,
+				entityId: "ent_assets",
+				assetId: "asset-1",
+				wrap,
+			}),
+		);
+		if (!second.ok) throw new Error("expected ok");
+		expect((second.value as { appended: boolean }).appended).toBe(false);
+
+		// The wrap survives a reload and lives under brainstorm.meta → assetDeks.
+		const reload = await handleYDocEnvelope(
+			mk("snapshot", { vaultPath: vaultDir, entityId: "ent_assets" }),
+		);
+		if (!reload.ok) throw new Error("expected ok");
+		const reader = new Y.Doc();
+		Y.applyUpdate(
+			reader,
+			new Uint8Array(Buffer.from((reload.value as { snapshotB64: string }).snapshotB64, "base64")),
+		);
+		const meta = reader.getMap<unknown>("brainstorm.meta");
+		const map = meta.get("assetDeks") as Y.Map<unknown>;
+		expect(map.get("asset-1")).toEqual(wrap);
+	});
+
+	it("installAssetDekWrap() rejects a malformed wrap shape", async () => {
+		const reply = await handleYDocEnvelope(
+			mk("installAssetDekWrap", {
+				vaultPath: vaultDir,
+				entityId: "ent_bad",
+				assetId: "asset-x",
+				wrap: { v: 1, nonceB64: 5 },
+			}),
+		);
+		expect(reply.ok).toBe(false);
+	});
+
 	it("rejects unknown methods with Unavailable", async () => {
 		const reply = await handleYDocEnvelope(
 			mk("doesNotExist", { vaultPath: vaultDir, entityId: "ent_x" }),

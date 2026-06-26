@@ -79,6 +79,7 @@ import { makeNetworkEgress } from "./connectors/egress";
 import { buildConnectorsServiceDeps } from "./connectors/wiring";
 import { makeCoversServiceHandler } from "./covers/covers-service";
 import { readAiProviderKey } from "./credentials/ai-provider-keys";
+import type { AssetDekWrap } from "./credentials/asset-dek-wrap";
 import { bytesToBase64 } from "./credentials/crypto";
 import { verifySignature } from "./credentials/identity";
 import { wrapDekForRecipient } from "./credentials/member-wraps";
@@ -97,6 +98,7 @@ import { createElectronGhostWindow, createGhostOverlay } from "./dnd/ghost-overl
 import { type ApplyRemoteDocFn, makeEntitiesServiceHandler } from "./entities/entities-service";
 import { EntityChangeEmitter } from "./entities/entity-change-emitter";
 import { installEntityDek } from "./entities/install-wrap";
+import { rehomeAssetDeks } from "./entities/rehome-asset-deks";
 import { retroWrapNullDeks } from "./entities/retro-wrap-deks";
 import {
 	broadcastVaultEntitiesStaleSignal,
@@ -232,7 +234,7 @@ import { migrateBindingsFileToEntity, readOverridesFromEntity } from "./shortcut
 import type { ShortcutRegistry } from "./shortcuts/shortcut-registry";
 import { makeShortcutsServiceHandler } from "./shortcuts/shortcuts-service";
 import { makeSpellcheckServiceHandler } from "./spellcheck/spellcheck-service";
-import { EntitiesRepository } from "./storage/entities-repo";
+import { AssetRefsRepository, EntitiesRepository } from "./storage/entities-repo";
 import { AppsRepository } from "./storage/registry-repo/apps-repo";
 import { BlocksRepository } from "./storage/registry-repo/blocks-repo";
 import { EntityTypesRepository } from "./storage/registry-repo/entity-types-repo";
@@ -1782,6 +1784,65 @@ void app.whenReady().then(async () => {
 		}
 	};
 
+	// Asset-B1 — install a pre-sealed asset-DEK wrap on an entity Y.Doc. The
+	// seal (under the entity DEK) happens on the main side; this only ferries the
+	// opaque envelope to the ydoc worker (which stays crypto-free), mirroring
+	// `installEntityWrap`. Idempotent on the worker side.
+	const installAssetDekWrap = async (
+		entityId: string,
+		assetId: string,
+		wrap: AssetDekWrap,
+	): Promise<{ appended: boolean }> => {
+		// Throw (don't return) when the session is gone mid-pass: the re-home
+		// caller stamps `rehomed_at` on resolution, so a silent no-op here would
+		// mark the pair re-homed without ever installing the wrap — stranding that
+		// asset's DEK off the doc forever. A throw defers the pair to the next boot.
+		const session = getActiveVaultSession();
+		if (!session) throw new Error("no active vault session");
+		const handler = workersRef.broker.getServiceHandler("ydoc");
+		if (!handler) throw new Error("ydoc worker service unavailable");
+		await handler({
+			v: 1,
+			msg: `ydoc_iad_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
+			app: "io.brainstorm.shell",
+			service: "ydoc",
+			method: "installAssetDekWrap",
+			args: [{ vaultPath: session.vaultPath, entityId, assetId, wrap }],
+			caps: [],
+		});
+		// The worker round-trip resolves once the wrap is on the doc (a throw
+		// would have propagated). The `appended` flag is informational; the
+		// re-home pass stamps its marker on resolution regardless.
+		return { appended: true };
+	};
+
+	// Asset-B1 — re-home each referenced asset's DEK from the master-key wrap
+	// into the owning entity's Y.Doc (sealed under the entity DEK), so a paired
+	// device that fetches the ciphertext blob can open it. Runs AFTER the
+	// retro-wrap pass (which mints the entity DEKs this pass seals under).
+	// Idempotent: `asset_refs.rehomed_at` is the marker, so steady-state boot is
+	// one empty query.
+	const runRehomeAssetDeks = async (): Promise<void> => {
+		const session = getActiveVaultSession();
+		if (!session) return;
+		try {
+			const db = await session.dataStores.open("entities");
+			const r = await rehomeAssetDeks({
+				assetRefs: new AssetRefsRepository(db),
+				assetDekStore: await session.assetDekStore(),
+				entityDekStore: await session.entityDekStore(),
+				installAssetDekWrap,
+			});
+			if (r.rehomed > 0 || r.skipped > 0 || r.localOnly > 0) {
+				console.log(
+					`[brainstorm] asset-DEK re-home pass: re-homed ${r.rehomed} (${r.deferred} deferred, ${r.localOnly} local-only, ${r.skipped} skipped)`,
+				);
+			}
+		} catch (error) {
+			console.warn(`[brainstorm] asset-DEK re-home pass failed: ${(error as Error).message}`);
+		}
+	};
+
 	let activeNetworkSettingsSubscription: { dispose: () => void } | null = null;
 
 	// Mailbox-2 — per-vault mail sync registration. Restarted on every vault
@@ -1849,6 +1910,7 @@ void app.whenReady().then(async () => {
 		await loadShortcutBindings();
 		await loadInstalledAppShortcuts();
 		await runRetroWrapNullDeks();
+		await runRehomeAssetDeks();
 		await swapSearchIndexer();
 		await swapUsageIndex();
 		// Re-point the dashboard at THIS vault's store and push its snapshot:
