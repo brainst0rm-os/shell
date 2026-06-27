@@ -1129,8 +1129,12 @@ body[data-view-mode="grid"] .content-row[data-selected="true"] {
 }
 
 body[data-view-mode="grid"] .content-row__glyph {
-	width: 44px;
-	height: 44px;
+	/* Media slot scales with the tile-size preset (the metrics table's `icon`
+	 * value, piped in as --glyph-size) instead of a fixed 44px — so a Large
+	 * tile gets a Large icon. ~1.25× the glyph leaves the squircle /
+	 * folder-tint surface its padding ring. */
+	width: calc(var(--glyph-size, 36px) * 1.25);
+	height: calc(var(--glyph-size, 36px) * 1.25);
 	/* Explicit display beats the global `.content-row__glyph:empty
 	 * { display: none }` collapse — in tile modes the media slot is part
 	 * of the tile's anatomy (folder tint / thumb / chip), so an empty
@@ -1143,8 +1147,8 @@ body[data-view-mode="grid"] .content-row__glyph {
 }
 
 body[data-view-mode="grid"] .content-row__glyph svg {
-	width: 36px;
-	height: 36px;
+	width: var(--glyph-size, 36px);
+	height: var(--glyph-size, 36px);
 }
 
 /* Folder tiles read as containers: the folder glyph (the sanctioned
@@ -1166,14 +1170,29 @@ body[data-view-mode="gallery"] .content-row__glyph[data-kind="folder"] {
 
 /* Opener-app squircle — the sanctioned type-identity badge for a typed
  * object (Note/Task/Bookmark/…) with no own icon, so its tile reads as
- * what it is instead of going blank. Sized to the glyph slot, not stretched
- * edge-to-edge like a thumbnail. */
+ * what it is instead of going blank. The brand glyph asset is a transparent,
+ * already-inset SVG; the dashboard's AppIcon paints it ON a squircle frosted
+ * tile, and that surface is what makes a lone glyph read as an app badge. We
+ * mirror that here — a square glass squircle filling the slot — instead of
+ * dropping the bare 64% glyph (which rendered as a tiny floating mark, far
+ * lighter than the folder/emoji glyphs sharing the same grid). Square via
+ * `aspect-ratio` + height so the badge stays a squircle in gallery's
+ * non-square media band too. */
 .content-row__app-icon {
-	width: 64%;
-	height: 64%;
+	height: 100%;
+	aspect-ratio: 1 / 1;
 	object-fit: contain;
-	border-radius: var(--radius-md);
+	border-radius: 22.37%; /* SQUIRCLE_RADIUS_PERCENT — same as dashboard tiles */
+	background: var(--color-glass-background-strong, var(--bg-elev));
+	border: var(--border-width) solid var(--color-glass-border, var(--border));
 	display: block;
+}
+
+/* Gallery's media band is tall and flex-filled, so size the badge off the
+ * preset glyph metric (matching the folder/emoji glyphs in the same band)
+ * rather than filling the whole band like a thumbnail. */
+body[data-view-mode="gallery"] .content-row__app-icon {
+	height: calc(var(--glyph-size, 56px) * 1.25);
 }
 
 /* Extension chip — the no-preview, no-icon fallback so a file tile is
@@ -1251,8 +1270,8 @@ body[data-view-mode="gallery"] .content-row__glyph {
 }
 
 body[data-view-mode="gallery"] .content-row__glyph svg {
-	width: 56px;
-	height: 56px;
+	width: var(--glyph-size, 56px);
+	height: var(--glyph-size, 56px);
 }
 
 body[data-view-mode="gallery"] .content-row__name {

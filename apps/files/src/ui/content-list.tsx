@@ -564,7 +564,15 @@ function TileMedia({
 	const chip = isFile && !hasImage && !icon ? extensionChip(readName(entity)) : null;
 	const appIcon = !isFolder && !isFile && !icon && !hasImage ? openerAppId : null;
 	return (
-		<span className="content-row__glyph" data-kind={isFolder ? "folder" : "file"} aria-hidden="true">
+		<span
+			className="content-row__glyph"
+			data-kind={isFolder ? "folder" : "file"}
+			// Pipe the tile-size preset's icon metric to the stylesheet so the
+			// glyph / squircle / thumbnail scale with the tile instead of the
+			// CSS pinning one fixed pixel size across Small/Medium/Large.
+			style={{ "--glyph-size": `${iconSize}px` } as React.CSSProperties}
+			aria-hidden="true"
+		>
 			{hasImage ? (
 				<img
 					className="content-row__thumb"
