@@ -183,6 +183,25 @@ export class ActiveRelayOrchestrator {
 	}
 
 	/**
+	 * Asset-B4 — send one blob-plane request frame (HAS/PUT/GET) over the live
+	 * port's asset channel and resolve with the node's response. Delegates to the
+	 * current port if it supports it (the WebSocket transport does; loopback has
+	 * no CAS, so this rejects there). The asset up/download path calls this
+	 * through the live `RelaySurface` via `relayAssetCas`.
+	 */
+	requestAsset(frame: Uint8Array): Promise<Uint8Array> {
+		const withAsset = this.#current.port as RelayPort & {
+			requestAsset?: (frame: Uint8Array) => Promise<Uint8Array>;
+		};
+		if (typeof withAsset.requestAsset !== "function") {
+			return Promise.reject(
+				new Error("ActiveRelayOrchestrator.requestAsset: transport has no durable node"),
+			);
+		}
+		return withAsset.requestAsset(frame);
+	}
+
+	/**
 	 * Stage 10.14 — whether the CURRENT transport can answer a catalog query
 	 * (i.e. is a durable-node-capable WebSocket port, not a loopback). The
 	 * orchestrator always exposes `requestCatalog`, so callers gating the

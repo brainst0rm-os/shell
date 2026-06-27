@@ -4,6 +4,7 @@ import { generateSymmetricKey } from "../credentials/crypto";
 import {
 	ASSET_CHUNK_BYTES,
 	type AssetChunkManifest,
+	MAX_ASSET_RAW_BYTES,
 	chunkCount,
 	openAssetChunks,
 	openOneChunk,
@@ -190,6 +191,31 @@ describe("parseAssetChunkManifest (untrusted input)", () => {
 		).toBeNull();
 		// totalRawLen that doesn't match the sum of chunk rawLens (over-allocation guard).
 		expect(parseAssetChunkManifest({ ...good, totalRawLen: good.totalRawLen + 1000 })).toBeNull();
+		// A declared total / chunk size above the hard ceiling (OOM guard) — the
+		// untrusted reassembly buffer is allocated up front from totalRawLen.
+		expect(parseAssetChunkManifest({ ...good, totalRawLen: MAX_ASSET_RAW_BYTES + 1 })).toBeNull();
+		expect(parseAssetChunkManifest({ ...good, chunkBytes: MAX_ASSET_RAW_BYTES + 1 })).toBeNull();
+		// A single chunk claiming more raw bytes than the chunk size.
+		expect(
+			parseAssetChunkManifest({ ...good, chunks: [{ ...good.chunks[0], rawLen: CHUNK + 1 }] }),
+		).toBeNull();
+		// A padded chunk count that doesn't match ceil(totalRawLen / chunkBytes).
+		expect(parseAssetChunkManifest({ ...good, chunks: [good.chunks[0], good.chunks[0]] })).toBeNull();
+	});
+
+	it("rejects a tiny-chunk multi-GB totalRawLen lie before allocation (OOM guard)", () => {
+		// 100 GB declared via 2 chunks — exactly the attack the ceiling stops.
+		const lie = {
+			v: 1,
+			assetId: ASSET,
+			chunkBytes: MAX_ASSET_RAW_BYTES,
+			totalRawLen: 100 * 1024 * 1024 * 1024,
+			chunks: [
+				{ hash: "a".repeat(64), encLen: 40, rawLen: MAX_ASSET_RAW_BYTES },
+				{ hash: "b".repeat(64), encLen: 40, rawLen: 1 },
+			],
+		};
+		expect(parseAssetChunkManifest(lie)).toBeNull();
 	});
 });
 
