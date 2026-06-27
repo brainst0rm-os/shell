@@ -179,6 +179,7 @@
   },
   "devDependencies": {
     "@electron/rebuild": "^4.0.4",
+    "@noble/curves": "^2.2.0",
     "@types/imapflow": "^1.0.189",
     "@types/mailparser": "^3.4.6",
     "@types/nodemailer": "^8.0.1",
