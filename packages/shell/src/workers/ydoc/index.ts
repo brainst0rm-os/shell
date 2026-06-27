@@ -457,6 +457,19 @@ const handlers: Record<string, (envelope: Envelope) => Promise<unknown> | unknow
 		const manifest = map.get(args.assetId);
 		return { manifest: manifest && typeof manifest === "object" ? manifest : null };
 	},
+	// Asset-B4 — read the re-homed asset-DEK wrap back off the entity Y.Doc (the
+	// synced-device DEK-recovery path: a device that didn't mint the asset opens
+	// the wrap with its entity DEK on main). Returns null if absent. Sibling of
+	// `installAssetDekWrap`; no crypto here, the wrap is opaque.
+	readAssetDekWrap: async (envelope) => {
+		const args = parseArgs<ReadAssetManifestArgs>(envelope, "readAssetDekWrap");
+		const { doc } = await ensureDoc(args.vaultPath, args.entityId);
+		const meta = doc.getMap<unknown>(WORKER_ENTITY_META_TOP);
+		const map = meta.get(WORKER_ENTITY_ASSET_DEKS_KEY);
+		if (!(map instanceof Y.Map)) return { wrap: null };
+		const wrap = map.get(args.assetId);
+		return { wrap: isWorkerSealedSecret(wrap) ? wrap : null };
+	},
 };
 
 function parseArgs<T>(envelope: Envelope, methodName: string): T {

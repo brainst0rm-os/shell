@@ -88,25 +88,51 @@ function sha256Hex(bytes: Uint8Array): string {
 }
 
 /**
+ * Hard ceiling on a manifest's declared total plaintext size. The untrusted
+ * reassembly buffer (`new Uint8Array(totalRawLen)`) is allocated UP FRONT from
+ * this field, before any chunk is fetched/verified — so a lying peer manifest
+ * (it rides the entity Y.Doc unsigned) must not be able to name a multi-GB
+ * total and OOM the victim on first materialise. Matches the 2 GiB upload cap
+ * (9.10a `MAX_UPLOAD_BYTES`); a genuinely larger asset is out of v1 scope.
+ */
+export const MAX_ASSET_RAW_BYTES = 2 * 1024 * 1024 * 1024;
+
+/**
  * Validate an UNTRUSTED manifest read off a synced entity (a peer authored it)
  * before it drives any fetch. Returns the typed manifest or null on any
- * deviation — fail closed. Checks the version, the id, the chunk array shape,
- * 64-hex addresses, non-negative lengths, and that `totalRawLen` equals the sum
- * of the per-chunk `rawLen` (so a lying manifest can't over-allocate the
- * reassembly buffer).
+ * deviation — fail closed. Checks version / id / chunk-array shape / 64-hex
+ * addresses / non-negative integer lengths, and the integrity constraints that
+ * bound the up-front reassembly allocation: `chunkBytes` and `totalRawLen` are
+ * each `≤ MAX_ASSET_RAW_BYTES`, every chunk's `rawLen ≤ chunkBytes`, the
+ * per-chunk `rawLen` sum to `totalRawLen`, and the chunk COUNT is exactly the
+ * fixed-size split of the declared total (so a peer can't pad the count or
+ * declare a total the chunks don't account for).
  */
 export function parseAssetChunkManifest(value: unknown): AssetChunkManifest | null {
 	if (!value || typeof value !== "object" || Array.isArray(value)) return null;
 	const m = value as Record<string, unknown>;
 	if (m.v !== 1) return null;
 	if (typeof m.assetId !== "string" || m.assetId.length === 0) return null;
-	if (typeof m.chunkBytes !== "number" || !Number.isInteger(m.chunkBytes) || m.chunkBytes <= 0) {
+	if (
+		typeof m.chunkBytes !== "number" ||
+		!Number.isInteger(m.chunkBytes) ||
+		m.chunkBytes <= 0 ||
+		m.chunkBytes > MAX_ASSET_RAW_BYTES
+	) {
 		return null;
 	}
-	if (typeof m.totalRawLen !== "number" || !Number.isInteger(m.totalRawLen) || m.totalRawLen < 0) {
+	if (
+		typeof m.totalRawLen !== "number" ||
+		!Number.isInteger(m.totalRawLen) ||
+		m.totalRawLen < 0 ||
+		m.totalRawLen > MAX_ASSET_RAW_BYTES
+	) {
 		return null;
 	}
 	if (!Array.isArray(m.chunks) || m.chunks.length === 0) return null;
+	// The chunk count is fully determined by (totalRawLen, chunkBytes); reject any
+	// padded/short count before walking the array.
+	if (m.chunks.length !== chunkCount(m.totalRawLen, m.chunkBytes)) return null;
 	const chunks: AssetChunkRef[] = [];
 	let sumRaw = 0;
 	for (const raw of m.chunks) {
@@ -114,7 +140,14 @@ export function parseAssetChunkManifest(value: unknown): AssetChunkManifest | nu
 		const c = raw as Record<string, unknown>;
 		if (typeof c.hash !== "string" || !/^[0-9a-f]{64}$/.test(c.hash)) return null;
 		if (typeof c.encLen !== "number" || !Number.isInteger(c.encLen) || c.encLen <= 0) return null;
-		if (typeof c.rawLen !== "number" || !Number.isInteger(c.rawLen) || c.rawLen < 0) return null;
+		if (
+			typeof c.rawLen !== "number" ||
+			!Number.isInteger(c.rawLen) ||
+			c.rawLen < 0 ||
+			c.rawLen > m.chunkBytes
+		) {
+			return null;
+		}
 		sumRaw += c.rawLen;
 		chunks.push({ hash: c.hash, encLen: c.encLen, rawLen: c.rawLen });
 	}

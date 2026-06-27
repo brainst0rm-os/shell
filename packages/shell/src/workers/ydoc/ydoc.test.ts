@@ -241,6 +241,30 @@ describe("ydoc worker", () => {
 		expect(reply.ok).toBe(false);
 	});
 
+	it("readAssetDekWrap() reads back an installed wrap; null when absent/malformed", async () => {
+		const wrap = { v: 1 as const, nonceB64: "Tk9OQ0U", ciphertextB64: "Q1RYVA" };
+		await handleYDocEnvelope(
+			mk("installAssetDekWrap", { vaultPath: vaultDir, entityId: "ent_rw", assetId: "asset-w", wrap }),
+		);
+		const read = await handleYDocEnvelope(
+			mk("readAssetDekWrap", { vaultPath: vaultDir, entityId: "ent_rw", assetId: "asset-w" }),
+		);
+		if (!read.ok) throw new Error("expected ok");
+		expect((read.value as { wrap: unknown }).wrap).toEqual(wrap);
+
+		const miss = await handleYDocEnvelope(
+			mk("readAssetDekWrap", { vaultPath: vaultDir, entityId: "ent_rw", assetId: "asset-absent" }),
+		);
+		if (!miss.ok) throw new Error("expected ok");
+		expect((miss.value as { wrap: unknown }).wrap).toBeNull();
+
+		const noEntity = await handleYDocEnvelope(
+			mk("readAssetDekWrap", { vaultPath: vaultDir, entityId: "ent_norw", assetId: "asset-w" }),
+		);
+		if (!noEntity.ok) throw new Error("expected ok");
+		expect((noEntity.value as { wrap: unknown }).wrap).toBeNull();
+	});
+
 	it("readAssetManifest() returns null for an entity with no manifests", async () => {
 		const reply = await handleYDocEnvelope(
 			mk("readAssetManifest", { vaultPath: vaultDir, entityId: "ent_none", assetId: "asset-x" }),
