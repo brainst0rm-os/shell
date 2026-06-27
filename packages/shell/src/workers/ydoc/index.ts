@@ -77,6 +77,13 @@ function isWorkerMemberWrap(value: unknown): value is WorkerMemberWrap {
  *  (a Y.Map keyed by assetId). Sibling of the member-wraps array. */
 const WORKER_ENTITY_ASSET_DEKS_KEY = "assetDeks";
 
+/** Asset-B4 — key in the entity meta map for the chunk manifests (a Y.Map
+ *  keyed by assetId, value = the opaque `AssetChunkManifest` JSON). Unlike the
+ *  asset-DEK wraps this is NOT separately sealed — it's plain metadata (chunk
+ *  ciphertext-hashes + sizes) that inherits the Y.Doc's own transport
+ *  encryption; opening the chunks still needs the asset DEK in `assetDeks`. */
+const WORKER_ENTITY_ASSET_MANIFESTS_KEY = "assetManifests";
+
 /** Worker-side shape of a re-homed asset-DEK wrap — the opaque `SealedSecret`
  *  envelope produced on main by `sealAssetDekUnderEntity`. The worker stores it
  *  verbatim and validates only the shape; all crypto stays on the main side. */
@@ -222,6 +229,14 @@ type InstallAssetDekWrapArgs = {
 	assetId: string;
 	wrap: WorkerSealedSecret;
 };
+type InstallAssetManifestArgs = {
+	vaultPath: string;
+	entityId: string;
+	assetId: string;
+	/** Opaque `AssetChunkManifest` JSON — validated for shape on main. */
+	manifest: Record<string, unknown>;
+};
+type ReadAssetManifestArgs = { vaultPath: string; entityId: string; assetId: string };
 
 const handlers: Record<string, (envelope: Envelope) => Promise<unknown> | unknown> = {
 	load: async (envelope) => {
@@ -390,6 +405,57 @@ const handlers: Record<string, (envelope: Envelope) => Promise<unknown> | unknow
 			await storeFor(args.vaultPath).appendAndMaybeCompact(args.entityId, installUpdate);
 		}
 		return { appended };
+	},
+	// Asset-B4 — set the chunk manifest for an asset into the entity Y.Doc's
+	// `assetManifests` map, keyed by assetId, and persist the update. Idempotent:
+	// a manifest already present for that assetId is a no-op (the asset is
+	// immutable, so its manifest never changes). A paired device reads this back
+	// to lazily fetch + reassemble the blob from the node.
+	installAssetManifest: async (envelope) => {
+		const args = parseArgs<InstallAssetManifestArgs>(envelope, "installAssetManifest");
+		if (typeof args.assetId !== "string" || args.assetId === "") {
+			throw new Error("ydoc.installAssetManifest: assetId must be a non-empty string");
+		}
+		if (!args.manifest || typeof args.manifest !== "object") {
+			throw new Error("ydoc.installAssetManifest: manifest must be an object");
+		}
+		const { doc } = await ensureDoc(args.vaultPath, args.entityId);
+		const meta = doc.getMap<unknown>(WORKER_ENTITY_META_TOP);
+		let installUpdate: Uint8Array | null = null;
+		const captureUpdate = (update: Uint8Array): void => {
+			installUpdate = update;
+		};
+		doc.on("update", captureUpdate);
+		let appended = false;
+		try {
+			doc.transact(() => {
+				if (!(meta.get(WORKER_ENTITY_ASSET_MANIFESTS_KEY) instanceof Y.Map)) {
+					meta.set(WORKER_ENTITY_ASSET_MANIFESTS_KEY, new Y.Map<unknown>());
+				}
+				const map = meta.get(WORKER_ENTITY_ASSET_MANIFESTS_KEY) as Y.Map<unknown>;
+				if (map.has(args.assetId)) return;
+				map.set(args.assetId, args.manifest);
+				appended = true;
+			});
+		} finally {
+			doc.off("update", captureUpdate);
+		}
+		if (appended && installUpdate) {
+			await storeFor(args.vaultPath).appendAndMaybeCompact(args.entityId, installUpdate);
+		}
+		return { appended };
+	},
+	// Asset-B4 — read an asset's chunk manifest back from the entity Y.Doc (the
+	// lazy-fetch path on a paired device). Returns null if the entity carries no
+	// manifest for that assetId.
+	readAssetManifest: async (envelope) => {
+		const args = parseArgs<ReadAssetManifestArgs>(envelope, "readAssetManifest");
+		const { doc } = await ensureDoc(args.vaultPath, args.entityId);
+		const meta = doc.getMap<unknown>(WORKER_ENTITY_META_TOP);
+		const map = meta.get(WORKER_ENTITY_ASSET_MANIFESTS_KEY);
+		if (!(map instanceof Y.Map)) return { manifest: null };
+		const manifest = map.get(args.assetId);
+		return { manifest: manifest && typeof manifest === "object" ? manifest : null };
 	},
 };
 

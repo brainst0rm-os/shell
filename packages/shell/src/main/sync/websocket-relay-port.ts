@@ -55,6 +55,12 @@ export enum WebSocketRelayState {
 /** First-byte channel discriminator (see file header). */
 export const CONTROL_CHANNEL_BYTE = 0x00;
 export const FRAME_CHANNEL_BYTE = 0x01;
+/** Asset-B4 — the blob plane (Asset-B3 node channel `0x02`): content-addressed
+ *  chunk HAS/PUT/GET, a request/response channel distinct from the entity-routed
+ *  frame fan-out. Requests are SERIALIZED on this client (one in-flight at a
+ *  time) so a response correlates to the head of the queue without a per-request
+ *  id — the node answers async + out-of-order under pipelining, so we don't. */
+export const ASSET_CHANNEL_BYTE = 0x02;
 
 /** JSON-tagged control message shape. */
 export type SubscribeControl = { op: "subscribe"; entityIds: string[] };
@@ -121,6 +127,8 @@ export type WebSocketRelayPortOptions = {
 	now?: () => number;
 	/** Stage 10.14 — `requestCatalog` reply timeout (default 15 s). */
 	catalogTimeoutMs?: number;
+	/** Asset-B4 — `requestAsset` (blob chunk) reply timeout (default 30 s). */
+	assetTimeoutMs?: number;
 	/** SYNC-4b — respond to a gated node's `challenge`. Given the server nonce,
 	 *  return the `{token, account, sig}` to send back, or null to stay
 	 *  unauthenticated (an open node never challenges). This is the ONLY place
@@ -138,6 +146,7 @@ export class WebSocketRelayPort implements RelayPort {
 	readonly #clearTimer: (handle: unknown) => void;
 	readonly #now: () => number;
 	readonly #catalogTimeoutMs: number;
+	readonly #assetTimeoutMs: number;
 	readonly #onChallenge: ((nonce: string) => Promise<AuthResponse | null>) | null;
 	readonly #emitter = new EventEmitter();
 	readonly #subscriptions = new Set<string>();
@@ -152,6 +161,19 @@ export class WebSocketRelayPort implements RelayPort {
 			promise: Promise<CatalogEntry[]>;
 		}
 	>();
+	/** Asset-B4 — queued asset requests awaiting their turn (only one is in
+	 *  flight at a time so the single inbound response correlates by FIFO). */
+	readonly #assetQueue: Array<{
+		frame: Uint8Array;
+		resolve: (frame: Uint8Array) => void;
+		reject: (error: Error) => void;
+	}> = [];
+	/** The single in-flight asset request's resolver (null when idle). */
+	#pendingAsset: {
+		resolve: (frame: Uint8Array) => void;
+		reject: (error: Error) => void;
+		timer: unknown;
+	} | null = null;
 	#state: WebSocketRelayState = WebSocketRelayState.Idle;
 	#ws: WebSocketLike | null = null;
 	#sendQueue: Uint8Array[] = [];
@@ -174,6 +196,7 @@ export class WebSocketRelayPort implements RelayPort {
 		this.#clearTimer = opts.clearTimer ?? ((h) => clearTimeout(h as ReturnType<typeof setTimeout>));
 		this.#now = opts.now ?? Date.now;
 		this.#catalogTimeoutMs = opts.catalogTimeoutMs ?? 15_000;
+		this.#assetTimeoutMs = opts.assetTimeoutMs ?? 30_000;
 		this.#onChallenge = opts.onChallenge ?? null;
 	}
 
@@ -326,6 +349,79 @@ export class WebSocketRelayPort implements RelayPort {
 	}
 
 	/**
+	 * Asset-B4 — send one blob-plane request frame (an `AssetWireKind`
+	 * HAS/PUT/GET, already built by the caller's `WireAssetCas`) on the asset
+	 * channel and resolve with the node's response frame. Serialized: each call
+	 * waits for the prior to settle so exactly one request is in flight and the
+	 * single inbound response correlates to it (no per-request id needed). Unlike
+	 * `send`, an asset request is NOT queued offline — it rejects if the socket
+	 * isn't Open (the caller, the asset transport, retries the chunk later).
+	 *
+	 * This is the WS binding the Asset-B2 client transport deferred: pass
+	 * `(frame) => port.requestAsset(frame)` as a `WireAssetCas` transport.
+	 */
+	requestAsset(frame: Uint8Array): Promise<Uint8Array> {
+		if (this.#disposed)
+			return Promise.reject(new Error("WebSocketRelayPort.requestAsset: port is closed"));
+		return new Promise<Uint8Array>((resolve, reject) => {
+			this.#assetQueue.push({ frame: new Uint8Array(frame), resolve, reject });
+			this.#pumpAsset();
+		});
+	}
+
+	/** Send the next queued asset request if none is in flight. Sends
+	 *  synchronously so the request is on the wire before the caller can `close`;
+	 *  the inbound response (or timeout / close) settles it and pumps the next. */
+	#pumpAsset(): void {
+		if (this.#pendingAsset) return;
+		const next = this.#assetQueue.shift();
+		if (!next) return;
+		if (
+			this.#disposed ||
+			this.#state !== WebSocketRelayState.Open ||
+			!this.#ws ||
+			this.#ws.readyState !== OPEN_READY_STATE
+		) {
+			next.reject(new Error("WebSocketRelayPort.requestAsset: port not open"));
+			this.#pumpAsset();
+			return;
+		}
+		const timer = this.#setTimer(() => {
+			this.#settleAsset((p) =>
+				p.reject(
+					new Error(`WebSocketRelayPort.requestAsset: no reply within ${this.#assetTimeoutMs}ms`),
+				),
+			);
+		}, this.#assetTimeoutMs);
+		this.#pendingAsset = { resolve: next.resolve, reject: next.reject, timer };
+		const wire = new Uint8Array(1 + next.frame.length);
+		wire[0] = ASSET_CHANNEL_BYTE;
+		wire.set(next.frame, 1);
+		try {
+			this.#ws.send(wire);
+		} catch (error) {
+			this.#settleAsset((p) =>
+				p.reject(
+					error instanceof Error ? error : new Error("WebSocketRelayPort.requestAsset: send failed"),
+				),
+			);
+		}
+	}
+
+	/** Settle the in-flight asset request (clearing its timer) and pump the
+	 *  next. A no-op if nothing is in flight (e.g. a late/stale response). */
+	#settleAsset(
+		settle: (p: { resolve: (f: Uint8Array) => void; reject: (e: Error) => void }) => void,
+	): void {
+		const pending = this.#pendingAsset;
+		if (!pending) return;
+		this.#pendingAsset = null;
+		this.#clearTimer(pending.timer);
+		settle(pending);
+		this.#pumpAsset();
+	}
+
+	/**
 	 * Enqueue an opaque `EncryptedFrame` for delivery. The first byte sent
 	 * on the wire is the `FRAME_CHANNEL_BYTE`; the rest is the frame
 	 * payload unchanged.
@@ -365,6 +461,7 @@ export class WebSocketRelayPort implements RelayPort {
 		this.#disposed = true;
 		this.#clearReconnect();
 		this.#rejectAllCatalog("WebSocketRelayPort: port closed");
+		this.#rejectPendingAsset("WebSocketRelayPort: port closed");
 		this.#sendQueue = [];
 		const ws = this.#ws;
 		this.#ws = null;
@@ -467,6 +564,14 @@ export class WebSocketRelayPort implements RelayPort {
 			}
 			return;
 		}
+		if (channel === ASSET_CHANNEL_BYTE) {
+			// Asset-B4 — the response to the one in-flight `requestAsset` (FIFO:
+			// requests are serialized, so the head pending resolver is this reply).
+			if (!this.#pendingAsset) this.#droppedInbound += 1;
+			const response = new Uint8Array(bytes.subarray(1));
+			this.#settleAsset((p) => p.resolve(response));
+			return;
+		}
 		if (channel === CONTROL_CHANNEL_BYTE) {
 			// Server→client control messages this client acts on: `catalog-result`
 			// (the reply to `requestCatalog`), and the SYNC-4b gated handshake
@@ -561,6 +666,17 @@ export class WebSocketRelayPort implements RelayPort {
 			pending.reject(new Error(reason));
 		}
 		this.#pendingCatalog.clear();
+	}
+
+	#rejectPendingAsset(reason: string): void {
+		const pending = this.#pendingAsset;
+		if (pending) {
+			this.#pendingAsset = null;
+			this.#clearTimer(pending.timer);
+			pending.reject(new Error(reason));
+		}
+		const queued = this.#assetQueue.splice(0);
+		for (const q of queued) q.reject(new Error(reason));
 	}
 
 	#sendControl(message: RelayControlMessage): void {

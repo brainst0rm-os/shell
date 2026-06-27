@@ -167,6 +167,88 @@ describe("ydoc worker", () => {
 		expect(map.get("asset-1")).toEqual(wrap);
 	});
 
+	it("installAssetManifest() stores a manifest keyed by assetId, idempotent, readable back", async () => {
+		const manifest = {
+			v: 1,
+			assetId: "asset-m1",
+			chunkBytes: 16,
+			totalRawLen: 20,
+			chunks: [
+				{ hash: "a".repeat(64), encLen: 40, rawLen: 16 },
+				{ hash: "b".repeat(64), encLen: 24, rawLen: 4 },
+			],
+		};
+		const first = await handleYDocEnvelope(
+			mk("installAssetManifest", {
+				vaultPath: vaultDir,
+				entityId: "ent_man",
+				assetId: "asset-m1",
+				manifest,
+			}),
+		);
+		if (!first.ok) throw new Error("expected ok");
+		expect((first.value as { appended: boolean }).appended).toBe(true);
+
+		// Idempotent — a second install for the same assetId is a no-op.
+		const second = await handleYDocEnvelope(
+			mk("installAssetManifest", {
+				vaultPath: vaultDir,
+				entityId: "ent_man",
+				assetId: "asset-m1",
+				manifest,
+			}),
+		);
+		if (!second.ok) throw new Error("expected ok");
+		expect((second.value as { appended: boolean }).appended).toBe(false);
+
+		// Read it back (the lazy-fetch path).
+		const read = await handleYDocEnvelope(
+			mk("readAssetManifest", { vaultPath: vaultDir, entityId: "ent_man", assetId: "asset-m1" }),
+		);
+		if (!read.ok) throw new Error("expected ok");
+		expect((read.value as { manifest: unknown }).manifest).toEqual(manifest);
+
+		// A missing assetId reads back null.
+		const miss = await handleYDocEnvelope(
+			mk("readAssetManifest", { vaultPath: vaultDir, entityId: "ent_man", assetId: "asset-absent" }),
+		);
+		if (!miss.ok) throw new Error("expected ok");
+		expect((miss.value as { manifest: unknown }).manifest).toBeNull();
+
+		// It lives under brainstorm.meta → assetManifests and survives a reload.
+		const reload = await handleYDocEnvelope(
+			mk("snapshot", { vaultPath: vaultDir, entityId: "ent_man" }),
+		);
+		if (!reload.ok) throw new Error("expected ok");
+		const reader = new Y.Doc();
+		Y.applyUpdate(
+			reader,
+			new Uint8Array(Buffer.from((reload.value as { snapshotB64: string }).snapshotB64, "base64")),
+		);
+		const map = reader.getMap<unknown>("brainstorm.meta").get("assetManifests") as Y.Map<unknown>;
+		expect(map.get("asset-m1")).toEqual(manifest);
+	});
+
+	it("installAssetManifest() rejects a non-object manifest", async () => {
+		const reply = await handleYDocEnvelope(
+			mk("installAssetManifest", {
+				vaultPath: vaultDir,
+				entityId: "ent_badm",
+				assetId: "asset-x",
+				manifest: "nope",
+			}),
+		);
+		expect(reply.ok).toBe(false);
+	});
+
+	it("readAssetManifest() returns null for an entity with no manifests", async () => {
+		const reply = await handleYDocEnvelope(
+			mk("readAssetManifest", { vaultPath: vaultDir, entityId: "ent_none", assetId: "asset-x" }),
+		);
+		if (!reply.ok) throw new Error("expected ok");
+		expect((reply.value as { manifest: unknown }).manifest).toBeNull();
+	});
+
 	it("installAssetDekWrap() rejects a malformed wrap shape", async () => {
 		const reply = await handleYDocEnvelope(
 			mk("installAssetDekWrap", {

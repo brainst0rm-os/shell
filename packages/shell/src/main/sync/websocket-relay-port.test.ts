@@ -276,6 +276,91 @@ describe("WebSocketRelayPort — requestCatalog (10.14)", () => {
 	});
 });
 
+describe("WebSocketRelayPort — requestAsset (Asset-B4 blob plane)", () => {
+	const ASSET_BYTE = 0x02;
+	const assetReply = (body: Uint8Array): Uint8Array => {
+		const r = new Uint8Array(1 + body.length);
+		r[0] = ASSET_BYTE;
+		r.set(body, 1);
+		return r;
+	};
+
+	it("rejects when the relay is not open", async () => {
+		const Ctor = makeFakeWsCtor();
+		const port = new WebSocketRelayPort({ url: "ws://x", wsImpl: Ctor });
+		await expect(port.requestAsset(new Uint8Array([1]))).rejects.toThrow(/not open/);
+		port.close();
+	});
+
+	it("sends an asset request on channel 0x02 and resolves on the asset reply", async () => {
+		const Ctor = makeFakeWsCtor();
+		const port = new WebSocketRelayPort({ url: "ws://x", wsImpl: Ctor });
+		port.connect();
+		const ws = Ctor.instances[0];
+		ws?.open();
+		const pending = port.requestAsset(new Uint8Array([9, 8, 7]));
+		const lastSent = ws?.sent.at(-1);
+		expect(lastSent?.[0]).toBe(ASSET_BYTE);
+		expect(lastSent?.subarray(1)).toEqual(new Uint8Array([9, 8, 7]));
+		ws?.deliver(assetReply(new Uint8Array([4, 5, 6])));
+		await expect(pending).resolves.toEqual(new Uint8Array([4, 5, 6]));
+		port.close();
+	});
+
+	it("serializes concurrent requests — one in flight, FIFO correlation", async () => {
+		const Ctor = makeFakeWsCtor();
+		const port = new WebSocketRelayPort({ url: "ws://x", wsImpl: Ctor });
+		port.connect();
+		const ws = Ctor.instances[0];
+		ws?.open();
+		const sentCount = () => (ws?.sent ?? []).filter((m) => m[0] === ASSET_BYTE).length;
+
+		const first = port.requestAsset(new Uint8Array([1]));
+		const second = port.requestAsset(new Uint8Array([2]));
+		// Only the first request is on the wire — the second waits.
+		expect(sentCount()).toBe(1);
+
+		ws?.deliver(assetReply(new Uint8Array([0x11])));
+		await expect(first).resolves.toEqual(new Uint8Array([0x11]));
+		await Promise.resolve(); // let the chain advance to the second send
+		expect(sentCount()).toBe(2);
+		expect(ws?.sent.at(-1)?.subarray(1)).toEqual(new Uint8Array([2]));
+
+		ws?.deliver(assetReply(new Uint8Array([0x22])));
+		await expect(second).resolves.toEqual(new Uint8Array([0x22]));
+		port.close();
+	});
+
+	it("rejects on timeout when no asset reply arrives", async () => {
+		const Ctor = makeFakeWsCtor();
+		const timer = manualTimer();
+		const port = new WebSocketRelayPort({
+			url: "ws://x",
+			wsImpl: Ctor,
+			setTimer: timer.setTimer,
+			clearTimer: timer.clearTimer,
+			assetTimeoutMs: 5_000,
+		});
+		port.connect();
+		Ctor.instances[0]?.open();
+		const pending = port.requestAsset(new Uint8Array([1]));
+		const rejected = expect(pending).rejects.toThrow(/no reply/);
+		expect(timer.fire()).toBe(true);
+		await rejected;
+		port.close();
+	});
+
+	it("rejects an in-flight asset request when the port closes", async () => {
+		const Ctor = makeFakeWsCtor();
+		const port = new WebSocketRelayPort({ url: "ws://x", wsImpl: Ctor });
+		port.connect();
+		Ctor.instances[0]?.open();
+		const pending = port.requestAsset(new Uint8Array([1]));
+		port.close();
+		await expect(pending).rejects.toThrow(/closed/);
+	});
+});
+
 describe("WebSocketRelayPort — lifecycle", () => {
 	it("transitions Idle → Connecting → Open and emits state events", () => {
 		const Ctor = makeFakeWsCtor();
@@ -767,16 +852,18 @@ describe("SYNC-4b gated handshake (onChallenge)", () => {
 		ws?.open();
 		ws?.deliver(control({ op: "challenge", nonce: "NONCE1" }));
 		await tick();
-		const auth = ws?.sent
-			.map((b) => decodeControlMessage(b))
-			.find((m) => m?.op === "auth");
+		const auth = ws?.sent.map((b) => decodeControlMessage(b)).find((m) => m?.op === "auth");
 		expect(auth).toEqual({ op: "auth", token: "tok", account: "acct", sig: "sig_NONCE1" });
 		port.close();
 	});
 
 	it("re-sends subscriptions on auth-ok (a gated node dropped the pre-auth ones)", async () => {
 		const Ctor = makeFakeWsCtor();
-		const port = new WebSocketRelayPort({ url: "ws://x", wsImpl: Ctor, onChallenge: async () => null });
+		const port = new WebSocketRelayPort({
+			url: "ws://x",
+			wsImpl: Ctor,
+			onChallenge: async () => null,
+		});
 		port.subscribe("e1");
 		port.connect();
 		const ws = Ctor.instances[0];
