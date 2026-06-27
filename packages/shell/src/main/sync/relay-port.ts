@@ -23,6 +23,11 @@ export interface RelayPort {
 	send(frame: Uint8Array): void;
 	onFrame(cb: (frame: Uint8Array) => void): void;
 	offFrame(cb: (frame: Uint8Array) => void): void;
+	/** Asset-B4 — send one blob-plane request frame (an `AssetWireKind`
+	 *  HAS/PUT/GET) and resolve with the node's response frame. Serialized per
+	 *  port; rejects if the transport isn't open or has no durable node (loopback
+	 *  has no CAS to answer). Absent ⇒ no blob plane on this port. */
+	requestAsset?(frame: Uint8Array): Promise<Uint8Array>;
 	close(): void;
 }
 
@@ -56,6 +61,9 @@ export interface RelaySurface {
 	 *  ids + latest snapshot versions; rejects on timeout or a non-WebSocket
 	 *  transport (loopback has no server to answer). Absent ⇒ no durable node. */
 	requestCatalog?(account: string): Promise<CatalogEntry[]>;
+	/** Asset-B4 — blob-plane request/response over the live port (forwards to the
+	 *  current `RelayPort.requestAsset`). Absent ⇒ no durable node / loopback. */
+	requestAsset?(frame: Uint8Array): Promise<Uint8Array>;
 }
 
 type LoopbackBus = {
