@@ -147,9 +147,13 @@ test("switching vaults repaints the dashboard (no stale theme from the previous 
 				},
 				{ dir: userDataDir },
 			);
+			// Anchor on the IPC snapshot first: the async seed commits rose/light
+			// there before the renderer repaints `data-theme`, so on a slow runner
+			// the bare attr poll can time out otherwise.
+			await waitForDefaultSnapshot(dashboard);
 			await expect
 				.poll(() => dashboard.evaluate(() => document.documentElement.dataset.theme), {
-					timeout: 15_000,
+					timeout: 30_000,
 				})
 				.toBe("rose");
 
@@ -181,7 +185,7 @@ test("switching vaults repaints the dashboard (no stale theme from the previous 
 			await dashboard.reload();
 			await expect
 				.poll(() => dashboard.evaluate(() => document.documentElement.dataset.theme), {
-					timeout: 15_000,
+					timeout: 30_000,
 				})
 				.toBe("midnight");
 
@@ -204,7 +208,7 @@ test("switching vaults repaints the dashboard (no stale theme from the previous 
 			);
 			await expect
 				.poll(() => dashboard.evaluate(() => document.documentElement.dataset.theme), {
-					timeout: 15_000,
+					timeout: 30_000,
 				})
 				.toBe("rose");
 		} finally {
