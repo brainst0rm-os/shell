@@ -5,11 +5,12 @@
  * the shared panel renders; all chrome (glass slide-over, header, grid rows)
  * lives in the SDK component, identical to Notes / Journal / Bookmarks.
  *
- * The bridged rows are display-only — a task's priority / date / project are
- * edited via the detail's chips, so this panel is a clean at-a-glance summary
- * that also surfaces fields the chips don't (status, created, updated) —
- * EXCEPT Assignee (F-152), set/cleared right here through the shared
- * Person/v1 entity-ref picker cell.
+ * Every bridged row is edited in-place through its shared cell (status /
+ * priority / tags via the vocabulary TagCell, scheduled / due via the DateCell,
+ * project / assignee via the entity-ref Link cell, estimate / logged via the
+ * Duration Number cell); created / updated stay read-only. Each cell's edited
+ * value flows through a `task-properties` parser back to the typed `Task`
+ * patch supplied by the host.
  *
  * Custom fields (9.14.16): below the bridged rows, the task's bound vault
  * properties (`task.values`) render as fully-editable rows through the same
@@ -36,12 +37,9 @@ import {
 import { useRef } from "react";
 import { t } from "../i18n/t";
 import {
-	TASK_PROPERTY_DEFS,
-	TASK_PROP_KEY,
-	type TaskValueContext,
+	type TaskFieldHandlers,
 	boundCustomDefs,
-	parseAssigneeValue,
-	taskToValues,
+	bridgedTaskRows,
 	unboundCustomDefs,
 } from "../properties/task-properties";
 import { getBrainstorm } from "../storage/runtime";
@@ -63,39 +61,23 @@ export type TaskPropertiesPanelProps = {
 	task: Task;
 	open: boolean;
 	onClose: () => void;
-	/** Persists an assignee pick / clear. Absent (preview / no repository) →
-	 *  the row renders read-only like the rest. */
-	onAssigneeChange?: (assigneeId: string | null) => void;
 	/** Persists the task's custom vault-property bag (9.14.16). Absent
 	 *  (preview / no repository) → custom rows render read-only and the
 	 *  add-property affordance hides. */
 	onValuesChange?: (next: ValuesMap) => void;
-} & TaskValueContext;
+} & TaskFieldHandlers;
 
 export function TaskPropertiesPanel({
 	task,
 	open,
 	onClose,
-	onAssigneeChange,
 	onValuesChange,
-	priorityLabel,
-	projectName,
-	statusLabel,
+	...handlers
 }: TaskPropertiesPanelProps): React.ReactElement {
 	const { properties: catalog, ready } = usePropertyStore();
 	const addButtonRef = useRef<HTMLButtonElement | null>(null);
 
-	const values = taskToValues(task, { priorityLabel, projectName, statusLabel });
-	const rows: PropertiesPanelRow[] = TASK_PROPERTY_DEFS.map((def) => {
-		if (def.key === TASK_PROP_KEY.assignee && onAssigneeChange) {
-			return {
-				def,
-				value: readValue(values, def),
-				onChange: (next: unknown) => onAssigneeChange(parseAssigneeValue(next)),
-			};
-		}
-		return { def, value: readValue(values, def), readOnly: true };
-	});
+	const rows: PropertiesPanelRow[] = bridgedTaskRows(task, handlers);
 
 	// Custom vault-property rows (9.14.16) — editable through the same cells.
 	const customValues = task.values ?? {};

@@ -298,6 +298,9 @@ const DEFAULTS = {
 	"tasks.prop.due": "Due",
 	"tasks.prop.project": "Project",
 	"tasks.prop.assignee": "Assignee",
+	"tasks.prop.estimate": "Estimate",
+	"tasks.prop.logged": "Logged",
+	"tasks.prop.tags": "Tags",
 	"tasks.prop.created": "Created",
 	"tasks.prop.updated": "Updated",
 

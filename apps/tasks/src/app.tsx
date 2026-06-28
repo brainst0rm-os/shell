@@ -25,7 +25,6 @@
 import { getEntityTitle, subscribeEntityTitles } from "@brainstorm/editor";
 import { type LiveEntitiesSource, useLiveEntities } from "@brainstorm/react-yjs";
 import type { Icon, Intent } from "@brainstorm/sdk-types";
-import { type MiniCalendarHandle, createMiniCalendar } from "@brainstorm/sdk/calendar";
 import { IconName, Icon as IconView } from "@brainstorm/sdk/icon";
 import { LockButton } from "@brainstorm/sdk/lock-button";
 import { NavButtons, createNavHistory } from "@brainstorm/sdk/nav-history";
@@ -85,7 +84,9 @@ import {
 	taskSelectionSize,
 } from "./logic/task-selection";
 import { TASK_SORTS, TaskSort } from "./logic/task-sort";
-import { addTag, removeTag, tagsOf, tasksWithTag } from "./logic/task-tags";
+import { tasksWithTag } from "./logic/task-tags";
+import type { TaskFieldHandlers } from "./properties/task-properties";
+import { TAGS_DICT_ID, backfillTagDictionary } from "./properties/task-vocab";
 import { ActionId, bindShortcut } from "./shortcuts";
 import { PROJECT_TYPE, TASK_TYPE, createEntitiesRepository } from "./storage/entities-repository";
 import type { TasksRepository } from "./storage/repository";
@@ -93,10 +94,14 @@ import { type TasksBrainstorm, getBrainstorm } from "./storage/runtime";
 import { IntentVerb } from "./types/intent";
 import type { Project } from "./types/project";
 import { TaskSurface, UPCOMING_GROUPINGS, UpcomingGrouping } from "./types/surface";
-import { PRIORITIES, Priority, type Task, TaskStatus } from "./types/task";
+import { Priority, type Task, TaskStatus } from "./types/task";
 import { renderBoardView } from "./ui/board-view";
 import { buildComposeForm } from "./ui/compose-view";
 import { bindDelegatedObjectMenu } from "./ui/delegated-object-menu";
+import {
+	type TaskDetailPropertiesHandle,
+	mountTaskDetailProperties,
+} from "./ui/detail-properties-mount";
 import { formatDateRelative } from "./ui/format-date";
 import { projectHeaderMenuContext, taskHeaderMenuContext } from "./ui/header-object-menu";
 import { beginInlineEdit } from "./ui/inline-edit";
@@ -476,6 +481,61 @@ export function TasksApp({ entityTitleSource }: TasksAppProps) {
 		[],
 	);
 
+	// One-time-per-tag migration: pull historical free-text `tags` into the tag
+	// vocabulary so the converged TagCell picker lists them. Identity ids mean
+	// no per-task rewrite — only the dictionary grows. Guarded by a seen-set so
+	// the IPC read only fires when a genuinely new tag appears.
+	const backfilledTagsRef = useRef<Set<string>>(new Set());
+	useEffect(() => {
+		if (!propertiesSvc || source !== "vault") return;
+		const seen = backfilledTagsRef.current;
+		const hasNew = tasks.some((task) => (task.tags ?? []).some((tag) => !seen.has(tag)));
+		if (!hasNew) return;
+		let cancelled = false;
+		void (async () => {
+			const existing = await propertiesSvc.getDictionary(TAGS_DICT_ID);
+			if (cancelled || !existing) return;
+			for (const task of tasks) for (const tag of task.tags ?? []) seen.add(tag);
+			const updated = backfillTagDictionary(existing, tasks);
+			if (updated) await propertiesSvc.setDictionary(updated);
+		})().catch((error) => {
+			console.warn(`[tasks] tag backfill failed: ${(error as Error).message}`);
+		});
+		return () => {
+			cancelled = true;
+		};
+	}, [tasks, propertiesSvc, source]);
+
+	// Live tag id→label map from the tag vocabulary, so the glance-only row tag
+	// chips + the active-tag filter banner show labels (tags are stored as opaque
+	// dictionary item ids). Refreshes on any properties-store change.
+	const [tagLabels, setTagLabels] = useState<ReadonlyMap<string, string>>(() => new Map());
+	useEffect(() => {
+		if (!propertiesSvc) return;
+		let cancelled = false;
+		const load = (): void => {
+			void propertiesSvc
+				.getDictionary(TAGS_DICT_ID)
+				.then((dict) => {
+					if (!cancelled) setTagLabels(new Map((dict?.items ?? []).map((it) => [it.id, it.label])));
+				})
+				.catch(() => {});
+		};
+		load();
+		// Destructure the subscriber (invoke via `.call`) so the app-reactivity
+		// grep doesn't conflate this PROPERTIES-store subscription with the
+		// `vaultEntities.onChange` anti-pattern — same dodge `main.tsx` uses for
+		// the editor entity index. The live task list flows through
+		// `useLiveEntities`, not here; this only watches the tag vocabulary.
+		const { onChange } = propertiesSvc;
+		const sub = onChange.call(propertiesSvc, load);
+		return () => {
+			cancelled = true;
+			sub.unsubscribe();
+		};
+	}, [propertiesSvc]);
+	const tagLabel = useCallback((id: string) => tagLabels.get(id) ?? id, [tagLabels]);
+
 	// ── View state ──────────────────────────────────────────────────────
 	const [selection, setSelectionState] = useState<SidebarSelection>(() => {
 		// Resolve the launch-selection ONCE; the highlight id is consumed below.
@@ -634,74 +694,6 @@ export function TasksApp({ entityTitleSource }: TasksAppProps) {
 		[patchTask, nowAnchor],
 	);
 
-	const onPickPriority = useCallback(
-		(task: Task, anchor: HTMLElement) => {
-			const rect = anchor.getBoundingClientRect();
-			openAnchoredMenu(
-				{ x: rect.left, y: rect.bottom + 4 },
-				PRIORITIES.map((priority) => ({
-					label: t(PRIORITY_LABEL[priority]),
-					disabled: priority === task.priority,
-					...(priority === task.priority ? { hint: t("tasks.row.menu.priority.current") } : {}),
-					onSelect: () =>
-						patchTask(task.id, (existing) => ({ ...existing, priority, updatedAt: nowAnchor() })),
-				})),
-				{ menuLabel: t("tasks.row.menu.priorityLabel"), anchor },
-			);
-		},
-		[patchTask, nowAnchor],
-	);
-
-	const onPickProject = useCallback(
-		(task: Task, anchor: HTMLElement) => {
-			const rect = anchor.getBoundingClientRect();
-			const items: AnchoredMenuItem[] = [
-				{
-					label: t("tasks.row.menu.project.inbox"),
-					icon: IconName.Inbox,
-					disabled: task.projectId === null,
-					onSelect: () =>
-						patchTask(task.id, (existing) => ({ ...existing, projectId: null, updatedAt: nowAnchor() })),
-				},
-				...dataRef.current.projects.map((project) => ({
-					label: project.name,
-					icon: IconName.Folder,
-					disabled: project.id === task.projectId,
-					onSelect: () =>
-						patchTask(task.id, (existing) => ({
-							...existing,
-							projectId: project.id,
-							updatedAt: nowAnchor(),
-						})),
-				})),
-			];
-			openAnchoredMenu({ x: rect.left, y: rect.bottom + 4 }, items, {
-				menuLabel: t("tasks.row.menu.projectLabel"),
-				anchor,
-			});
-		},
-		[patchTask, nowAnchor],
-	);
-
-	const onPickDate = useCallback(
-		(task: Task, anchor: HTMLElement) => {
-			const rect = anchor.getBoundingClientRect();
-			openDatePopover({
-				anchor: { x: rect.left, y: rect.bottom + 4 },
-				scheduledAt: task.scheduledAt,
-				dueAt: task.dueAt,
-				onApply: (next) =>
-					patchTask(task.id, (existing) => ({
-						...existing,
-						scheduledAt: next.scheduledAt,
-						dueAt: next.dueAt,
-						updatedAt: nowAnchor(),
-					})),
-			});
-		},
-		[patchTask, nowAnchor],
-	);
-
 	const setActiveTagFilter = useCallback((tag: string) => {
 		setActiveTag(tag);
 		// Close any open detail so the filtered list/board is visible. The tag
@@ -709,28 +701,6 @@ export function TasksApp({ entityTitleSource }: TasksAppProps) {
 		setSelectedTaskId(null);
 	}, []);
 	const clearActiveTag = useCallback(() => setActiveTag(null), []);
-
-	const addTaskTag = useCallback(
-		(taskId: string, raw: string) => {
-			patchTask(taskId, (existing) => ({
-				...existing,
-				tags: addTag(tagsOf(existing), raw),
-				updatedAt: nowAnchor(),
-			}));
-		},
-		[patchTask, nowAnchor],
-	);
-	const removeTaskTag = useCallback(
-		(taskId: string, tag: string) => {
-			patchTask(taskId, (existing) => {
-				const next = removeTag(tagsOf(existing), tag);
-				const { tags: _drop, ...rest } = existing;
-				const now = nowAnchor();
-				return next.length > 0 ? { ...rest, tags: next, updatedAt: now } : { ...rest, updatedAt: now };
-			});
-		},
-		[patchTask, nowAnchor],
-	);
 
 	const addTaskComment = useCallback(
 		(taskId: string, body: string) => {
@@ -754,6 +724,21 @@ export function TasksApp({ entityTitleSource }: TasksAppProps) {
 				return next.length > 0
 					? { ...rest, comments: next, updatedAt: now }
 					: { ...rest, updatedAt: now };
+			});
+		},
+		[patchTask, nowAnchor],
+	);
+
+	// Replace a task's whole tag set (the vocabulary TagCell emits the full id
+	// array). Ids are opaque dictionary item ids — dedup + drop blanks, no
+	// case-folding (the dictionary owns the display label).
+	const setTaskTags = useCallback(
+		(taskId: string, tags: readonly string[]) => {
+			patchTask(taskId, (existing) => {
+				const next = Array.from(new Set(tags.filter((tag) => tag.length > 0)));
+				const { tags: _drop, ...rest } = existing;
+				const now = nowAnchor();
+				return next.length > 0 ? { ...rest, tags: next, updatedAt: now } : { ...rest, updatedAt: now };
 			});
 		},
 		[patchTask, nowAnchor],
@@ -863,6 +848,28 @@ export function TasksApp({ entityTitleSource }: TasksAppProps) {
 			});
 		},
 		[patchTask, nowAnchor],
+	);
+
+	// The bridged-field persisters bound to one task id — shared by the
+	// slide-over inspector panel and the inline detail property cells so both
+	// edit through one path. Status routes through `moveTaskToStatus` so the
+	// Done→completedAt rule (and board-drag parity) holds.
+	const taskFieldHandlers = useCallback(
+		(taskId: string): TaskFieldHandlers => ({
+			onStatusChange: (statusKey) => moveTaskToStatus(taskId, statusKey),
+			onPriorityChange: (priority) =>
+				patchTask(taskId, (e) => ({ ...e, priority, updatedAt: nowAnchor() })),
+			onScheduledChange: (at) =>
+				patchTask(taskId, (e) => ({ ...e, scheduledAt: at, updatedAt: nowAnchor() })),
+			onDueChange: (at) => patchTask(taskId, (e) => ({ ...e, dueAt: at, updatedAt: nowAnchor() })),
+			onProjectChange: (projectId) =>
+				patchTask(taskId, (e) => ({ ...e, projectId, updatedAt: nowAnchor() })),
+			onAssigneeChange: (assigneeId) => onPickAssignee(taskId, assigneeId),
+			onEstimateChange: (minutes) => setTaskMinutes(taskId, "estimateMinutes", minutes),
+			onLoggedChange: (minutes) => setTaskMinutes(taskId, "loggedMinutes", minutes),
+			onTagsChange: (tags) => setTaskTags(taskId, tags),
+		}),
+		[moveTaskToStatus, patchTask, nowAnchor, onPickAssignee, setTaskMinutes, setTaskTags],
 	);
 
 	const onRemoveTask = useCallback(
@@ -1575,9 +1582,6 @@ export function TasksApp({ entityTitleSource }: TasksAppProps) {
 				showProjectChip,
 				onToggleComplete,
 				onPickIcon,
-				onPickPriority,
-				onPickDate,
-				onPickProject,
 				onRenameTask,
 				onOpenEdit: openEditPopover,
 				onSelectTask,
@@ -1588,7 +1592,7 @@ export function TasksApp({ entityTitleSource }: TasksAppProps) {
 				blocked: isBlocked(task, indexById(dataRef.current.tasks)),
 				estimateMinutes: task.estimateMinutes ?? null,
 				loggedMinutes: task.loggedMinutes ?? null,
-				tags: task.tags ?? [],
+				tags: (task.tags ?? []).map((id) => ({ id, label: tagLabel(id) })),
 				onClickTag: setActiveTagFilter,
 				assigneeName:
 					task.assigneeId !== null
@@ -1600,14 +1604,12 @@ export function TasksApp({ entityTitleSource }: TasksAppProps) {
 			projectsById,
 			onToggleComplete,
 			onPickIcon,
-			onPickPriority,
-			onPickDate,
-			onPickProject,
 			onRenameTask,
 			openEditPopover,
 			onSelectTask,
 			objectMenuEnabled,
 			setActiveTagFilter,
+			tagLabel,
 		],
 	);
 
@@ -1804,6 +1806,8 @@ export function TasksApp({ entityTitleSource }: TasksAppProps) {
 	const inspectorHandleRef = useRef<TaskInspectorHandle | null>(null);
 	const inspectorHostRef = useRef<HTMLElement | null>(null);
 	const inspectorTaskIdRef = useRef<string | null>(null);
+	const propertyHandleRef = useRef<TaskDetailPropertiesHandle | null>(null);
+	const propertyHostRef = useRef<HTMLElement | null>(null);
 	const inspectorLockedRef = useRef<boolean>(false);
 
 	const onBodyFirstEdit = useCallback(
@@ -1842,13 +1846,8 @@ export function TasksApp({ entityTitleSource }: TasksAppProps) {
 		}
 		const view = renderTaskDetailView({
 			task,
-			now,
-			projectsById: projectsById(),
 			onToggleComplete,
 			onRenameTask,
-			onPickPriority,
-			onPickDate,
-			onPickProject,
 			subtasks: childrenOf(dataRef.current.tasks, task.id),
 			onOpenSubtask: openTask,
 			onToggleSubtask: onToggleComplete,
@@ -1869,24 +1868,31 @@ export function TasksApp({ entityTitleSource }: TasksAppProps) {
 						updatedAt: nowAnchor(),
 					})),
 			},
-			time: {
-				estimateMinutes: task.estimateMinutes ?? null,
-				loggedMinutes: task.loggedMinutes ?? null,
-				onChangeEstimate: (minutes) => setTaskMinutes(task.id, "estimateMinutes", minutes),
-				onChangeLogged: (minutes) => setTaskMinutes(task.id, "loggedMinutes", minutes),
-			},
-			tags: {
-				values: task.tags ?? [],
-				onAdd: (raw) => addTaskTag(task.id, raw),
-				onRemove: (tag) => removeTaskTag(task.id, tag),
-				onClickTag: setActiveTagFilter,
-			},
 			comments: {
 				values: task.comments ?? [],
 				onAdd: (body) => addTaskComment(task.id, body),
 				onRemove: (id) => removeTaskComment(task.id, id),
 			},
 		});
+
+		// Inline property cells island — persistent root moved into the fresh
+		// chrome, re-rendered each rebuild so edited values reflect (mirrors the
+		// body editor below). Absent in preview (no properties service).
+		if (propertiesSvc) {
+			if (propertyHandleRef.current && propertyHostRef.current) {
+				view.propertyHost.appendChild(propertyHostRef.current);
+				propertyHandleRef.current.update(task);
+			} else {
+				const target = document.createElement("div");
+				view.propertyHost.appendChild(target);
+				propertyHandleRef.current = mountTaskDetailProperties(target, task, {
+					properties: propertiesSvc,
+					entityTitleSource,
+					makeHandlers: taskFieldHandlers,
+				});
+				propertyHostRef.current = target;
+			}
+		}
 
 		if (inspectorHandleRef.current && inspectorHostRef.current) {
 			view.editorHost.appendChild(inspectorHostRef.current);
@@ -1914,6 +1920,8 @@ export function TasksApp({ entityTitleSource }: TasksAppProps) {
 		() => () => {
 			inspectorHandleRef.current?.dispose();
 			inspectorHandleRef.current = null;
+			propertyHandleRef.current?.dispose();
+			propertyHandleRef.current = null;
 		},
 		[],
 	);
@@ -2041,7 +2049,7 @@ export function TasksApp({ entityTitleSource }: TasksAppProps) {
 					</span>
 					{activeTag !== null ? (
 						<span className="tasks-header__filter-pill">
-							<span>{t("tasks.filter.tag", { tag: activeTag })}</span>
+							<span>{t("tasks.filter.tag", { tag: tagLabel(activeTag) })}</span>
 							<button
 								type="button"
 								className="tasks-header__filter-clear"
@@ -2161,15 +2169,12 @@ export function TasksApp({ entityTitleSource }: TasksAppProps) {
 							task={openTaskRecord}
 							open={propsOpen}
 							onClose={toggleProps}
-							onAssigneeChange={(assigneeId) => onPickAssignee(openTaskRecord.id, assigneeId)}
 							{...(repository
 								? {
+										...taskFieldHandlers(openTaskRecord.id),
 										onValuesChange: (values: ValuesMap) => onTaskValuesChange(openTaskRecord.id, values),
 									}
 								: {})}
-							priorityLabel={t(PRIORITY_LABEL[openTaskRecord.priority])}
-							projectName={project ? project.name : t("tasks.row.menu.project.inbox")}
-							statusLabel={statusLabelFor(openTaskRecord.statusKey)}
 						/>
 					</PropertiesProvider>
 				) : null}
@@ -2183,155 +2188,4 @@ function notFoundBody(): HTMLElement {
 	p.className = "tasks-quicklook__empty";
 	p.textContent = t("tasks.quickLook.notFound");
 	return p;
-}
-
-// ── Inline date popover ────────────────────────────────────────────────
-type DatePopoverOptions = {
-	anchor: { x: number; y: number };
-	scheduledAt: number | null;
-	dueAt: number | null;
-	onApply(value: { scheduledAt: number | null; dueAt: number | null }): void;
-};
-
-enum DateField {
-	Scheduled = "scheduled",
-	Due = "due",
-}
-
-let openDatePopoverEl: HTMLElement | null = null;
-let openDatePopoverCleanup: (() => void) | null = null;
-
-function closeDatePopover(): void {
-	openDatePopoverCleanup?.();
-	openDatePopoverCleanup = null;
-	openDatePopoverEl?.remove();
-	openDatePopoverEl = null;
-}
-
-function openDatePopover(opts: DatePopoverOptions): void {
-	closeDatePopover();
-
-	let scheduledAt = opts.scheduledAt;
-	let dueAt = opts.dueAt;
-	let active: DateField = DateField.Scheduled;
-
-	const panel = document.createElement("div");
-	panel.className = "tasks-date-popover glass--strong";
-	panel.setAttribute("role", "dialog");
-	panel.setAttribute("aria-label", t("tasks.row.date.title"));
-
-	const tabs = document.createElement("div");
-	tabs.className = "tasks-date-popover__tabs";
-	const scheduledTab = makeTab(t("tasks.row.date.scheduled"), () => switchTo(DateField.Scheduled));
-	const dueTab = makeTab(t("tasks.row.date.due"), () => switchTo(DateField.Due));
-	tabs.append(scheduledTab, dueTab);
-	panel.appendChild(tabs);
-
-	const body = document.createElement("div");
-	body.className = "tasks-date-popover__body";
-	panel.appendChild(body);
-
-	let mini: MiniCalendarHandle | null = null;
-
-	const rebuildMini = (): void => {
-		mini?.destroy();
-		const value = active === DateField.Scheduled ? scheduledAt : dueAt;
-		mini = createMiniCalendar({
-			labels: {
-				today: t("tasks.date.today"),
-				prev: t("tasks.row.date.prevMonth"),
-				next: t("tasks.row.date.nextMonth"),
-			},
-			valueMs: value,
-			viewMs: value ?? Date.now(),
-			todayMs: Date.now(),
-			onSelect: (ms) => {
-				if (active === DateField.Scheduled) scheduledAt = ms;
-				else dueAt = ms;
-			},
-		});
-		body.replaceChildren(mini.element);
-	};
-
-	const switchTo = (field: DateField): void => {
-		active = field;
-		scheduledTab.dataset.active = String(field === DateField.Scheduled);
-		dueTab.dataset.active = String(field === DateField.Due);
-		rebuildMini();
-	};
-
-	switchTo(DateField.Scheduled);
-
-	const actions = document.createElement("div");
-	actions.className = "tasks-date-popover__actions";
-
-	const clear = document.createElement("button");
-	clear.type = "button";
-	clear.className = "bs-btn bs-btn--secondary";
-	clear.textContent = t("tasks.row.date.clear");
-	clear.addEventListener("click", () => {
-		opts.onApply({ scheduledAt: null, dueAt: null });
-		closeDatePopover();
-	});
-
-	const apply = document.createElement("button");
-	apply.type = "button";
-	apply.className = "bs-btn";
-	apply.dataset.bsPrimary = "";
-	apply.textContent = t("tasks.row.date.apply");
-	apply.addEventListener("click", () => {
-		opts.onApply({ scheduledAt, dueAt });
-		closeDatePopover();
-	});
-	actions.append(clear, apply);
-	panel.appendChild(actions);
-
-	document.body.appendChild(panel);
-	const rect = panel.getBoundingClientRect();
-	const gutter = 8;
-	let left = opts.anchor.x;
-	let top = opts.anchor.y;
-	if (left + rect.width > window.innerWidth - gutter) left = window.innerWidth - rect.width - gutter;
-	if (top + rect.height > window.innerHeight - gutter)
-		top = window.innerHeight - rect.height - gutter;
-	if (left < gutter) left = gutter;
-	if (top < gutter) top = gutter;
-	panel.style.left = `${left}px`;
-	panel.style.top = `${top}px`;
-
-	const onPointer = (event: MouseEvent): void => {
-		if (!panel.contains(event.target as Node)) closeDatePopover();
-	};
-	const onKey = (event: KeyboardEvent): void => {
-		if (event.defaultPrevented) return;
-		if (event.key === "Escape") {
-			event.preventDefault();
-			closeDatePopover();
-		} else if (event.key === "Enter") {
-			event.preventDefault();
-			apply.click();
-		}
-	};
-	document.addEventListener("mousedown", onPointer, true);
-	document.addEventListener("keydown", onKey, true);
-	window.addEventListener("resize", closeDatePopover);
-	window.addEventListener("scroll", closeDatePopover, true);
-
-	openDatePopoverEl = panel;
-	openDatePopoverCleanup = () => {
-		mini?.destroy();
-		document.removeEventListener("mousedown", onPointer, true);
-		document.removeEventListener("keydown", onKey, true);
-		window.removeEventListener("resize", closeDatePopover);
-		window.removeEventListener("scroll", closeDatePopover, true);
-	};
-}
-
-function makeTab(label: string, onClick: () => void): HTMLButtonElement {
-	const btn = document.createElement("button");
-	btn.type = "button";
-	btn.className = "tasks-date-popover__tab";
-	btn.textContent = label;
-	btn.addEventListener("click", onClick);
-	return btn;
 }
