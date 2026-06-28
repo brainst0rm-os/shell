@@ -67,9 +67,17 @@ export type TaskInspectorEditorProps = {
 	 *  still the right primitive (no mount-settle write); we only use its
 	 *  interaction signal, not its payload. */
 	onFirstEdit?(): void;
+	/** When `false`, the task is locked (read-only) — the body editor rejects
+	 *  edits. Defaults to editable. */
+	editable?: boolean;
 };
 
-export function TaskInspectorEditor({ taskId, seedNotes, onFirstEdit }: TaskInspectorEditorProps) {
+export function TaskInspectorEditor({
+	taskId,
+	seedNotes,
+	onFirstEdit,
+	editable,
+}: TaskInspectorEditorProps) {
 	const doc = useYDoc(taskId);
 	const whenLoaded = useYDocLoaded(taskId);
 	const applyPending = useYDocApplyPending(taskId);
@@ -108,6 +116,7 @@ export function TaskInspectorEditor({ taskId, seedNotes, onFirstEdit }: TaskInsp
 		<BrainstormEditor
 			doc={doc}
 			docId={taskId}
+			editable={editable ?? true}
 			namespace="tasks"
 			theme={richTextTheme}
 			contentClassName="notes__contenteditable tasks-detail__editor"

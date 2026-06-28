@@ -27,6 +27,7 @@ import { type LiveEntitiesSource, useLiveEntities } from "@brainstorm/react-yjs"
 import type { Icon, Intent } from "@brainstorm/sdk-types";
 import { type MiniCalendarHandle, createMiniCalendar } from "@brainstorm/sdk/calendar";
 import { IconName, Icon as IconView } from "@brainstorm/sdk/icon";
+import { LockButton } from "@brainstorm/sdk/lock-button";
 import { NavButtons, createNavHistory } from "@brainstorm/sdk/nav-history";
 import {
 	type AnchoredMenuItem,
@@ -1803,6 +1804,7 @@ export function TasksApp({ entityTitleSource }: TasksAppProps) {
 	const inspectorHandleRef = useRef<TaskInspectorHandle | null>(null);
 	const inspectorHostRef = useRef<HTMLElement | null>(null);
 	const inspectorTaskIdRef = useRef<string | null>(null);
+	const inspectorLockedRef = useRef<boolean>(false);
 
 	const onBodyFirstEdit = useCallback(
 		(taskId: string) => {
@@ -1818,9 +1820,10 @@ export function TasksApp({ entityTitleSource }: TasksAppProps) {
 	);
 
 	const inspectorEditorOpts = useCallback(
-		(task: Task): { seedNotes?: string; onFirstEdit?(): void } => ({
+		(task: Task): { seedNotes?: string; onFirstEdit?(): void; editable?: boolean } => ({
 			...(hasLegacyNotes(task.notes) ? { seedNotes: task.notes } : {}),
 			onFirstEdit: () => onBodyFirstEdit(task.id),
+			editable: !task.locked,
 		}),
 		[onBodyFirstEdit],
 	);
@@ -1887,9 +1890,10 @@ export function TasksApp({ entityTitleSource }: TasksAppProps) {
 
 		if (inspectorHandleRef.current && inspectorHostRef.current) {
 			view.editorHost.appendChild(inspectorHostRef.current);
-			if (inspectorTaskIdRef.current !== task.id) {
+			if (inspectorTaskIdRef.current !== task.id || inspectorLockedRef.current !== !!task.locked) {
 				inspectorHandleRef.current.update(task.id, inspectorEditorOpts(task));
 				inspectorTaskIdRef.current = task.id;
+				inspectorLockedRef.current = !!task.locked;
 			}
 		} else {
 			const mountTarget = document.createElement("div");
@@ -2076,6 +2080,20 @@ export function TasksApp({ entityTitleSource }: TasksAppProps) {
 								show: t("tasks.header.inspector.show"),
 								hide: t("tasks.header.inspector.hide"),
 							}}
+						/>
+					) : null}
+					{openTaskRecord ? (
+						<LockButton
+							locked={!!openTaskRecord.locked}
+							onToggle={() =>
+								patchTask(openTaskRecord.id, (x) => ({
+									...x,
+									locked: !x.locked,
+									updatedAt: nowAnchor(),
+								}))
+							}
+							lockLabel={t("tasks.header.lock")}
+							unlockLabel={t("tasks.header.unlock")}
 						/>
 					) : null}
 					<ObjectMenuMoreButton

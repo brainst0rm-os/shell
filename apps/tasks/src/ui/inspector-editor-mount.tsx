@@ -48,7 +48,10 @@ export type TaskInspectorHandle = {
 	/** Re-render against a different task. Cheap — same root, React diffs.
 	 *  `key={taskId}` remounts the editor subtree so `@lexical/yjs`'s
 	 *  CollaborationPlugin rebinds to the new task's Y.Doc. */
-	update(taskId: string, opts: { seedNotes?: string; onFirstEdit?(): void }): void;
+	update(
+		taskId: string,
+		opts: { seedNotes?: string; onFirstEdit?(): void; editable?: boolean },
+	): void;
 	/** Tear down the React tree + release the resolver refcount. */
 	dispose(): void;
 };
@@ -59,14 +62,17 @@ export type TaskInspectorHandle = {
 export function mountTaskInspectorEditor(
 	host: HTMLElement,
 	taskId: string,
-	opts: { seedNotes?: string; onFirstEdit?(): void },
+	opts: { seedNotes?: string; onFirstEdit?(): void; editable?: boolean },
 ): TaskInspectorHandle | null {
 	const resolverApi = getYDocResolverApi();
 	if (!resolverApi) return null;
 
 	const root: Root = createRoot(host);
 	const blockRegistry = buildBlockRegistry();
-	const render = (id: string, o: { seedNotes?: string; onFirstEdit?(): void }): void => {
+	const render = (
+		id: string,
+		o: { seedNotes?: string; onFirstEdit?(): void; editable?: boolean },
+	): void => {
 		// NOT wrapped in <StrictMode>: its dev double-mount re-binds the
 		// `@lexical/yjs` editor to an already-applied Y.Doc, whose `observeDeep`
 		// then fires no events → the task notes render blank on reopen.
@@ -78,6 +84,7 @@ export function mountTaskInspectorEditor(
 					<TaskInspectorEditor
 						key={id}
 						taskId={id}
+						editable={o.editable ?? true}
 						{...(o.seedNotes !== undefined ? { seedNotes: o.seedNotes } : {})}
 						{...(o.onFirstEdit ? { onFirstEdit: o.onFirstEdit } : {})}
 					/>

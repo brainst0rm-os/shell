@@ -62,6 +62,9 @@ export type Task = {
 	name: string;
 	notes?: string;
 	icon?: Icon | null;
+	/** Read-only lock — the task's synced `locked` property. When true the
+	 *  detail body editor is read-only. */
+	locked?: boolean;
 
 	/** Epoch ms of completion, or null if open. Truthy = done. */
 	completedAt: number | null;

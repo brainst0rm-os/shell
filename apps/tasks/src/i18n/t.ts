@@ -129,6 +129,8 @@ const DEFAULTS = {
 	"tasks.header.count.other": "{count} tasks",
 	"tasks.header.showCompleted": "Show completed",
 	"tasks.header.newTask": "New task",
+	"tasks.header.lock": "Lock task (read-only)",
+	"tasks.header.unlock": "Unlock task",
 	"tasks.header.sidebar.show": "Show sidebar",
 	"tasks.header.sidebar.hide": "Hide sidebar",
 	"tasks.header.iconPicker.open": "Change project icon",
