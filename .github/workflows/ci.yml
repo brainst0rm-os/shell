@@ -47,6 +47,15 @@ jobs:
         # `verify` already builds the native addon + all apps before testing.
         run: bun run verify
 
+      # `verify` only runs the integration+entities vitest subset (fast
+      # pre-handoff gate). That subset is how the read-only-lock rollout merged
+      # red — its whiteboard/code-editor/app-side test breakage was never run in
+      # CI. Run the FULL suite once, on the cheap ubuntu runner, so a green PR
+      # means the whole suite is green. (native + apps are already built above.)
+      - name: Full test suite (ubuntu — guards verify's subset gap)
+        if: matrix.os == 'ubuntu-22.04'
+        run: bun run test
+
       - name: Build shell bundle (sanity)
         run: bun run --filter @brainstorm/shell build
 
