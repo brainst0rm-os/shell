@@ -30,6 +30,7 @@ function row(
 		sizeBytes: content.length,
 		lineCount: content.split("\n").length,
 		isDirty: false,
+		locked: false,
 		lastOpenedAt: null,
 		createdAt: updatedAt,
 		updatedAt,

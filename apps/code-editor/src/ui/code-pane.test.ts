@@ -77,6 +77,7 @@ function makeRow(content: string): CodeFileRow {
 		sizeBytes: null,
 		lineCount: null,
 		isDirty: false,
+		locked: false,
 		lastOpenedAt: null,
 		createdAt: 1,
 		updatedAt: 1,

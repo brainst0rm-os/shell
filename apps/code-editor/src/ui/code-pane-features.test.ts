@@ -45,6 +45,7 @@ function makeRow(content: string, language: LanguageKey = LanguageKey.TypeScript
 		sizeBytes: null,
 		lineCount: null,
 		isDirty: false,
+		locked: false,
 		lastOpenedAt: null,
 		createdAt: 1,
 		updatedAt: 1,
