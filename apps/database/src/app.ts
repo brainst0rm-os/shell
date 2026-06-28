@@ -1139,6 +1139,9 @@ function renderActiveViewInner(state: AppState): void {
 	// One inline-edit commit shared by every editable view (grid / list / board
 	// / gallery) — a property edit persists the same way regardless of surface.
 	const editProperty = (entity: EntityRow, propertyId: string, value: unknown): void => {
+		// A locked record is read-only — every view's cell commit no-ops (the
+		// lock toggle itself writes through `persistEntityPatch` directly).
+		if (entity.properties?.locked === true) return;
 		void persistEntityPatch(state, entity, { [propertyId]: value });
 	};
 	switch (view.kind) {
@@ -1355,6 +1358,9 @@ function renderInspector(state: AppState): void {
 	const title = document.getElementById("inspector-title");
 	if (!body || !title) return;
 	body.replaceChildren();
+	// The lock toggle shows only for a single inspected record (wired below).
+	const lockBtn = document.getElementById("inspector-lock") as HTMLButtonElement | null;
+	if (lockBtn) lockBtn.hidden = true;
 
 	const selected = state.selection.selectedIds;
 	if (selected.size === 0) {
@@ -1421,6 +1427,22 @@ function renderInspector(state: AppState): void {
 		return;
 	}
 
+	// Read-only lock — the record's synced `locked` property. The shared
+	// `editProperty` commit no-ops for a locked record, so its cells are
+	// read-only across every view; here we surface the toggle + freeze rename.
+	const recordLocked = entity.properties?.locked === true;
+	if (lockBtn) {
+		lockBtn.hidden = false;
+		lockBtn.replaceChildren(createIconElement(IconName.Lock));
+		lockBtn.setAttribute("aria-pressed", String(recordLocked));
+		const lockLabel = recordLocked ? "Unlock record" : "Lock record (read-only)";
+		lockBtn.setAttribute("aria-label", lockLabel);
+		lockBtn.setAttribute("data-bs-tooltip", lockLabel);
+		lockBtn.onclick = () => {
+			void persistEntityPatch(state, entity, { locked: !recordLocked });
+		};
+	}
+
 	// The inspector heading IS the rename field, for every entity type — the
 	// properties panel is where you edit an object's fields, and the name is
 	// one of them (a typed entity can still rename in its own app too). The
@@ -1429,7 +1451,7 @@ function renderInspector(state: AppState): void {
 	if (title !== document.activeElement) {
 		const current = entityTitle(entity);
 		title.textContent = current;
-		title.contentEditable = "plaintext-only";
+		title.contentEditable = recordLocked ? "false" : "plaintext-only";
 		title.spellcheck = false;
 		title.setAttribute("role", "textbox");
 		title.setAttribute("aria-label", "Name");

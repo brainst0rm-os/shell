@@ -1176,9 +1176,9 @@ function TabStrip({
 							type="button"
 							className="browser__tab-label"
 							aria-current={activeTab ? "page" : undefined}
-							aria-label={tab.title || tab.url}
+							aria-label={tab.title || tab.url || t("tab.untitled")}
 							onClick={() => onActivate(tab.id)}
-							data-bs-tooltip={tab.title || tab.url}
+							data-bs-tooltip={tab.title || tab.url || t("tab.untitled")}
 						>
 							{tab.loadState === TabLoadState.Loading ? (
 								<span className="browser__tab-spin" aria-hidden="true" />

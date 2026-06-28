@@ -78,6 +78,7 @@ export function parseStoredTask(raw: unknown): Task | null {
 		updatedAt: r.updatedAt,
 	};
 	if (typeof r.notes === "string") task.notes = r.notes;
+	if (r.locked === true) task.locked = true;
 	if (icon) task.icon = icon;
 	const taskSort = nullableNumber(r.sortIndex);
 	if (taskSort !== null) task.sortIndex = taskSort;

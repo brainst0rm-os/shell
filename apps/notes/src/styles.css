@@ -1034,15 +1034,20 @@ textarea {
 	--notes-swatch-text-purple: #a17fc4;
 	--notes-swatch-text-pink: #d06a9c;
 	--notes-swatch-text-red: #dd6058;
-	--notes-swatch-highlight-gray: #3a3a3a;
-	--notes-swatch-highlight-brown: #4a382c;
-	--notes-swatch-highlight-orange: #523620;
-	--notes-swatch-highlight-yellow: #4d4424;
-	--notes-swatch-highlight-green: #274034;
-	--notes-swatch-highlight-blue: #22384d;
-	--notes-swatch-highlight-purple: #3a2f4d;
-	--notes-swatch-highlight-pink: #4d2c3e;
-	--notes-swatch-highlight-red: #4d2926;
+	/* Highlights resolve per theme via light-dark() (color-scheme is set on
+	   :root by the app preload). A highlight is a tint BEHIND body text, so
+	   light themes get a pale wash that dark text reads on; dark themes keep
+	   the deep tint that light text reads on. A single dark value in a light
+	   theme is the muddy look this replaced. */
+	--notes-swatch-highlight-gray: light-dark(#e6e6e6, #3a3a3a);
+	--notes-swatch-highlight-brown: light-dark(#ecdfd5, #4a382c);
+	--notes-swatch-highlight-orange: light-dark(#fbe2cc, #523620);
+	--notes-swatch-highlight-yellow: light-dark(#fbf1c7, #4d4424);
+	--notes-swatch-highlight-green: light-dark(#d6ecdb, #274034);
+	--notes-swatch-highlight-blue: light-dark(#d4e7f7, #22384d);
+	--notes-swatch-highlight-purple: light-dark(#e7ddf4, #3a2f4d);
+	--notes-swatch-highlight-pink: light-dark(#f7dcea, #4d2c3e);
+	--notes-swatch-highlight-red: light-dark(#fbdbd7, #4d2926);
 }
 
 .notes__inline-toolbar-color {

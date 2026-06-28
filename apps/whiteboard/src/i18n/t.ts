@@ -166,6 +166,8 @@ export const WHITEBOARD_MANIFEST = {
 	// In-place board rename (F-198)
 	"whiteboard.board.rename.aria": "Rename board",
 	"whiteboard.board.rename.hint": "Double-click to rename",
+	"whiteboard.board.lock": "Lock board (read-only)",
+	"whiteboard.board.unlock": "Unlock board",
 
 	// Object menu
 	"whiteboard.menu.more": "More actions",

@@ -139,6 +139,12 @@ export function InlineToolbarPlugin(props: InlineToolbarPluginProps = {}): React
 
 	useEffect(() => {
 		function read(): ToolbarState | null {
+			// A locked / read-only note (`editor.setEditable(false)`) must never
+			// show the formatting toolbar — text is still selectable in a
+			// `contenteditable="false"` element, so a stale selection would keep
+			// the bar up. Gate on editability (and re-run via the editable
+			// listener below so locking *while* selected dismisses it).
+			if (!editor.isEditable()) return null;
 			let next: ToolbarState | null = null;
 			editor.getEditorState().read(() => {
 				const selection = $getSelection();
@@ -193,6 +199,9 @@ export function InlineToolbarPlugin(props: InlineToolbarPluginProps = {}): React
 
 		return mergeRegister(
 			editor.registerUpdateListener(apply),
+			// Lock/unlock toggles `editable` — re-evaluate so the bar hides the
+			// moment a note is locked (and may return once unlocked).
+			editor.registerEditableListener(() => apply()),
 			editor.registerCommand(
 				SELECTION_CHANGE_COMMAND,
 				() => {
@@ -725,7 +734,7 @@ function ToolButton({
 			aria-pressed={active}
 			onClick={onSelect}
 		>
-			<span aria-hidden="true">{children}</span>
+			{children}
 		</button>
 	);
 }

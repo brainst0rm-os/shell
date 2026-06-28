@@ -62,17 +62,21 @@ export const SWATCH_COLORS: readonly SwatchColor[] = [
 type Hued = Exclude<SwatchColor, SwatchColor.Default>;
 
 /** Baked fallbacks, used only if the app stylesheet doesn't define the
- *  matching custom property. Tuned for contrast on both themes. */
+ *  matching custom property. Tuned for contrast on both themes — a
+ *  highlight is a tint behind body text, so it resolves per theme via
+ *  `light-dark()` (pale wash under dark text in light themes; deep tint
+ *  under light text in dark themes). Text colours read on both grounds as
+ *  a single value, so they stay flat. */
 const FALLBACK: Record<Hued, { text: string; highlight: string }> = {
-	[SwatchColor.Gray]: { text: "#8d8d8d", highlight: "#3a3a3a" },
-	[SwatchColor.Brown]: { text: "#b07b54", highlight: "#4a382c" },
-	[SwatchColor.Orange]: { text: "#e0823d", highlight: "#523620" },
-	[SwatchColor.Yellow]: { text: "#d6b656", highlight: "#4d4424" },
-	[SwatchColor.Green]: { text: "#5fa87d", highlight: "#274034" },
-	[SwatchColor.Blue]: { text: "#5b9bd5", highlight: "#22384d" },
-	[SwatchColor.Purple]: { text: "#a17fc4", highlight: "#3a2f4d" },
-	[SwatchColor.Pink]: { text: "#d06a9c", highlight: "#4d2c3e" },
-	[SwatchColor.Red]: { text: "#dd6058", highlight: "#4d2926" },
+	[SwatchColor.Gray]: { text: "#8d8d8d", highlight: "light-dark(#e6e6e6, #3a3a3a)" },
+	[SwatchColor.Brown]: { text: "#b07b54", highlight: "light-dark(#ecdfd5, #4a382c)" },
+	[SwatchColor.Orange]: { text: "#e0823d", highlight: "light-dark(#fbe2cc, #523620)" },
+	[SwatchColor.Yellow]: { text: "#d6b656", highlight: "light-dark(#fbf1c7, #4d4424)" },
+	[SwatchColor.Green]: { text: "#5fa87d", highlight: "light-dark(#d6ecdb, #274034)" },
+	[SwatchColor.Blue]: { text: "#5b9bd5", highlight: "light-dark(#d4e7f7, #22384d)" },
+	[SwatchColor.Purple]: { text: "#a17fc4", highlight: "light-dark(#e7ddf4, #3a2f4d)" },
+	[SwatchColor.Pink]: { text: "#d06a9c", highlight: "light-dark(#f7dcea, #4d2c3e)" },
+	[SwatchColor.Red]: { text: "#dd6058", highlight: "light-dark(#fbdbd7, #4d2926)" },
 };
 
 function channel(target: ColorTarget): "text" | "highlight" {
@@ -88,13 +92,16 @@ export function swatchCssValue(target: ColorTarget, color: SwatchColor): string 
 }
 
 /** Inverse of {@link swatchCssValue} for reflecting the active swatch in
- *  the toolbar. Unknown / empty → Default. */
+ *  the toolbar. Matches on the custom-property NAME, not the whole string,
+ *  so text highlighted before a fallback retune (e.g. the light-dark()
+ *  pass) still reflects its swatch. Unknown / empty → Default. */
 export function swatchFromCss(target: ColorTarget, css: string): SwatchColor {
 	const trimmed = css.trim();
 	if (trimmed.length === 0) return SwatchColor.Default;
+	const ch = channel(target);
 	for (const color of SWATCH_COLORS) {
 		if (color === SwatchColor.Default) continue;
-		if (swatchCssValue(target, color) === trimmed) return color;
+		if (trimmed.startsWith(`var(--notes-swatch-${ch}-${color}`)) return color;
 	}
 	return SwatchColor.Default;
 }
