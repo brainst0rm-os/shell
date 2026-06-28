@@ -85,6 +85,7 @@ import {
 } from "./logic/task-selection";
 import { TASK_SORTS, TaskSort } from "./logic/task-sort";
 import { addTag, removeTag, tagsOf, tasksWithTag } from "./logic/task-tags";
+import { TAGS_DICT_ID, backfillTagDictionary } from "./properties/task-vocab";
 import { ActionId, bindShortcut } from "./shortcuts";
 import { PROJECT_TYPE, TASK_TYPE, createEntitiesRepository } from "./storage/entities-repository";
 import type { TasksRepository } from "./storage/repository";
@@ -475,6 +476,31 @@ export function TasksApp({ entityTitleSource }: TasksAppProps) {
 		[],
 	);
 
+	// One-time-per-tag migration: pull historical free-text `tags` into the tag
+	// vocabulary so the converged TagCell picker lists them. Identity ids mean
+	// no per-task rewrite — only the dictionary grows. Guarded by a seen-set so
+	// the IPC read only fires when a genuinely new tag appears.
+	const backfilledTagsRef = useRef<Set<string>>(new Set());
+	useEffect(() => {
+		if (!propertiesSvc || source !== "vault") return;
+		const seen = backfilledTagsRef.current;
+		const hasNew = tasks.some((task) => (task.tags ?? []).some((tag) => !seen.has(tag)));
+		if (!hasNew) return;
+		let cancelled = false;
+		void (async () => {
+			const existing = await propertiesSvc.getDictionary(TAGS_DICT_ID);
+			if (cancelled || !existing) return;
+			for (const task of tasks) for (const tag of task.tags ?? []) seen.add(tag);
+			const updated = backfillTagDictionary(existing, tasks);
+			if (updated) await propertiesSvc.setDictionary(updated);
+		})().catch((error) => {
+			console.warn(`[tasks] tag backfill failed: ${(error as Error).message}`);
+		});
+		return () => {
+			cancelled = true;
+		};
+	}, [tasks, propertiesSvc, source]);
+
 	// ── View state ──────────────────────────────────────────────────────
 	const [selection, setSelectionState] = useState<SidebarSelection>(() => {
 		// Resolve the launch-selection ONCE; the highlight id is consumed below.
@@ -753,6 +779,21 @@ export function TasksApp({ entityTitleSource }: TasksAppProps) {
 				return next.length > 0
 					? { ...rest, comments: next, updatedAt: now }
 					: { ...rest, updatedAt: now };
+			});
+		},
+		[patchTask, nowAnchor],
+	);
+
+	// Replace a task's whole tag set (the vocabulary TagCell emits the full id
+	// array). Ids are opaque dictionary item ids — dedup + drop blanks, no
+	// case-folding (the dictionary owns the display label).
+	const setTaskTags = useCallback(
+		(taskId: string, tags: readonly string[]) => {
+			patchTask(taskId, (existing) => {
+				const next = Array.from(new Set(tags.filter((tag) => tag.length > 0)));
+				const { tags: _drop, ...rest } = existing;
+				const now = nowAnchor();
+				return next.length > 0 ? { ...rest, tags: next, updatedAt: now } : { ...rest, updatedAt: now };
 			});
 		},
 		[patchTask, nowAnchor],
@@ -2143,15 +2184,37 @@ export function TasksApp({ entityTitleSource }: TasksAppProps) {
 							task={openTaskRecord}
 							open={propsOpen}
 							onClose={toggleProps}
-							onAssigneeChange={(assigneeId) => onPickAssignee(openTaskRecord.id, assigneeId)}
 							{...(repository
 								? {
+										onStatusChange: (statusKey) => moveTaskToStatus(openTaskRecord.id, statusKey),
+										onPriorityChange: (priority) =>
+											patchTask(openTaskRecord.id, (e) => ({
+												...e,
+												priority,
+												updatedAt: nowAnchor(),
+											})),
+										onScheduledChange: (at) =>
+											patchTask(openTaskRecord.id, (e) => ({
+												...e,
+												scheduledAt: at,
+												updatedAt: nowAnchor(),
+											})),
+										onDueChange: (at) =>
+											patchTask(openTaskRecord.id, (e) => ({ ...e, dueAt: at, updatedAt: nowAnchor() })),
+										onProjectChange: (projectId) =>
+											patchTask(openTaskRecord.id, (e) => ({
+												...e,
+												projectId,
+												updatedAt: nowAnchor(),
+											})),
+										onAssigneeChange: (assigneeId) => onPickAssignee(openTaskRecord.id, assigneeId),
+										onEstimateChange: (minutes) =>
+											setTaskMinutes(openTaskRecord.id, "estimateMinutes", minutes),
+										onLoggedChange: (minutes) => setTaskMinutes(openTaskRecord.id, "loggedMinutes", minutes),
+										onTagsChange: (tags) => setTaskTags(openTaskRecord.id, tags),
 										onValuesChange: (values: ValuesMap) => onTaskValuesChange(openTaskRecord.id, values),
 									}
 								: {})}
-							priorityLabel={t(PRIORITY_LABEL[openTaskRecord.priority])}
-							projectName={project ? project.name : t("tasks.row.menu.project.inbox")}
-							statusLabel={statusLabelFor(openTaskRecord.statusKey)}
 						/>
 					</PropertiesProvider>
 				) : null}

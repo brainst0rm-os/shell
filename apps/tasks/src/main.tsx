@@ -39,6 +39,7 @@ import { getWidgetLaunch } from "@brainstorm/sdk/widget";
 import { createRoot } from "react-dom/client";
 import { TasksApp } from "./app";
 import { ASSIGNEE_CATALOG_DEF } from "./properties/task-properties";
+import { ensureTaskVocab } from "./properties/task-vocab";
 import { getBrainstorm } from "./storage/runtime";
 import { mountTasksWidget } from "./widget-mount";
 import "./styles.css";
@@ -135,6 +136,12 @@ function bootstrapTasksApp(): void {
 			.catch((error) => {
 				console.warn(`[tasks] assignee catalog def ensure failed: ${(error as Error).message}`);
 			});
+
+		// Seed the priority / status / tags vocabularies so the property cells
+		// have options to pick from (idempotent — only writes absent dictionaries).
+		void ensureTaskVocab(propertiesSvc).catch((error) => {
+			console.warn(`[tasks] vocabulary seed failed: ${(error as Error).message}`);
+		});
 	}
 
 	const root = document.getElementById("root");

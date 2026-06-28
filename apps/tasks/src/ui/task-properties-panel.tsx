@@ -5,11 +5,12 @@
  * the shared panel renders; all chrome (glass slide-over, header, grid rows)
  * lives in the SDK component, identical to Notes / Journal / Bookmarks.
  *
- * The bridged rows are display-only — a task's priority / date / project are
- * edited via the detail's chips, so this panel is a clean at-a-glance summary
- * that also surfaces fields the chips don't (status, created, updated) —
- * EXCEPT Assignee (F-152), set/cleared right here through the shared
- * Person/v1 entity-ref picker cell.
+ * Every bridged row is edited in-place through its shared cell (status /
+ * priority / tags via the vocabulary TagCell, scheduled / due via the DateCell,
+ * project / assignee via the entity-ref Link cell, estimate / logged via the
+ * Duration Number cell); created / updated stay read-only. Each cell's edited
+ * value flows through a `task-properties` parser back to the typed `Task`
+ * patch supplied by the host.
  *
  * Custom fields (9.14.16): below the bridged rows, the task's bound vault
  * properties (`task.values`) render as fully-editable rows through the same
@@ -38,14 +39,19 @@ import { t } from "../i18n/t";
 import {
 	TASK_PROPERTY_DEFS,
 	TASK_PROP_KEY,
-	type TaskValueContext,
 	boundCustomDefs,
 	parseAssigneeValue,
+	parseDateValue,
+	parseDurationValue,
+	parsePriorityValue,
+	parseProjectValue,
+	parseStatusValue,
+	parseTagsValue,
 	taskToValues,
 	unboundCustomDefs,
 } from "../properties/task-properties";
 import { getBrainstorm } from "../storage/runtime";
-import type { Task } from "../types/task";
+import type { Priority, Task } from "../types/task";
 
 /** The SDK property-kind glyph for each value type, so the add-property
  *  picker rows carry the same type icon Notes' picker shows (each row is a
@@ -63,38 +69,60 @@ export type TaskPropertiesPanelProps = {
 	task: Task;
 	open: boolean;
 	onClose: () => void;
-	/** Persists an assignee pick / clear. Absent (preview / no repository) →
-	 *  the row renders read-only like the rest. */
+	/** Per-field persisters. Each is absent (preview / no repository) → that
+	 *  row renders read-only. Created / updated have no setter by design. */
+	onStatusChange?: (statusKey: string | null) => void;
+	onPriorityChange?: (priority: Priority) => void;
+	onScheduledChange?: (at: number | null) => void;
+	onDueChange?: (at: number | null) => void;
+	onProjectChange?: (projectId: string | null) => void;
 	onAssigneeChange?: (assigneeId: string | null) => void;
+	onEstimateChange?: (minutes: number | null) => void;
+	onLoggedChange?: (minutes: number | null) => void;
+	onTagsChange?: (tags: string[]) => void;
 	/** Persists the task's custom vault-property bag (9.14.16). Absent
 	 *  (preview / no repository) → custom rows render read-only and the
 	 *  add-property affordance hides. */
 	onValuesChange?: (next: ValuesMap) => void;
-} & TaskValueContext;
+};
 
 export function TaskPropertiesPanel({
 	task,
 	open,
 	onClose,
+	onStatusChange,
+	onPriorityChange,
+	onScheduledChange,
+	onDueChange,
+	onProjectChange,
 	onAssigneeChange,
+	onEstimateChange,
+	onLoggedChange,
+	onTagsChange,
 	onValuesChange,
-	priorityLabel,
-	projectName,
-	statusLabel,
 }: TaskPropertiesPanelProps): React.ReactElement {
 	const { properties: catalog, ready } = usePropertyStore();
 	const addButtonRef = useRef<HTMLButtonElement | null>(null);
 
-	const values = taskToValues(task, { priorityLabel, projectName, statusLabel });
+	const values = taskToValues(task);
+	// Each bridged field maps its cell's raw edited value through a parser back
+	// to the typed `Task` patch. An absent persister leaves the row read-only.
+	const editable: Record<string, ((next: unknown) => void) | undefined> = {
+		[TASK_PROP_KEY.status]: onStatusChange && ((n) => onStatusChange(parseStatusValue(n))),
+		[TASK_PROP_KEY.priority]: onPriorityChange && ((n) => onPriorityChange(parsePriorityValue(n))),
+		[TASK_PROP_KEY.scheduled]: onScheduledChange && ((n) => onScheduledChange(parseDateValue(n))),
+		[TASK_PROP_KEY.due]: onDueChange && ((n) => onDueChange(parseDateValue(n))),
+		[TASK_PROP_KEY.project]: onProjectChange && ((n) => onProjectChange(parseProjectValue(n))),
+		[TASK_PROP_KEY.assignee]: onAssigneeChange && ((n) => onAssigneeChange(parseAssigneeValue(n))),
+		[TASK_PROP_KEY.estimate]: onEstimateChange && ((n) => onEstimateChange(parseDurationValue(n))),
+		[TASK_PROP_KEY.logged]: onLoggedChange && ((n) => onLoggedChange(parseDurationValue(n))),
+		[TASK_PROP_KEY.tags]: onTagsChange && ((n) => onTagsChange(parseTagsValue(n))),
+	};
 	const rows: PropertiesPanelRow[] = TASK_PROPERTY_DEFS.map((def) => {
-		if (def.key === TASK_PROP_KEY.assignee && onAssigneeChange) {
-			return {
-				def,
-				value: readValue(values, def),
-				onChange: (next: unknown) => onAssigneeChange(parseAssigneeValue(next)),
-			};
-		}
-		return { def, value: readValue(values, def), readOnly: true };
+		const onChange = editable[def.key];
+		return onChange
+			? { def, value: readValue(values, def), onChange }
+			: { def, value: readValue(values, def), readOnly: true };
 	});
 
 	// Custom vault-property rows (9.14.16) — editable through the same cells.
