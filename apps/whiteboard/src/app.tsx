@@ -23,6 +23,7 @@ import {
 	type ExportSelectOption,
 	openExportPopover,
 } from "@brainstorm/sdk/export-popover";
+import { LockButton } from "@brainstorm/sdk/lock-button";
 import { MenuAlign } from "@brainstorm/sdk/menus";
 import { NavButtons, type NavHistory } from "@brainstorm/sdk/nav-history";
 import {
@@ -276,6 +277,19 @@ export function WhiteboardApp(): ReactElement {
 		[],
 	);
 	const vault = useVaultEntities(vaultService);
+	// Board-level read-only lock — the open board's synced `locked` property.
+	const boardLocked = snap?.boardId
+		? vault.entities.some((e) => e.id === snap.boardId && e.properties.locked === true)
+		: false;
+	useEffect(() => {
+		eng()?.setReadonly(boardLocked);
+	}, [boardLocked, eng]);
+	const toggleBoardLock = useCallback(() => {
+		const id = snap?.boardId;
+		if (!id) return;
+		const update = getBrainstorm()?.services?.entities?.update;
+		void update?.(id, { locked: !boardLocked });
+	}, [snap?.boardId, boardLocked]);
 	const seenVault = useRef<typeof vault | null>(null);
 	useEffect(() => {
 		// `useVaultEntities` returns a new snapshot reference only on a real
@@ -541,17 +555,19 @@ export function WhiteboardApp(): ReactElement {
 					<HeaderMenuButton
 						glyph={WhiteboardIcon.Shapes}
 						label={t("whiteboard.add.menu")}
+						disabled={boardLocked}
 						items={addItems}
 					/>
 					<HeaderMenuButton
 						glyph={WhiteboardIcon.Style}
 						label={canStyle ? t("whiteboard.style.menu") : t("whiteboard.style.menuDisabled")}
-						disabled={!canStyle}
+						disabled={!canStyle || boardLocked}
 						items={styleItems}
 					/>
 					<HeaderMenuButton
 						glyph={WhiteboardIcon.Arrange}
 						label={t("whiteboard.arrange.menu")}
+						disabled={boardLocked}
 						items={arrangeItems}
 					/>
 					<button
@@ -582,6 +598,14 @@ export function WhiteboardApp(): ReactElement {
 						onClick={() => eng()?.toggleNav()}
 						labels={{ show: t("whiteboard.nav.show"), hide: t("whiteboard.nav.hide") }}
 					/>
+					{snap?.boardId ? (
+						<LockButton
+							locked={boardLocked}
+							onToggle={toggleBoardLock}
+							lockLabel={t("whiteboard.board.lock")}
+							unlockLabel={t("whiteboard.board.unlock")}
+						/>
+					) : null}
 					<ObjectMenuMoreButton context={boardContext} moreActionsLabel={t("whiteboard.menu.more")} />
 				</div>
 			</header>

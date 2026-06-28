@@ -212,6 +212,7 @@ type AppState = {
 	editingNodeId: string | null;
 	editingEdgeId: string | null;
 	selectedEdgeId: string | null;
+	readonly: boolean;
 	tool: ToolId;
 	repository: WhiteboardsRepository | null;
 	allWhiteboards: Whiteboard[];
@@ -277,6 +278,9 @@ export type WhiteboardEngine = {
 	distributeSelection(axis: DistributeAxis): void;
 	applyZOrder(op: ZOrderOp): void;
 	setSelectionLocked(locked: boolean): void;
+	/** Board-level read-only lock — when true the whole canvas rejects edits
+	 *  (no create/move/resize/text-edit); pan, zoom, and selection still work. */
+	setReadonly(readonly: boolean): void;
 	setSelectionTextSize(size: TextSize): void;
 	setSelectionStickyFill(color: StickyColor): void;
 	setSelectionTextColor(color: TextColor): void;
@@ -406,6 +410,9 @@ export function createWhiteboardEngine(hosts: EngineHosts): WhiteboardEngine {
 		editingNodeId: null,
 		editingEdgeId: null,
 		selectedEdgeId: null,
+		/** Board-level read-only lock (the board's synced `locked` property).
+		 *  When true every mutation entry point no-ops; selection/pan/zoom stay. */
+		readonly: false,
 		tool: ToolId.Select,
 		repository: null,
 		allWhiteboards: [],
@@ -889,7 +896,7 @@ export function createWhiteboardEngine(hosts: EngineHosts): WhiteboardEngine {
 			handle.className = `whiteboard__handle whiteboard__handle--${side}`;
 			handle.setAttribute("aria-hidden", "true");
 			handle.addEventListener("pointerdown", (event) => {
-				if (event.button !== 0) return;
+				if (event.button !== 0 || state.readonly) return;
 				event.preventDefault();
 				event.stopPropagation();
 				canvasWrap.setPointerCapture?.(event.pointerId);
@@ -909,7 +916,7 @@ export function createWhiteboardEngine(hosts: EngineHosts): WhiteboardEngine {
 			event.preventDefault();
 			(event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
 			selectFor(node);
-			if (node.locked) {
+			if (node.locked || state.readonly) {
 				applySelectionClasses();
 				return;
 			}
@@ -1026,6 +1033,7 @@ export function createWhiteboardEngine(hosts: EngineHosts): WhiteboardEngine {
 	}
 
 	function beginEdit(node: WhiteboardNode, el: HTMLElement): void {
+		if (state.readonly) return;
 		if (!isSticky(node) && !isText(node)) return;
 		// Re-entry (a dblclick landing on the node already mid-edit) would
 		// re-seed the editor from the model — wiping the uncommitted DOM text —
@@ -1266,6 +1274,9 @@ export function createWhiteboardEngine(hosts: EngineHosts): WhiteboardEngine {
 				return;
 			}
 			if (event.button !== 0) return;
+			// Read-only board: pan + selection stay, but no creation (Pen, sticky,
+			// text, …). The Select tool's marquee/edge-pick below is selection-only.
+			if (state.readonly && state.tool !== ToolId.Select) return;
 			if (state.tool === ToolId.Pen) {
 				event.preventDefault();
 				wrap.setPointerCapture(event.pointerId);
@@ -1773,6 +1784,19 @@ export function createWhiteboardEngine(hosts: EngineHosts): WhiteboardEngine {
 			persistBoard();
 			paint();
 		}
+	}
+
+	function setReadonly(readonly: boolean): void {
+		if (state.readonly === readonly) return;
+		state.readonly = readonly;
+		// Drop any active text edit / in-flight gesture so the surface freezes.
+		if (readonly) {
+			state.editingNodeId = null;
+			state.drag = null;
+			state.connector = null;
+			state.ink = null;
+		}
+		paint();
 	}
 
 	function setSelectionTextSize(size: TextSize): void {
@@ -2464,6 +2488,7 @@ export function createWhiteboardEngine(hosts: EngineHosts): WhiteboardEngine {
 		distributeSelection,
 		applyZOrder,
 		setSelectionLocked,
+		setReadonly,
 		setSelectionTextSize,
 		setSelectionStickyFill,
 		setSelectionTextColor,
