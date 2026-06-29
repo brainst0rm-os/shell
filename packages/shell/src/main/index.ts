@@ -613,6 +613,11 @@ function createDashboardWindow(): BrowserWindow {
 			sandbox: true,
 			nodeIntegration: false,
 			webSecurity: true,
+			// Authoritative dev signal for the preload (NODE_ENV is unset in a
+			// packaged build, so the preload can't use it — it would leave dev-only
+			// affordances like "Reseed vault" visible in production). Driven by
+			// `!app.isPackaged` in the main process; the preload reads it from argv.
+			additionalArguments: isDev ? ["--brainstorm-dev"] : [],
 			// Dev only: in a packaged build the inspector must not be available to
 			// defeat the lock screen / inspect renderer state (13.8 security).
 			devTools: DEVTOOLS_ENABLED,

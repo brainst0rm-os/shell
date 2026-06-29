@@ -1404,8 +1404,10 @@ const mainErrors = { on: onMainError };
 
 /** Dev-only helpers. Always exposed; the main-process handler is registered
  *  only when `!app.isPackaged`, so a packaged build will reject the call.
- *  `isDev` is set from `process.env.NODE_ENV` so the renderer can hide the
- *  affordance entirely in production. */
+ *  `isDev` is read from the `--brainstorm-dev` argv flag the main process
+ *  injects (via `additionalArguments`) when `!app.isPackaged`. NODE_ENV is
+ *  unset in a packaged build, so it can't drive this — using it left dev-only
+ *  affordances (e.g. "Reseed vault") visible in production. */
 export type DevSeedResult = {
 	installed: number;
 	skipped: number;
@@ -1448,7 +1450,7 @@ export type DevCreateAndOpenScratchNoteResult =
 	| { ok: false; reason: string };
 
 const dev = {
-	isDev: process.env.NODE_ENV !== "production",
+	isDev: process.argv.includes("--brainstorm-dev"),
 	seedDemoApps: (): Promise<DevSeedResult> => ipcRenderer.invoke("dev:seed-demo-apps"),
 	/** Install the bundles already on disk (`<app>/dist`) without a per-app
 	 *  vite rebuild. The dogfood harness builds apps once in its global setup,
