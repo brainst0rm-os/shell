@@ -4,6 +4,10 @@ on:
   push:
     tags:
       - "v*.*.*"
+  # Manual dry-run: builds the full matrix but never publishes (see the
+  # publish-guard in the Package step), so the release pipeline can be tested
+  # on a branch without burning a version tag.
+  workflow_dispatch: {}
 
 # Don't cancel a release run.
 concurrency:
@@ -47,6 +51,10 @@ jobs:
               -c.mac.notarize=true
           # Windows + Linux: pin each runner to its own arch (target:arch) so it
           # never builds the other (broken — its native isn't built on this host).
+          # Windows ships x64 only — it runs on Windows-on-ARM via emulation, and
+          # a second arm64 runner would collide on the single latest.yml / Setup
+          # .exe name. Native arm64 Windows is a follow-up (build both on one
+          # runner, mirroring macOS).
           - os: windows-2022
             arch: x64
             runner: windows-2022
@@ -55,14 +63,6 @@ jobs:
             builder-platform: "--win"
             builder-targets: "nsis"
             builder-archs: "x64"
-          - os: windows-11-arm
-            arch: arm64
-            runner: windows-11-arm
-            rust-target: aarch64-pc-windows-msvc
-            napi-script: build:windows-arm64
-            builder-platform: "--win"
-            builder-targets: "nsis"
-            builder-archs: "arm64"
           - os: ubuntu-22.04
             arch: x64
             runner: ubuntu-22.04
@@ -121,18 +121,10 @@ jobs:
             done
           done
           cd packages/shell
-          bunx electron-builder ${{ matrix.builder-platform }} $spec --publish always ${{ matrix.sign-args }}
-
-  release:
-    name: Create release draft
-    needs: build
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-      - name: Create draft release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release create "${{ github.ref_name }}" --draft --generate-notes || true
+          # Publish only on a real tag push; a manual workflow_dispatch is a
+          # dry-run (build the matrix, upload nothing). electron-builder's
+          # --publish always already CREATES the draft release and uploads every
+          # artifact to it — no separate "create release" job (that produced a
+          # second, empty duplicate draft).
+          publish=${{ github.event_name == 'push' && 'always' || 'never' }}
+          bunx electron-builder ${{ matrix.builder-platform }} $spec --publish "$publish" ${{ matrix.sign-args }}
