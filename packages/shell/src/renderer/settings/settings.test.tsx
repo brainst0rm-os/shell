@@ -42,11 +42,16 @@ describe("Settings — KBN-S-settings focus trap + F6 region nav", () => {
 		(window as unknown as { brainstorm: unknown }).brainstorm = {
 			version: "0.0.1",
 			vaults: { session: () => Promise.resolve(null) },
-			// General section now renders the Updates panel (13.6).
+			// General section now renders the Updates panel (13.6 + 13.12).
 			update: {
 				getPrefs: () => Promise.resolve({ channel: "stable", lastCheckedAt: null }),
 				check: () => Promise.resolve({}),
 				setChannel: () => Promise.resolve({ channel: "stable", lastCheckedAt: null }),
+				getState: () => Promise.resolve({ lifecycle: "unsupported" }),
+				checkAuto: () => Promise.resolve({ lifecycle: "unsupported" }),
+				download: () => Promise.resolve({ lifecycle: "unsupported" }),
+				installNow: () => Promise.resolve(),
+				onStateChange: () => () => {},
 			},
 			intents: { dispatch: () => Promise.resolve({ handled: true }) },
 		};
