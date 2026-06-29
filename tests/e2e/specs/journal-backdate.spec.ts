@@ -63,13 +63,14 @@ test("journal — an empty past day is editable, not a dead 'No entry yet.' line
 			await cell.waitFor({ state: "visible", timeout: 30_000 });
 			await cell.click();
 
-			// The fix: that empty past day renders the implicit-create placeholder
-			// editable, and NOT the read-only "No entry yet." empty state.
-			await expect(journal.locator(".journal__write-placeholder")).toBeVisible({ timeout: 10_000 });
-			await expect(journal.locator(".journal__write-placeholder")).toHaveAttribute(
-				"contenteditable",
-				"true",
-			);
+			// The fix (F-299): an empty past day renders the live editor DIRECTLY —
+			// editable, and NOT the read-only "No entry yet." empty state. The old
+			// implicit-create `.journal__write-placeholder` is gone (its placeholder→
+			// editor handoff dropped the first typed word); the day is now one editor.
+			await expect(journal.locator('.journal__entry-editor[contenteditable="true"]')).toBeVisible({
+				timeout: 10_000,
+			});
+			await expect(journal.locator(".journal__write-placeholder")).toHaveCount(0);
 			await expect(journal.locator(".journal__empty")).toHaveCount(0);
 		} finally {
 			await app.close();
