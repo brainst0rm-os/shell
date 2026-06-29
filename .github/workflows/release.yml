@@ -37,8 +37,10 @@ jobs:
             rust-extra: x86_64-apple-darwin
             napi-script: build:darwin-arm64
             napi-extra: build:darwin-x64
-            package-script: package:mac
-            package-args: >-
+            builder-platform: "--mac"
+            builder-targets: "dmg zip"
+            builder-archs: "arm64 x64"
+            sign-args: >-
               -c.mac.hardenedRuntime=true
               -c.mac.entitlements=build/entitlements.mac.plist
               -c.mac.entitlementsInherit=build/entitlements.mac.inherit.plist
@@ -50,29 +52,33 @@ jobs:
             runner: windows-2022
             rust-target: x86_64-pc-windows-msvc
             napi-script: build:windows-x64
-            package-script: package:win
-            package-args: "nsis:x64"
+            builder-platform: "--win"
+            builder-targets: "nsis"
+            builder-archs: "x64"
           - os: windows-11-arm
             arch: arm64
             runner: windows-11-arm
             rust-target: aarch64-pc-windows-msvc
             napi-script: build:windows-arm64
-            package-script: package:win
-            package-args: "nsis:arm64"
+            builder-platform: "--win"
+            builder-targets: "nsis"
+            builder-archs: "arm64"
           - os: ubuntu-22.04
             arch: x64
             runner: ubuntu-22.04
             rust-target: x86_64-unknown-linux-gnu
             napi-script: build:linux-x64
-            package-script: package:linux
-            package-args: "AppImage:x64 deb:x64"
+            builder-platform: "--linux"
+            builder-targets: "AppImage deb"
+            builder-archs: "x64"
           - os: ubuntu-22.04-arm
             arch: arm64
             runner: ubuntu-22.04-arm
             rust-target: aarch64-unknown-linux-gnu
             napi-script: build:linux-arm64
-            package-script: package:linux
-            package-args: "AppImage:arm64 deb:arm64"
+            builder-platform: "--linux"
+            builder-targets: "AppImage deb"
+            builder-archs: "arm64"
     permissions:
       contents: write  # to create release drafts
     steps:
@@ -103,7 +109,19 @@ jobs:
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: bun run --filter @brainstorm/shell ${{ matrix.package-script }} -- --publish always ${{ matrix.package-args }}
+        shell: bash
+        run: |
+          # Build the target:arch spec (the ONLY form that overrides the
+          # config's per-target arch arrays — bare --x64/--arm64 are ignored).
+          # The spec must follow the platform flag, not trail as positionals.
+          spec=""
+          for t in ${{ matrix.builder-targets }}; do
+            for a in ${{ matrix.builder-archs }}; do
+              spec="$spec $t:$a"
+            done
+          done
+          cd packages/shell
+          bunx electron-builder ${{ matrix.builder-platform }} $spec --publish always ${{ matrix.sign-args }}
 
   release:
     name: Create release draft
