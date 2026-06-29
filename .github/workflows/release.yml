@@ -21,18 +21,32 @@ jobs:
       # added/removed, mirror in both.
       matrix:
         include:
+          # macOS: override the local-safe (ad-hoc) defaults in packages/shell/package.json
+          # with the signed posture for distribution — Developer ID hardened runtime +
+          # real entitlements + notarisation. These -c flags merge over the package.json
+          # build config; local `package:mac` (no certs) keeps the ad-hoc path. (13.11)
           - os: macos-13
             arch: x64
             runner: macos-13
             rust-target: x86_64-apple-darwin
             napi-script: build:darwin-x64
             package-script: package:mac
+            package-args: >-
+              -c.mac.hardenedRuntime=true
+              -c.mac.entitlements=build/entitlements.mac.plist
+              -c.mac.entitlementsInherit=build/entitlements.mac.inherit.plist
+              -c.mac.notarize=true
           - os: macos-14
             arch: arm64
             runner: macos-14
             rust-target: aarch64-apple-darwin
             napi-script: build:darwin-arm64
             package-script: package:mac
+            package-args: >-
+              -c.mac.hardenedRuntime=true
+              -c.mac.entitlements=build/entitlements.mac.plist
+              -c.mac.entitlementsInherit=build/entitlements.mac.inherit.plist
+              -c.mac.notarize=true
           - os: windows-2022
             arch: x64
             runner: windows-2022
@@ -80,8 +94,12 @@ jobs:
           CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
           WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
           WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+          # macOS notarisation (app-specific-password auth; electron-builder `mac.notarize: true`)
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: bun run --filter @brainstorm/shell ${{ matrix.package-script }} -- --publish always
+        run: bun run --filter @brainstorm/shell ${{ matrix.package-script }} -- --publish always ${{ matrix.package-args }}
 
   release:
     name: Create release draft
