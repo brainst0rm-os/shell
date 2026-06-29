@@ -21,56 +21,58 @@ jobs:
       # added/removed, mirror in both.
       matrix:
         include:
-          # macOS: override the local-safe (ad-hoc) defaults in packages/shell/package.json
-          # with the signed posture for distribution — Developer ID hardened runtime +
-          # real entitlements + notarisation. These -c flags merge over the package.json
-          # build config; local `package:mac` (no certs) keeps the ad-hoc path. (13.11)
-          - os: macos-13
-            arch: x64
-            runner: macos-13
-            rust-target: x86_64-apple-darwin
-            napi-script: build:darwin-x64
-            package-script: package:mac
-            package-args: >-
-              -c.mac.hardenedRuntime=true
-              -c.mac.entitlements=build/entitlements.mac.plist
-              -c.mac.entitlementsInherit=build/entitlements.mac.inherit.plist
-              -c.mac.notarize=true
-          - os: macos-14
-            arch: arm64
+          # macOS — ONE Apple-Silicon runner cross-builds BOTH arches. Rust
+          # cross-compiles x86_64 (rust-extra), both native addons build
+          # (napi-extra), and `package:mac` stays UNPINNED so it produces x64 +
+          # arm64 .dmg/.zip — each with its correct native. codesign + notarize
+          # are arch-agnostic, so the x64 artefact signs/notarises fine on the
+          # arm64 host. This removes the dependency on scarce/retired macos-13
+          # (Intel) runners. The -c flags apply the signed posture (Developer ID
+          # hardened runtime + entitlements + notarisation) over the package.json
+          # ad-hoc defaults (13.11). Diverges from ci.yml's test matrix by design.
+          - os: macos
+            arch: universal
             runner: macos-14
             rust-target: aarch64-apple-darwin
+            rust-extra: x86_64-apple-darwin
             napi-script: build:darwin-arm64
+            napi-extra: build:darwin-x64
             package-script: package:mac
             package-args: >-
               -c.mac.hardenedRuntime=true
               -c.mac.entitlements=build/entitlements.mac.plist
               -c.mac.entitlementsInherit=build/entitlements.mac.inherit.plist
               -c.mac.notarize=true
+          # Windows + Linux: pin each runner to its own arch (target:arch) so it
+          # never builds the other (broken — its native isn't built on this host).
           - os: windows-2022
             arch: x64
             runner: windows-2022
             rust-target: x86_64-pc-windows-msvc
             napi-script: build:windows-x64
             package-script: package:win
+            package-args: "nsis:x64"
           - os: windows-11-arm
             arch: arm64
             runner: windows-11-arm
             rust-target: aarch64-pc-windows-msvc
             napi-script: build:windows-arm64
             package-script: package:win
+            package-args: "nsis:arm64"
           - os: ubuntu-22.04
             arch: x64
             runner: ubuntu-22.04
             rust-target: x86_64-unknown-linux-gnu
             napi-script: build:linux-x64
             package-script: package:linux
+            package-args: "AppImage:x64 deb:x64"
           - os: ubuntu-22.04-arm
             arch: arm64
             runner: ubuntu-22.04-arm
             rust-target: aarch64-unknown-linux-gnu
             napi-script: build:linux-arm64
             package-script: package:linux
+            package-args: "AppImage:arm64 deb:arm64"
     permissions:
       contents: write  # to create release drafts
     steps:
@@ -84,7 +86,9 @@ jobs:
       - name: Build native + apps + shell
         shell: bash
         run: |
+          if [ -n "${{ matrix.rust-extra }}" ]; then rustup target add ${{ matrix.rust-extra }}; fi
           bun run --filter @brainstorm/native ${{ matrix.napi-script }}
+          if [ -n "${{ matrix.napi-extra }}" ]; then bun run --filter @brainstorm/native ${{ matrix.napi-extra }}; fi
           bun run --filter @brainstorm/shell build
           bun run build:apps
 
