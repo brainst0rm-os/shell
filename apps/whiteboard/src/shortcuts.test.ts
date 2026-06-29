@@ -64,9 +64,13 @@ describe("matchesChord", () => {
 	});
 
 	it("requires every modifier the chord lists and rejects extras", () => {
-		const event = evt({ key: "g", metaKey: true });
-		expect(matchesChord(event, "CmdOrCtrl+G")).toBe(true);
-		expect(matchesChord(event, "CmdOrCtrl+Shift+G")).toBe(false);
+		// Explicit Ctrl (not CmdOrCtrl) so the assertion is platform-independent:
+		// CmdOrCtrl maps to Cmd on mac and Ctrl elsewhere, so a metaKey event +
+		// "CmdOrCtrl+G" only matches on mac — the CmdOrCtrl mapping itself is
+		// covered by the navigator-mocked test below.
+		const event = evt({ key: "g", ctrlKey: true });
+		expect(matchesChord(event, "Ctrl+G")).toBe(true);
+		expect(matchesChord(event, "Ctrl+Shift+G")).toBe(false);
 	});
 
 	it("normalizes space and single-char keys case-insensitively", () => {
