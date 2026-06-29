@@ -81,8 +81,16 @@ const FTS_P99_BUDGET_MS = 100;
  * doc assumes (and the doc itself says lower-end hardware is "2-3x relaxed").
  * The raw `console.log` numbers are the real signal; the assertion only
  * catches an order-of-magnitude regression. Override per the runner.
+ *
+ * Set to 16 (was 8): the FTS p50 here is measured on the synthetic *dense*
+ * bench corpus (uniform ~100-word pool — far denser than real prose), which
+ * the docs note pins p50 at ~9× the 50ms budget regardless of code health, so
+ * an 8× slack (400ms) sits *below* the corpus's own baseline and flakes on a
+ * shared 2-core runner (seen at 465ms). 16× keeps a gross-regression guard
+ * without flaking on the corpus artifact. Real per-query perf gating is the
+ * dedicated perf suite (`bun run perf`), not this scale harness.
  */
-const CI_SLACK = clampFloat(process.env.BS_STRESS_CI_SLACK, 8, 1, 100);
+const CI_SLACK = clampFloat(process.env.BS_STRESS_CI_SLACK, 16, 1, 100);
 
 const ONE_MIB = 1024 * 1024;
 /** Target on-disk Y.Doc size for the large-doc scale point. */
