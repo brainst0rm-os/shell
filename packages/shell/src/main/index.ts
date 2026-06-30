@@ -2014,6 +2014,14 @@ void app.whenReady().then(async () => {
 		// requiring a manual refetch.
 		if (dashboardWindow && !dashboardWindow.webContents.isDestroyed()) {
 			dashboardWindow.webContents.send("shortcuts:bindings-changed");
+			// Same persists-across-switch reason as the dashboard rebind above:
+			// the renderer's VaultProvider only refreshes `current` on mount + its
+			// own React create/open/activate calls, so a switch it didn't initiate
+			// (a main-side activation, or a raw-IPC create) leaves `current` stale —
+			// which pins the theme to the welcome-screen Midnight (effectiveTheme's
+			// `!hasVault` gate) and the welcome/dashboard routing to the wrong
+			// surface. Push a signal so the renderer re-reads the live session.
+			dashboardWindow.webContents.send("vaults:active-changed");
 		}
 	};
 	onActiveVaultSessionChanged(() => {
