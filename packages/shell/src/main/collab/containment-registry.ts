@@ -51,10 +51,18 @@ const CHAT_MESSAGE_PARENT_PROP = "conversation";
 
 /** Tasks: a Project contains its Tasks, linked by the task's project ref
  *  (`apps/tasks` `PROJECT_ENTITY_TYPE` / `TASK_TYPE` / the `project` PropertyDef
- *  key). */
+ *  key). NB the key contains dots — see the M2 note on `childrenSourceFor`. */
 const TASKS_PROJECT_TYPE = "brainstorm/Project/v1";
 const TASKS_TASK_TYPE = "brainstorm/Task/v1";
 const TASKS_PROJECT_PARENT_PROP = "io.brainstorm.tasks/project";
+
+/** Whiteboard: a board contains its edge entities, linked by `whiteboardId`
+ *  (`apps/whiteboard/src/types/edge.ts` — nodes are inlined in the board doc,
+ *  edges are separate entities, OQ-WB-1). The FK has no dots, so the byFilter
+ *  cascade enumerates cleanly (like chat's `conversation`). */
+const WHITEBOARD_TYPE = "brainstorm/Whiteboard/v1";
+const WHITEBOARD_EDGE_TYPE = "brainstorm/WhiteboardEdge/v1";
+const WHITEBOARD_EDGE_PARENT_PROP = "whiteboardId";
 
 const RULES: readonly ContainmentRule[] = Object.freeze([
 	Object.freeze({
@@ -66,6 +74,11 @@ const RULES: readonly ContainmentRule[] = Object.freeze([
 		parentType: TASKS_PROJECT_TYPE,
 		childType: TASKS_TASK_TYPE,
 		childParentProp: TASKS_PROJECT_PARENT_PROP,
+	}),
+	Object.freeze({
+		parentType: WHITEBOARD_TYPE,
+		childType: WHITEBOARD_EDGE_TYPE,
+		childParentProp: WHITEBOARD_EDGE_PARENT_PROP,
 	}),
 ]);
 

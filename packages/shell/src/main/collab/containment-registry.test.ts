@@ -27,6 +27,8 @@ import {
 const CHANNEL_TYPE = "io.brainstorm.chat/Channel/v1";
 const PROJECT_TYPE = "brainstorm/Project/v1";
 const TASK_TYPE = "brainstorm/Task/v1";
+const WHITEBOARD_TYPE = "brainstorm/Whiteboard/v1";
+const WHITEBOARD_EDGE_TYPE = "brainstorm/WhiteboardEdge/v1";
 const NOTE_TYPE = "brainstorm/Note/v1";
 
 describe("containment registry — lookups", () => {
@@ -43,9 +45,16 @@ describe("containment registry — lookups", () => {
 		expect(rule?.childParentProp).toBe("io.brainstorm.tasks/project");
 	});
 
+	it("maps a Whiteboard to its edge children (non-dotted FK)", () => {
+		const rule = containmentRuleForParent(WHITEBOARD_TYPE);
+		expect(rule?.childType).toBe(WHITEBOARD_EDGE_TYPE);
+		expect(rule?.childParentProp).toBe("whiteboardId");
+	});
+
 	it("resolves rules by child type too", () => {
 		expect(containmentRuleForChild(MESSAGE_TYPE_URL)?.parentType).toBe(CHANNEL_TYPE);
 		expect(containmentRuleForChild(TASK_TYPE)?.parentType).toBe(PROJECT_TYPE);
+		expect(containmentRuleForChild(WHITEBOARD_EDGE_TYPE)?.parentType).toBe(WHITEBOARD_TYPE);
 	});
 
 	it("returns null for single-entity / unknown types (no cascade)", () => {
@@ -111,6 +120,15 @@ describe("containment registry — childrenSourceFor over a real entities.db", (
 	it.todo(
 		"enumerates a project's tasks — pending M2: dotted key needs byLink over a persisted containment edge",
 	);
+
+	it("enumerates a whiteboard's edges by its non-dotted whiteboardId FK", async () => {
+		const rule = containmentRuleForParent(WHITEBOARD_TYPE) as ContainmentRule;
+		seed("wb1", WHITEBOARD_TYPE, { name: "Roadmap" });
+		seed("e1", WHITEBOARD_EDGE_TYPE, { whiteboardId: "wb1" });
+		seed("e2", WHITEBOARD_EDGE_TYPE, { whiteboardId: "wb1" });
+		seed("e3", WHITEBOARD_EDGE_TYPE, { whiteboardId: "other" });
+		expect(await resolve(childrenSourceFor(rule, "wb1"))).toEqual(["e1", "e2"]);
+	});
 
 	it("returns empty for a container with no children yet (empty channel)", async () => {
 		const rule = containmentRuleForParent(CHANNEL_TYPE) as ContainmentRule;
