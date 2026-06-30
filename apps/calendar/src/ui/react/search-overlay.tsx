@@ -71,7 +71,7 @@ export function SearchOverlay({ getItems, now, onPick, onClose }: SearchOverlayP
 			<div className="cal-search">
 				<input
 					type="search"
-					className="cal-search__input cal-detail__input"
+					className="cal-search__input bs-input"
 					placeholder={t("calendar.search.placeholder")}
 					aria-label={t("calendar.search.title")}
 					value={query}

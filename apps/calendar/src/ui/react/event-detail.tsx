@@ -378,7 +378,7 @@ export function EventDetail({
 						</button>
 						<input
 							type="text"
-							className="cal-detail__input cal-detail__input--title"
+							className="bs-input bs-input--lg cal-detail__input--title"
 							value={draft.title}
 							placeholder={t("calendar.detail.field.titlePlaceholder")}
 							aria-label={t("calendar.detail.field.title")}
@@ -434,7 +434,7 @@ export function EventDetail({
 						<Field labelKey="calendar.detail.field.location">
 							<input
 								type="text"
-								className="cal-detail__input"
+								className="bs-input cal-detail__input"
 								value={draft.location ?? ""}
 								placeholder={t("calendar.detail.field.locationPlaceholder")}
 								onChange={(e) => patch({ location: e.target.value })}
@@ -522,7 +522,7 @@ export function EventDetail({
 
 						<Field labelKey="calendar.detail.field.description">
 							<textarea
-								className="cal-detail__textarea"
+								className="bs-input cal-detail__textarea"
 								rows={3}
 								value={draft.description ?? ""}
 								placeholder={t("calendar.detail.field.descriptionPlaceholder")}

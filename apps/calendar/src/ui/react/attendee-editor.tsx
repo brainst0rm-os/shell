@@ -107,7 +107,7 @@ export function AttendeeEditor({ value, onChange }: AttendeeEditorProps) {
 			<div className="cal-attendees__add">
 				<input
 					type="text"
-					className="cal-detail__input"
+					className="bs-input cal-detail__input"
 					placeholder={t("calendar.attendee.addNamePlaceholder")}
 					value={name}
 					onChange={(e) => setName(e.target.value)}
@@ -115,7 +115,7 @@ export function AttendeeEditor({ value, onChange }: AttendeeEditorProps) {
 				/>
 				<input
 					type="email"
-					className="cal-detail__input"
+					className="bs-input cal-detail__input"
 					placeholder={t("calendar.attendee.addEmailPlaceholder")}
 					value={email}
 					onChange={(e) => setEmail(e.target.value)}
