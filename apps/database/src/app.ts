@@ -36,7 +36,7 @@ import "@brainstorm/sdk/virtual-list.css";
 import "@brainstorm/sdk/property-ui/dictionary-editor.css";
 import "@brainstorm/sdk/count-badge.css";
 import { EntityCommentsPanel } from "@brainstorm/editor";
-import { openEntity, quickLookEntity } from "@brainstorm/sdk";
+import { inheritedPropertyDefs, openEntity, quickLookEntity } from "@brainstorm/sdk";
 import {
 	COLLECTION_TYPE_URL,
 	type Cover,
@@ -1564,6 +1564,7 @@ function renderInspector(state: AppState): void {
 						entity,
 						onEdit: (target, propertyId, value) =>
 							void persistEntityPatch(state, target, { [propertyId]: value }),
+						inheritedDefs: inheritedPropertyDefs(entity.id, state.lists, cachedVaultProperties),
 					}),
 			}),
 		),
