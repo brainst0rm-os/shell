@@ -45,5 +45,11 @@ describe("Database app boots without a module-eval / render-path crash", () => {
 
 	it("evaluating app.ts (bootApp → real render + bind) throws no ReferenceError/TDZ", async () => {
 		await expect(import("../src/app")).resolves.toBeDefined();
+		// bootApp() mounts React roots (menu host, comments panel) this test
+		// has no handle to unmount. Drain React's scheduler inside the jsdom
+		// environment so no `performWorkUntilDeadline` macrotask survives to
+		// fire after vitest tears jsdom down — that fires with `window`
+		// undefined, an uncaught exception that reds the whole run.
+		for (let i = 0; i < 10; i++) await new Promise((resolve) => setTimeout(resolve, 0));
 	}, 30_000); // under contention. 30s leaves headroom without masking real hangs. // Shiki — transform on a cold worker can blow past vitest's 5s default // app.ts pulls in the full renderer + every linked SDK + Lexical/Pixi/
 });

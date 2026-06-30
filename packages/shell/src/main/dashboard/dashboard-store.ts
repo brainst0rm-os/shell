@@ -249,7 +249,16 @@ export class DashboardStore {
 			if (origin === "load") return;
 			this.pendingPersist = this.pendingPersist.then(async () => {
 				if (this.closed) return;
-				await this.yStore.appendAndMaybeCompact(this.docId, update);
+				try {
+					await this.yStore.appendAndMaybeCompact(this.docId, update);
+				} catch (err) {
+					// A failed tail append (disk error, or the vault dir torn
+					// down while close() drains in the background — dispose()
+					// fire-and-forgets close()) must not poison the persist
+					// chain into an unhandled rejection. The in-memory doc keeps
+					// the update; surface it as a log, not a process crash.
+					console.warn(`[shell/dashboard-store] persist failed for ${this.docId}:`, err);
+				}
 			});
 			this.notify();
 		};
