@@ -17,6 +17,7 @@ const DEFAULTS = {
 	// Create-flow template picker (B11.10 templates foundation)
 	"brainstorm.database.create.pickTemplate": "New from template",
 	"brainstorm.database.create.blank": "Blank",
+	"brainstorm.database.create.untitledTemplate": "Untitled template",
 	"brainstorm.database.status.templateSaved": "Saved as template",
 
 	// Cross-app drag grip (DND-4)
