@@ -189,6 +189,31 @@ describe("Collab-C5 — sharing broker service", () => {
 		}
 	});
 
+	it("shareCollection cascades the grant onto the channel's messages (through the service)", async () => {
+		const CHANNEL = "ent_chan_svc";
+		const CHANNEL_TYPE = "io.brainstorm.chat/Channel/v1";
+		const MSG = "ent_msg_svc";
+		const MESSAGE_TYPE = "brainstorm/Message/v1";
+		await ownerBridge.provisionEntity(CHANNEL, CHANNEL_TYPE, { name: "general" });
+		await ownerBridge.provisionEntity(MSG, MESSAGE_TYPE, { conversation: CHANNEL, body: "hi team" });
+
+		const token = (await guestHandler(envelope("createInvite", ["Guest"]))) as ShareInviteToken;
+		const members = (await ownerHandler(
+			envelope("shareCollection", [
+				{ entityId: CHANNEL, type: CHANNEL_TYPE, invite: token, role: RosterRole.Editor },
+			]),
+		)) as SharedMember[];
+
+		const guestB64 = guestBridge.whoami().userPubB64;
+		// The container carries the guest as an active Editor...
+		expect(members.find((m) => m.pubkey === guestB64)?.active).toBe(true);
+		// ...and so does the message, via the cascade (owner-side access record).
+		const msgAccess = (await ownerHandler(envelope("access", [MSG]))) as SharedMember[];
+		expect(msgAccess.find((m) => m.pubkey === guestB64)?.active).toBe(true);
+		expect(msgAccess.find((m) => m.pubkey === guestB64)?.role).toBe(RosterRole.Editor);
+		expect(refreshSpy).toHaveBeenCalledWith(CHANNEL, CHANNEL_TYPE);
+	});
+
 	it("re-checks the scarce sharing.share capability server-side (fail-closed)", async () => {
 		const token = (await guestHandler(envelope("createInvite", ["Guest"]))) as ShareInviteToken;
 		await ownerBridge.provisionEntity(ENTITY_ID, ENTITY_TYPE);

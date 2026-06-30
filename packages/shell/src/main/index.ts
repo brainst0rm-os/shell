@@ -74,6 +74,7 @@ import { makeBpHookRouter } from "./bp/hook-router";
 import { makeBpRouter } from "./bp/router";
 import { makeCalDavServiceHandler } from "./caldav/caldav-service";
 import { resolveMembers } from "./collab/access-record";
+import { createAutoShareReactor } from "./collab/auto-share-reactor";
 import { makeConnectorsServiceHandler } from "./connectors/connectors-service";
 import { makeNetworkEgress } from "./connectors/egress";
 import { buildConnectorsServiceDeps } from "./connectors/wiring";
@@ -229,7 +230,7 @@ import { makeSearchServiceHandler } from "./search/search-service";
 import { type VectorIndexer, createVectorIndexer } from "./search/vector-indexer";
 import { SelectionStore, makeSelectionServiceHandler } from "./selection/selection-service";
 import { makeSettingsServiceHandler } from "./settings/settings-service";
-import { makeSharingServiceHandler } from "./sharing/sharing-service";
+import { makeEngineHolder, makeSharingServiceHandler } from "./sharing/sharing-service";
 import { setActiveShortcutRegistry } from "./shortcuts/active-registry";
 import { migrateBindingsFileToEntity, readOverridesFromEntity } from "./shortcuts/bindings-entity";
 import type { ShortcutRegistry } from "./shortcuts/shortcut-registry";
@@ -2545,6 +2546,26 @@ void app.whenReady().then(async () => {
 			now: () => Date.now(),
 		}),
 	);
+
+	// Collab-C5 collection-sharing (design 71) — flow 2: when a child entity (a
+	// chat Message, a Task) is created locally under an already-shared container,
+	// cascade the container's membership onto it so a team's growing message/task
+	// stream follows the one-time channel/project share. Reuses the per-session
+	// SharingEngine the broker service uses; reads from the active session's repo.
+	// A single process-lifetime subscription — the engine holder rebuilds per
+	// vault swap, so no per-session teardown is needed. Local creates only (remote
+	// applies bypass entities.create), so no fan-out storm.
+	const autoShareEngine = makeEngineHolder({
+		getSession: () => getActiveVaultSession(),
+		getRelay: () => getActiveRelay(),
+	});
+	createAutoShareReactor(automationsChangeEmitter, {
+		getEngine: () => (getActiveVaultSession() ? autoShareEngine() : null),
+		readEntityProperties: async (entityId) => {
+			const repo = await getEntitiesRepoForActiveSession();
+			return repo?.get(entityId)?.properties ?? null;
+		},
+	});
 
 	workers.broker.registerService(
 		"search",

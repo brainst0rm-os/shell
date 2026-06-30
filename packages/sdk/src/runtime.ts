@@ -1010,6 +1010,8 @@ function sharingProxy(bridge: Bridge): SharingService {
 			callService<ShareInviteToken>(bridge, "sharing", "createInvite", [label], ["sharing.read"]),
 		share: (input) =>
 			callService<SharedMember[]>(bridge, "sharing", "share", [input], ["sharing.share"]),
+		shareCollection: (input) =>
+			callService<SharedMember[]>(bridge, "sharing", "shareCollection", [input], ["sharing.share"]),
 		revoke: (input) =>
 			callService<SharedMember[]>(bridge, "sharing", "revoke", [input], ["sharing.share"]),
 		access: (entityId) =>

@@ -154,8 +154,13 @@ async function requireCapability(
 }
 
 /** Holds one {@link SharingEngine} bound to the active vault session, rebuilt
- *  when the session swaps (a new vault = a new identity + relay binding). */
-function makeEngineHolder(options: SharingServiceOptions): () => SharingEngine {
+ *  when the session swaps (a new vault = a new identity + relay binding).
+ *  Exported so the auto-share reactor (collection-sharing flow 2) reuses the
+ *  same per-session engine instance the broker service uses. */
+export function makeEngineHolder(options: {
+	getSession: () => VaultSession | null;
+	getRelay: () => CollabRelayLike | null;
+}): () => SharingEngine {
 	let cached: { engine: SharingEngine; session: VaultSession } | null = null;
 	return () => {
 		const session = options.getSession();
@@ -189,6 +194,21 @@ export function makeSharingServiceHandler(options: SharingServiceOptions): Servi
 		return view.map(toSharedMember);
 	}
 
+	async function handleShareCollection(envelope: Envelope): Promise<SharedMember[]> {
+		await requireCapability(envelope, options, SHARING_SHARE_CAPABILITY);
+		const input = (envelope.args[0] ?? {}) as Record<string, unknown>;
+		const entityId = typeof input.entityId === "string" ? input.entityId : "";
+		const type = typeof input.type === "string" ? input.type : "";
+		if (!entityId || !type) {
+			throw makeError("Invalid", "sharing.shareCollection: entityId + type required");
+		}
+		const invite = decodeInviteToken(input.invite);
+		const role = parseRole(input.role);
+		const view = await engineFor().shareCollection({ entityId, type, invite, role });
+		options.refreshMembership?.(entityId, type);
+		return view.map(toSharedMember);
+	}
+
 	async function handleRevoke(envelope: Envelope): Promise<SharedMember[]> {
 		await requireCapability(envelope, options, SHARING_SHARE_CAPABILITY);
 		const input = (envelope.args[0] ?? {}) as Record<string, unknown>;
@@ -217,6 +237,8 @@ export function makeSharingServiceHandler(options: SharingServiceOptions): Servi
 				return await handleCreateInvite(envelope);
 			case "share":
 				return await handleShare(envelope);
+			case "shareCollection":
+				return await handleShareCollection(envelope);
 			case "revoke":
 				return await handleRevoke(envelope);
 			case "access":

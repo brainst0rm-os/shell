@@ -1564,6 +1564,17 @@ export type SharingService = {
 		invite: ShareInviteToken;
 		role: RosterRole;
 	}): Promise<SharedMember[]>;
+	/** Owner: share a COLLECTION container (a chat Channel, a Project) — grants
+	 *  `invite` on the container AND cascades the same grant + DEK onto every
+	 *  existing child (its messages / tasks), so the whole collection syncs.
+	 *  Children created later are auto-shared by the shell. Returns the
+	 *  container's access record. Requires `sharing.share`. */
+	shareCollection(input: {
+		entityId: string;
+		type: string;
+		invite: ShareInviteToken;
+		role: RosterRole;
+	}): Promise<SharedMember[]>;
 	/** Owner: revoke `member` (base64 pubkey). Signed, append-only audit — the
 	 *  row is retained. Returns the resolved access record. Requires
 	 *  `sharing.share`. */

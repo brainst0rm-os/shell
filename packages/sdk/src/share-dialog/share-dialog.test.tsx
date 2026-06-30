@@ -74,6 +74,7 @@ describe("ShareDialog", () => {
 	let sharing: {
 		createInvite: ReturnType<typeof vi.fn<SharingService["createInvite"]>>;
 		share: ReturnType<typeof vi.fn<SharingService["share"]>>;
+		shareCollection: ReturnType<typeof vi.fn<SharingService["shareCollection"]>>;
 		revoke: ReturnType<typeof vi.fn<SharingService["revoke"]>>;
 	};
 	let roster: { members: ReturnType<typeof vi.fn<RosterService["members"]>> };
@@ -85,6 +86,7 @@ describe("ShareDialog", () => {
 		sharing = {
 			createInvite: vi.fn<SharingService["createInvite"]>(async () => "INVITE-TOKEN-XYZ"),
 			share: vi.fn<SharingService["share"]>(async () => []),
+			shareCollection: vi.fn<SharingService["shareCollection"]>(async () => []),
 			revoke: vi.fn<SharingService["revoke"]>(async () => []),
 		};
 		roster = {
@@ -147,6 +149,36 @@ describe("ShareDialog", () => {
 		});
 		// Reloaded after the share (initial mount + post-share).
 		expect(roster.members.mock.calls.length).toBeGreaterThanOrEqual(2);
+	});
+
+	it("collection mode adds via sharing.shareCollection (cascade), not share", async () => {
+		await act(async () => {
+			root.render(
+				<ShareDialog
+					entityId="chan_1"
+					entityType="io.brainstorm.chat/Channel/v1"
+					collection
+					sharing={sharing}
+					roster={roster}
+					canManage
+					labels={LABELS}
+					onClose={() => undefined}
+				/>,
+			);
+		});
+		await flush();
+		const input = codeInput();
+		if (!input) throw new Error("expected code input for a manager");
+		await act(async () => typeInto(input, "PASTED-CODE"));
+		await act(async () => addBtn()?.click());
+		await flush();
+		expect(sharing.shareCollection).toHaveBeenCalledWith({
+			entityId: "chan_1",
+			type: "io.brainstorm.chat/Channel/v1",
+			invite: "PASTED-CODE",
+			role: RosterRole.Editor,
+		});
+		expect(sharing.share).not.toHaveBeenCalled();
 	});
 
 	it("Owner revokes a non-owner member → sharing.revoke", async () => {

@@ -48,10 +48,14 @@ export type ShareDialogLabels = {
 export type ShareDialogProps = {
 	entityId: string;
 	entityType: string;
-	sharing: Pick<SharingService, "createInvite" | "share" | "revoke">;
+	sharing: Pick<SharingService, "createInvite" | "share" | "shareCollection" | "revoke">;
 	roster: Pick<RosterService, "members">;
 	/** True when the local user is the entity Owner — gates add / revoke. */
 	canManage: boolean;
+	/** When the entity is a COLLECTION container (a chat Channel, a Project),
+	 *  share via `shareCollection` so the grant cascades to its children (its
+	 *  messages / tasks). Default false → a single-entity `share` (a Note). */
+	collection?: boolean;
 	labels: ShareDialogLabels;
 	onClose: () => void;
 	testId?: string;
@@ -100,7 +104,8 @@ export function ShareDialog(props: ShareDialogProps): ReactElement {
 		setBusy(true);
 		setError(null);
 		try {
-			await sharing.share({ entityId, type: entityType, invite, role });
+			const input = { entityId, type: entityType, invite, role };
+			await (props.collection ? sharing.shareCollection(input) : sharing.share(input));
 			setCode("");
 			await reload();
 		} catch {
@@ -108,7 +113,17 @@ export function ShareDialog(props: ShareDialogProps): ReactElement {
 		} finally {
 			setBusy(false);
 		}
-	}, [code, busy, sharing, entityId, entityType, role, reload, labels.shareFailed]);
+	}, [
+		code,
+		busy,
+		sharing,
+		entityId,
+		entityType,
+		role,
+		reload,
+		labels.shareFailed,
+		props.collection,
+	]);
 
 	const onRevoke = useCallback(
 		async (pubkey: string) => {
