@@ -2423,6 +2423,24 @@ body.bs-table-col-resizing * {
 	user-select: none;
 }
 
+/* The shared property cells are built for fixed-width table columns (width:100%,
+   flex-wrap, ellipsis). Inline in a paragraph the host has no column width, so
+   the cell collapsed to near-zero and its "Empty" placeholder wrapped mid-word
+   (date) / truncated to "Em…" (number). Let the inline trigger size to its own
+   content on one line. */
+.notes__date-field-host .bs-cell-date-trigger,
+.notes__number-field-host .bs-cell-plain {
+	width: auto;
+	max-width: none;
+	flex-wrap: nowrap;
+	overflow: visible;
+	white-space: nowrap;
+}
+.notes__date-field-host .bs-cell-date-empty,
+.notes__date-field-host .bs-cell-date-value {
+	white-space: nowrap;
+}
+
 /* Inline single-select field (B11.3) — the Select-typed sibling of the inline
    checkbox / date / number. Self-contained: a chip trigger + an anchored
    options popover, carrying its own inline vocabulary (no vault dictionary). */
