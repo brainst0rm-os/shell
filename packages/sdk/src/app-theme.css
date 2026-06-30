@@ -452,6 +452,76 @@ select {
 }
 
 /* ============================================================
+ * INPUT — shared structural primitive `.bs-input`. The text-field
+ * counterpart to `.bs-btn` / `.bs-select`: every app's text inputs
+ * (text / search / number / date / email …) AND field-trigger buttons
+ * (a custom picker that visually reads as a field, e.g. Calendar's
+ * date trigger) build on this, so height / padding / radius / border /
+ * surface live in ONE place. Sizes ride the same control-height scale
+ * (sm 24 · md 32 · lg 40), so an input lines up pixel-exact beside any
+ * button / select of the same size — the whole point: a control's
+ * height comes from the scale, never from hand-rolled padding. An app
+ * supplies only layout deltas (flex / width), never the box.
+ * ============================================================ */
+:root .bs-input {
+	display: flex;
+	align-items: center;
+	width: 100%;
+	min-width: 0;
+	height: var(--control-height-md, 32px);
+	padding: 0 var(--space-2);
+	appearance: none;
+	background: var(--bg-elev);
+	border: var(--border-width) solid var(--border-strong);
+	border-radius: var(--radius-sm);
+	color: var(--text);
+	font-family: inherit;
+	font-size: var(--text-size-md);
+	text-align: left;
+	transition:
+		border-color var(--motion-duration-fast) var(--motion-easing-standard),
+		background var(--motion-duration-fast) var(--motion-easing-standard);
+}
+:root .bs-input::placeholder {
+	color: var(--text-faint);
+}
+:root .bs-input:hover:not(:disabled) {
+	border-color: var(--border-strong);
+	background: var(--hover);
+}
+/* Text inputs render focus whenever focused (you're typing); a trigger button
+ * focuses on keyboard nav. `:focus-visible` covers both in modern Chromium. */
+:root .bs-input:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: -1px;
+	border-color: transparent;
+}
+:root .bs-input:disabled {
+	cursor: not-allowed;
+	opacity: 0.55;
+}
+
+/* Sizes — md is the base height above; sm / lg only re-set height + padding. */
+:root .bs-input--sm {
+	height: var(--control-height-sm, 24px);
+	font-size: var(--text-size-sm);
+}
+:root .bs-input--lg {
+	height: var(--control-height-lg, 40px);
+}
+
+/* Multiline — a textarea grows vertically, so height becomes a min and the
+ * vertical padding returns (there's no single line to center against). */
+:root textarea.bs-input,
+:root .bs-input--multiline {
+	display: block;
+	height: auto;
+	min-height: var(--control-height-md, 32px);
+	padding: var(--space-2);
+	resize: vertical;
+}
+
+/* ============================================================
  * BUTTONS — canonical glossy primary, same recipe as the shell
  * Button (packages/shell/src/renderer/ui/button.css): 2-colour
  * theme face, no white top band, soft tinted speculars, inset

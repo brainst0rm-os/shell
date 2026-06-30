@@ -168,7 +168,7 @@ export function CalDavDialog({ caldav, entities, onClose, notify }: CalDavDialog
 					<label className="cal-detail__field">
 						<span className="cal-detail__label">{t("calendar.caldav.serverUrl")}</span>
 						<input
-							className="cal-detail__input"
+							className="bs-input cal-detail__input"
 							type="url"
 							required
 							placeholder="https://caldav.example.com/"
@@ -179,7 +179,7 @@ export function CalDavDialog({ caldav, entities, onClose, notify }: CalDavDialog
 					<label className="cal-detail__field">
 						<span className="cal-detail__label">{t("calendar.caldav.username")}</span>
 						<input
-							className="cal-detail__input"
+							className="bs-input cal-detail__input"
 							type="text"
 							required
 							autoComplete="username"
@@ -190,7 +190,7 @@ export function CalDavDialog({ caldav, entities, onClose, notify }: CalDavDialog
 					<label className="cal-detail__field">
 						<span className="cal-detail__label">{t("calendar.caldav.password")}</span>
 						<input
-							className="cal-detail__input"
+							className="bs-input cal-detail__input"
 							type="password"
 							required
 							autoComplete="current-password"

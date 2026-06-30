@@ -141,7 +141,7 @@ export function DateTimeField({
 				<button
 					ref={dateBtn}
 					type="button"
-					className="cal-detail__date-trigger"
+					className="cal-detail__date-trigger bs-input"
 					onClick={openDatePicker}
 					aria-label={t("calendar.detail.field.pickDate")}
 				>

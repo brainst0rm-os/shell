@@ -1236,12 +1236,14 @@ body.is-resizing .calendar-resize {
 	flex: 0 0 auto;
 }
 
+/* Square swatch beside the title input — matches the title's `.bs-input--lg`
+ * height so the title row sits on one baseline. */
 .cal-detail__icon {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: var(--control-height-md, 32px);
-	height: var(--control-height-md, 32px);
+	width: var(--control-height-lg, 40px);
+	height: var(--control-height-lg, 40px);
 	flex: 0 0 auto;
 	border-radius: var(--radius-md);
 	border: var(--border-width) solid var(--border-strong);
@@ -1311,25 +1313,8 @@ body.is-resizing .calendar-resize {
 	color: var(--text-dim);
 }
 
-.cal-detail__input,
-.cal-detail__textarea {
-	width: 100%;
-	font-family: inherit;
-	font-size: var(--text-size-md);
-	color: var(--text);
-	background: var(--bg-elev);
-	border: var(--border-width) solid var(--border-strong);
-	border-radius: var(--radius-sm);
-	padding: var(--space-2) var(--space-2);
-}
-
-.cal-detail__input:focus-visible,
-.cal-detail__textarea:focus-visible {
-	outline: 2px solid var(--color-focus-ring);
-	outline-offset: -1px;
-	border-color: transparent;
-}
-
+/* Box (height / border / surface / focus) comes from the shared `.bs-input`
+ * face; these rules supply only the calendar-specific deltas. */
 .cal-detail__input--title {
 	flex: 1 1 auto;
 	font-size: var(--text-size-lg);
@@ -1337,7 +1322,6 @@ body.is-resizing .calendar-resize {
 }
 
 .cal-detail__textarea {
-	resize: vertical;
 	min-height: 64px;
 }
 
@@ -1354,24 +1338,11 @@ body.is-resizing .calendar-resize {
 	gap: var(--space-2);
 }
 
+/* Box (height / border / surface) comes from the shared `.bs-input` face;
+ * this rule supplies only the flex layout + pointer affordance deltas. */
 .cal-detail__date-trigger {
 	flex: 1 1 auto;
-	min-width: 0;
-	font-family: inherit;
-	font-size: var(--text-size-md);
-	text-align: left;
-	color: var(--text);
-	background: var(--bg-elev);
-	border: var(--border-width) solid var(--border-strong);
-	border-radius: var(--radius-sm);
-	padding: var(--space-2) var(--space-2);
 	cursor: pointer;
-}
-
-.cal-detail__date-trigger:focus-visible {
-	outline: 2px solid var(--color-focus-ring);
-	outline-offset: -1px;
-	border-color: transparent;
 }
 
 .cal-detail__date-text[data-empty="true"] {
