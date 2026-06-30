@@ -2509,8 +2509,14 @@ body.bs-table-col-resizing * {
 	color: var(--text);
 }
 
+/* The add-option input lives in the menu's custom footer, whose runtime wrapper
+   carries only a top border — no padding. Give the input its own gutters (matching
+   the list's body inset) so "Add option…" doesn't hug the panel edges. */
 .notes__select-field-input {
-	margin-top: var(--space-1);
+	display: block;
+	box-sizing: border-box;
+	width: calc(100% - var(--space-2) * 2);
+	margin: var(--space-1) var(--space-2);
 	padding: var(--space-1);
 	border: var(--border-width) solid var(--color-border-subtle);
 	border-radius: var(--radius-sm);
