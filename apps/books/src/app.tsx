@@ -836,7 +836,6 @@ export function BooksApp(): ReactElement {
 					selectedId={selectedId}
 					open={showLibrary}
 					onSelect={openBook}
-					onImport={canImport ? importBook : undefined}
 					importError={importError}
 					onDismissError={() => setImportError(null)}
 				/>
@@ -844,7 +843,12 @@ export function BooksApp(): ReactElement {
 					<main className="books" ref={stageRef} />
 					{status !== ReaderStatus.Ready ? (
 						<div className="books__placeholder">
-							<ReaderNotice status={status} hasBooks={books.length > 0} usingVault={usingVault} />
+							<ReaderNotice
+								status={status}
+								hasBooks={books.length > 0}
+								usingVault={usingVault}
+								onImport={canImport ? importBook : undefined}
+							/>
 						</div>
 					) : null}
 				</div>
@@ -872,10 +876,12 @@ function ReaderNotice({
 	status,
 	hasBooks,
 	usingVault,
+	onImport,
 }: {
 	status: ReaderStatus;
 	hasBooks: boolean;
 	usingVault: boolean;
+	onImport?: (() => void) | undefined;
 }): ReactElement {
 	// Loading is a momentary state on every book open — a flashing glyph chip
 	// reads worse than a quiet line, so it stays plain text.
@@ -900,6 +906,14 @@ function ReaderNotice({
 				icon={IconName.View}
 				title={t("reader.emptyLibraryTitle")}
 				hint={t("reader.emptyLibraryHint")}
+				action={
+					onImport ? (
+						<button type="button" className="bs-btn" data-bs-primary onClick={onImport}>
+							<Icon name={IconName.Download} size={16} />
+							{t("library.importBook")}
+						</button>
+					) : undefined
+				}
 			/>
 		);
 	}

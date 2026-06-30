@@ -6,7 +6,6 @@
  * (matching Notes' chrome-light sidebar).
  */
 
-import { Icon, IconName } from "@brainstorm/sdk/icon";
 import { Searchbar } from "@brainstorm/sdk/searchbar";
 import { useMemo, useState } from "react";
 import type { ReactElement } from "react";
@@ -22,9 +21,6 @@ export type LibraryPanelProps = {
 	 *  toggle. */
 	open: boolean;
 	onSelect: (id: string) => void;
-	/** Picks + imports an EPUB/PDF into the library. Absent when the Files
-	 *  host service isn't available (standalone preview). */
-	onImport?: (() => void) | undefined;
 	/** A user-facing import failure (e.g. capability not granted) — shown as a
 	 *  dismissable banner so a failed import is never silent. */
 	importError?: string | null;
@@ -36,7 +32,6 @@ export function LibraryPanel({
 	selectedId,
 	open,
 	onSelect,
-	onImport,
 	importError,
 	onDismissError,
 }: LibraryPanelProps): ReactElement {
@@ -91,20 +86,12 @@ export function LibraryPanel({
 				</div>
 			) : null}
 			{books.length === 0 ? (
+				// Quiet note only — the primary "Import a book" CTA lives on the
+				// prominent reader-pane empty hero (one empty state owns the action,
+				// not two competing ones). Import also stays in the header menu.
 				<div className="books__library-blank">
 					<p className="books__library-blank-title">{t("library.empty")}</p>
 					<p className="books__library-blank-hint">{t("library.emptyHint")}</p>
-					{onImport ? (
-						<button
-							type="button"
-							className="bs-btn books__library-import-cta"
-							data-bs-primary
-							onClick={onImport}
-						>
-							<Icon name={IconName.Download} size={16} />
-							{t("library.importBook")}
-						</button>
-					) : null}
 				</div>
 			) : hasResults ? (
 				<div className="books__library-list">

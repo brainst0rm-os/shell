@@ -42,7 +42,7 @@ function ComposeField({
 		<label className="contacts-compose__field">
 			<span className="contacts-compose__label">{label}</span>
 			<input
-				className="contacts-compose__input"
+				className="bs-input contacts-compose__input"
 				type={type}
 				value={value}
 				placeholder={placeholder}

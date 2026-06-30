@@ -8,7 +8,6 @@
     "apps/browser/src/app.tsx",
     "apps/browser/src/find-bar.tsx",
     "apps/chat/src/app.tsx",
-    "apps/contacts/src/ui/compose-contact.tsx",
     "apps/contacts/src/ui/person-detail.tsx",
     "apps/contacts/src/ui/person-list.tsx",
     "apps/database/src/react/grid-view.tsx",
@@ -25,7 +24,6 @@
     "apps/theme-editor/src/app.tsx",
     "apps/theme-editor/src/ui/style-pack-editor.tsx",
     "apps/theme-editor/src/ui/token-grid.tsx",
-    "apps/theme-editor/src/ui/typography-editor.tsx",
-    "apps/whiteboard/src/app.tsx"
+    "apps/theme-editor/src/ui/typography-editor.tsx"
   ]
 }

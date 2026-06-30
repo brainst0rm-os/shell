@@ -224,23 +224,14 @@ button {
 
 /* In-place rename input (F-198) — swaps into the title on double-click;
  * keeps the title's face so the swap doesn't jump. */
+/* Box (height / border / surface / focus) comes from the shared `.bs-input`
+ * face (`--sm` to stay compact in the header); the app supplies only the
+ * semibold board-name weight, a min width, and the drag-region opt-out. */
 .whiteboard__board-name-input {
-	font: inherit;
-	font-size: var(--text-size-md);
 	font-weight: var(--text-weight-semibold, 600);
-	color: var(--text);
-	background: var(--bg-elev, transparent);
-	border: var(--border-width) solid var(--color-border-subtle, var(--border));
-	border-radius: var(--radius-sm);
-	padding: var(--space-0_5);
 	min-width: 160px;
 	max-width: 100%;
 	-webkit-app-region: no-drag;
-}
-
-.whiteboard__board-name-input:focus-visible {
-	outline: 2px solid var(--color-focus-ring);
-	outline-offset: -1px;
 }
 
 /* Header content-action icon buttons — one chrome for add / style / arrange /
