@@ -264,4 +264,28 @@ describe("template-entity-codec", () => {
 			expect(draft.properties).not.toHaveProperty("name");
 		});
 	});
+
+	describe("prototype-key hygiene (defense-in-depth)", () => {
+		// JSON.parse produces genuine own `__proto__`/`constructor`/`prototype`
+		// keys (an object literal would set the prototype instead) — the shape a
+		// crafted / hand-edited property bag could carry.
+		it("drops dangerous keys from objectToTemplateProperties' prototype", () => {
+			const properties = JSON.parse(
+				'{"status":"todo","__proto__":{"polluted":1},"constructor":"x","prototype":"y"}',
+			);
+			const result = objectToTemplateProperties({ type: "brainstorm/Task/v1", properties });
+			expect(result.prototype.status).toBe("todo");
+			for (const key of ["__proto__", "constructor", "prototype"]) {
+				expect(Object.prototype.hasOwnProperty.call(result.prototype, key)).toBe(false);
+			}
+		});
+
+		it("does not carry dangerous keys or pollute Object.prototype on instantiate", () => {
+			const prototype = JSON.parse('{"__proto__":{"polluted":1},"ok":1}');
+			const draft = instantiateObjectTemplate(sampleTemplate({ prototype }), { properties: {} });
+			expect(draft.properties.ok).toBe(1);
+			expect(Object.prototype.hasOwnProperty.call(draft.properties, "__proto__")).toBe(false);
+			expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+		});
+	});
 });

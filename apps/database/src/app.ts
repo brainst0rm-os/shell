@@ -2996,7 +2996,7 @@ async function createEntityInActiveList(state: AppState): Promise<void> {
 			label:
 				option.kind === CreateOptionKind.Blank
 					? t("brainstorm.database.create.blank")
-					: option.template.name || t("brainstorm.database.create.blank"),
+					: option.template.name || t("brainstorm.database.create.untitledTemplate"),
 			onSelect: () => void performRowCreate(state, list, plan, option),
 		})),
 		{
