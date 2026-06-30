@@ -68,6 +68,19 @@ export function VaultProvider({ children }: { children: ReactNode }) {
 		})();
 	}, [refresh]);
 
+	// The dashboard window persists across a vault switch (not remounted), so a
+	// switch this renderer didn't initiate — a main-side activation, or a vault
+	// created/opened through the raw preload bridge rather than the React
+	// methods below — never runs the `refresh()` those callbacks do. Subscribe
+	// to the main-side `vaults:active-changed` push so `current` tracks the live
+	// session regardless of who switched it; without this the theme stays pinned
+	// to the welcome-screen Midnight (effectiveTheme's `!hasVault` gate) and the
+	// welcome/dashboard routing to the stale surface. Optional-chained so a
+	// stale preload bundle (no HMR) can't crash the dashboard.
+	useEffect(() => {
+		return window.brainstorm.vaults?.onActiveChanged?.(() => void refresh());
+	}, [refresh]);
+
 	const create = useCallback(
 		async (options: CreateVaultOptions) => {
 			try {

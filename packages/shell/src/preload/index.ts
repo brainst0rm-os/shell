@@ -154,6 +154,12 @@ const vaults = {
 	/** Subscribe to `app:lock-changed`; returns an unsubscribe. */
 	onLockChanged: (listener: (payload: LockChangedPayload) => void): (() => void) =>
 		subscribe<LockChangedPayload>("app:lock-changed", listener),
+	/** Subscribe to `vaults:active-changed` — the main process pushes this on
+	 *  every active-vault open/switch (alongside the dashboard rebind), so the
+	 *  renderer can re-read the live session even when it didn't initiate the
+	 *  switch. Returns an unsubscribe. */
+	onActiveChanged: (listener: () => void): (() => void) =>
+		subscribe<void>("vaults:active-changed", listener),
 };
 
 const credentials = {
