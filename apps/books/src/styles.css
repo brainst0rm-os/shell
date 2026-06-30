@@ -331,10 +331,9 @@ body {
 	padding: var(--space-2);
 }
 
-/* Empty-shelf CTAs — the shared `.bs-btn` primitive owns the face (primary
-   gloss / secondary). The app supplies only layout: a full-width stacked
-   column so the two actions read as one tidy block. */
-.books__library-import-cta,
+/* The sample-book opt-in CTA — the shared `.bs-btn` primitive owns the face;
+   the app supplies only a full-width layout. (The empty-library import CTA now
+   lives on the reader-pane hero, not in this panel.) */
 .books__library-sample {
 	width: 100%;
 }

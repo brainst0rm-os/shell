@@ -102,7 +102,7 @@ function BoardTitle({
 		return (
 			<input
 				ref={inputRef}
-				className="whiteboard__board-name-input"
+				className="bs-input bs-input--sm whiteboard__board-name-input"
 				value={draft}
 				aria-label={t("whiteboard.board.rename.aria")}
 				onChange={(e) => setDraft(e.target.value)}
