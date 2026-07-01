@@ -12,6 +12,13 @@ const DEFAULTS = {
 	// Row menu (shared object-menu extras)
 	"brainstorm.database.menu.rename": "Rename",
 	"brainstorm.database.menu.delete": "Delete",
+	"brainstorm.database.menu.saveAsTemplate": "Save as template",
+
+	// Create-flow template picker (B11.10 templates foundation)
+	"brainstorm.database.create.pickTemplate": "New from template",
+	"brainstorm.database.create.blank": "Blank",
+	"brainstorm.database.create.untitledTemplate": "Untitled template",
+	"brainstorm.database.status.templateSaved": "Saved as template",
 
 	// Cross-app drag grip (DND-4)
 	"brainstorm.database.row.drag": "Drag to another app",

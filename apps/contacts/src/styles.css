@@ -591,20 +591,8 @@ body.is-resizing .contacts__resize {
 	color: var(--text-dim);
 }
 
-.contacts-compose__input {
-	height: var(--control-height-md, 32px);
-	padding: 0 var(--space-2);
-	border: var(--border-width) solid var(--border);
-	border-radius: var(--radius-md);
-	background: var(--bg-elev);
-	color: var(--text);
-	font-size: var(--text-size-md);
-	outline: none;
-}
-
-.contacts-compose__input:focus-visible {
-	border-color: var(--color-focus-ring);
-}
+/* Box (height / border / surface / focus) comes from the shared `.bs-input`
+ * face; the compose field needs no app-specific deltas. */
 
 .contacts-compose__actions {
 	display: flex;

@@ -49,6 +49,7 @@ import { createGeminiProvider } from "./ai/gemini-provider";
 import { type OllamaHttp, createOllamaProvider } from "./ai/ollama-provider";
 import { createOpenAiProvider } from "./ai/openai-provider";
 import { ProviderRegistry } from "./ai/provider-registry";
+import { maskAppWindowsForLock } from "./apps/app-window-lock";
 import { wireExternalLinkRouting } from "./apps/external-link-routing";
 import { validateManifest } from "./apps/manifest";
 import { appSelfManagesTabs } from "./apps/window-container";
@@ -1179,6 +1180,12 @@ void app.whenReady().then(async () => {
 		crashQueue,
 	});
 
+	// Synchronous app-version read for the preload bridge (`brainstorm.version`),
+	// so the renderer shows the real packaged version instead of a placeholder.
+	ipcMain.on("app:get-version", (event) => {
+		event.returnValue = app.getVersion();
+	});
+
 	// 13.6 — manual-download update check (app-global). The shell's own
 	// egress to a build-time-constant release feed; results carry only a
 	// download page the renderer opens via the OS-handoff chokepoint.
@@ -2014,6 +2021,14 @@ void app.whenReady().then(async () => {
 		// requiring a manual refetch.
 		if (dashboardWindow && !dashboardWindow.webContents.isDestroyed()) {
 			dashboardWindow.webContents.send("shortcuts:bindings-changed");
+			// Same persists-across-switch reason as the dashboard rebind above:
+			// the renderer's VaultProvider only refreshes `current` on mount + its
+			// own React create/open/activate calls, so a switch it didn't initiate
+			// (a main-side activation, or a raw-IPC create) leaves `current` stale —
+			// which pins the theme to the welcome-screen Midnight (effectiveTheme's
+			// `!hasVault` gate) and the welcome/dashboard routing to the wrong
+			// surface. Push a signal so the renderer re-reads the live session.
+			dashboardWindow.webContents.send("vaults:active-changed");
 		}
 	};
 	onActiveVaultSessionChanged(() => {
@@ -2413,15 +2428,11 @@ void app.whenReady().then(async () => {
 			const launcher = launchSetup.getLauncherSync();
 			// Warm-kept (parked) renderers hold the now-locked session's data in
 			// memory — tear them down on lock rather than just hiding them (they'd
-			// otherwise be revealed by the unlock show-loop below). Visible windows
-			// are masked/revealed as before.
+			// otherwise be revealed by the unlock show-loop). Visible windows are
+			// hidden + told to conceal (the renderer-overlay backstop) and revealed
+			// on unlock — see `maskAppWindowsForLock`.
 			if (locked) launcher?.evictAllParked();
-			for (const view of launcher?.allContainers() ?? []) {
-				const base = view.container.baseWindow;
-				if (base.isDestroyed()) continue;
-				if (locked) base.hide();
-				else revealWindow(base);
-			}
+			maskAppWindowsForLock(launcher, locked, revealWindow);
 			if (locked && dashboardWindow && !dashboardWindow.isDestroyed()) dashboardWindow.focus();
 		},
 	});

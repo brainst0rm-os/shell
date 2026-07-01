@@ -32,7 +32,10 @@ export function InspectorProperties({
 	inheritedDefs = [],
 }: {
 	entity: EntityRow;
-	onEdit: EntityPropertyEdit;
+	/** Absent ⇒ the record is read-only (locked): every cell paints read-only.
+	 *  Passed straight to each `EditableCell`, so a locked record's inherited
+	 *  collection rows render read-only too. */
+	onEdit: EntityPropertyEdit | undefined;
 	/** Collection-scoped (list overlay) defs the entity inherits from the
 	 *  collections it belongs to — resolved by the caller via
 	 *  `inheritedPropertyDefs`. Rendered as editable rows after the entity's own

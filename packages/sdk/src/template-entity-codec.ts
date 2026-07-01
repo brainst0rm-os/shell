@@ -86,11 +86,15 @@ export type SaveObjectAsTemplateOptions = {
  * follow-up through the editor insert path, mirroring `instantiateObjectTemplate`.
  */
 export function objectToTemplateProperties(
-	entity: Entity,
+	entity: Pick<Entity, "type" | "properties">,
 	options: SaveObjectAsTemplateOptions = {},
 ): TemplateEntityProperties {
 	const props = entity.properties as Record<string, unknown>;
-	const excluded = new Set<string>([...TEMPLATE_PRESENTATION_KEYS, ...TEMPLATE_CONTROL_KEYS]);
+	const excluded = new Set<string>([
+		...TEMPLATE_PRESENTATION_KEYS,
+		...TEMPLATE_CONTROL_KEYS,
+		...UNSAFE_CLONE_KEYS,
+	]);
 	const prototype: Record<string, unknown> = {};
 	for (const [k, v] of Object.entries(props)) {
 		if (!excluded.has(k)) prototype[k] = deepCloneValue(v);
@@ -181,9 +185,18 @@ export function templateAppliesToType(template: Template, targetType: string): b
 	return template.templateKind === TemplateKind.Object && template.targetType === targetType;
 }
 
+/** Keys never carried through a template clone. Spreading these never pollutes
+ *  global `Object.prototype` (an own `__proto__` invokes the local literal's
+ *  setter, not the global), but skipping them keeps a crafted/hand-edited
+ *  property bag from smuggling a prototype-shaped key onto an instance —
+ *  defense-in-depth at the one copy boundary. */
+const UNSAFE_CLONE_KEYS = new Set<string>(["__proto__", "constructor", "prototype"]);
+
 function deepCloneRecord(value: Record<string, unknown>): Record<string, unknown> {
 	const out: Record<string, unknown> = {};
-	for (const [k, v] of Object.entries(value)) out[k] = deepCloneValue(v);
+	for (const [k, v] of Object.entries(value)) {
+		if (!UNSAFE_CLONE_KEYS.has(k)) out[k] = deepCloneValue(v);
+	}
 	return out;
 }
 
