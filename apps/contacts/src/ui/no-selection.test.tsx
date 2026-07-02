@@ -6,6 +6,7 @@
  * contact list when that panel is hidden.
  */
 
+import { Icon, IconName } from "@brainstorm/sdk/icon";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -55,6 +56,24 @@ describe("NoSelection", () => {
 			cta?.click();
 		});
 		expect(onCreate).toHaveBeenCalledTimes(1);
+	});
+
+	it("uses the address-book people glyph, not the generic Entity cube fallback", () => {
+		render({ listOpen: true, onCreate: vi.fn() });
+		const glyph = container.querySelector(".bs-empty-state__glyph")?.innerHTML ?? "";
+		expect(glyph).not.toBe("");
+
+		function renderIcon(name: IconName): string {
+			const host = document.createElement("div");
+			const iconRoot = createRoot(host);
+			act(() => iconRoot.render(<Icon name={name} size={28} />));
+			const html = host.innerHTML;
+			act(() => iconRoot.unmount());
+			return html;
+		}
+
+		expect(glyph).toBe(renderIcon(IconName.AddressBook));
+		expect(glyph).not.toBe(renderIcon(IconName.Entity));
 	});
 
 	it("drops the choose-from-the-list instruction when the list panel is hidden", () => {

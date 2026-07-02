@@ -97,6 +97,42 @@ function historyButton(): HTMLButtonElement {
 	return el;
 }
 
+describe("fresh session chrome", () => {
+	it("opens exactly one tab on a fresh vault (no persisted session)", async () => {
+		await render(<BrowserApp />);
+		// createSession mints a single blank tab; with no BrowsingSession/v1 row
+		// to restore, the chrome must stay on that one tab (two tabs at launch
+		// only ever come from a persisted, restored session — never a fresh boot).
+		expect(container.querySelectorAll(".browser__tab").length).toBe(1);
+	});
+
+	it("hides the security badge on a blank new tab (no remote origin)", async () => {
+		await render(<BrowserApp />);
+		// The connection badge has no meaningful state for about:blank, so it must
+		// not render (a bare dot with no icon reads as a stray/placeholder element).
+		expect(container.querySelector(".browser__security")).toBeNull();
+	});
+
+	it("shows a lock badge once a secure page loads", async () => {
+		await render(<BrowserApp />);
+		const omnibox = container.querySelector<HTMLInputElement>(".browser__omnibox");
+		if (!omnibox) throw new Error("omnibox missing");
+		const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+		setter?.call(omnibox, "https://example.test");
+		await act(async () => {
+			omnibox.dispatchEvent(new Event("input", { bubbles: true }));
+		});
+		await act(async () => {
+			omnibox.closest("form")?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+		});
+		const badge = container.querySelector<HTMLElement>(".browser__security");
+		expect(badge).not.toBeNull();
+		expect(badge?.classList.contains("browser__security--secure")).toBe(true);
+		// A real glyph, not an empty dot.
+		expect(badge?.querySelector("svg")).not.toBeNull();
+	});
+});
+
 describe("recently-closed reopen affordance", () => {
 	it("shows an empty state while nothing was closed or visited", async () => {
 		await render(<BrowserApp />);

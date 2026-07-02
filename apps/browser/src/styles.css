@@ -194,21 +194,21 @@ body {
 }
 
 .browser__security {
-	width: 10px;
-	height: 10px;
-	border-radius: 50%;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
 	margin: 0 var(--space-1, var(--space-1));
 	flex: none;
-	background: var(--color-text-tertiary);
+	color: var(--color-text-tertiary);
 }
 
 .browser__security--secure {
-	background: var(--color-state-success);
+	color: var(--color-state-success);
 }
 
 .browser__security--insecure,
 .browser__security--mixed {
-	background: var(--color-state-warning);
+	color: var(--color-state-warning);
 }
 
 .browser__omnibox-wrap {

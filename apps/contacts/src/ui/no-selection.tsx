@@ -5,6 +5,10 @@
  * empties, so the empty pane is actionable like Chat / Mailbox / Books. The
  * hint adapts when the contact list panel is hidden — "choose from the list"
  * is a dead instruction with no list on screen.
+ *
+ * Icon: `AddressBook` — the shared set's people/contacts glyph — so the empty
+ * state reads as topical (like Mailbox's envelope, Chat's speech bubble)
+ * instead of the generic `Entity` cube fallback.
  */
 
 import { EmptyState } from "@brainstorm/sdk/empty-state";
@@ -21,7 +25,7 @@ export function NoSelection({
 }): ReactElement {
 	return (
 		<EmptyState
-			icon={IconName.Entity}
+			icon={IconName.AddressBook}
 			title={t("placeholder.title")}
 			hint={t(listOpen ? "placeholder.blurb" : "placeholder.blurb.listHidden")}
 			action={
