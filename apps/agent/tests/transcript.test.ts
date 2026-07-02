@@ -5,6 +5,7 @@ import {
 	type TranscriptMessage,
 	buildAiMessages,
 	deriveConversationTitle,
+	linkifyEntityRefs,
 	sortMessages,
 } from "../src/logic/transcript";
 
@@ -74,5 +75,31 @@ describe("deriveConversationTitle", () => {
 
 	it("falls back when the body is blank", () => {
 		expect(deriveConversationTitle("   \n  ", "New conversation")).toBe("New conversation");
+	});
+});
+
+describe("linkifyEntityRefs (F-319)", () => {
+	it("rewrites `[id] Title` to a `[Title](id)` markdown link", () => {
+		expect(linkifyEntityRefs("- [n_mqz1aegg_2qmlcl] Northbound Q3 plan 32834")).toBe(
+			"- [Northbound Q3 plan 32834](n_mqz1aegg_2qmlcl)",
+		);
+	});
+
+	it("labels a bare `[id]` with the id itself (citationsToLinks fallback)", () => {
+		expect(linkifyEntityRefs("see [ent_abc123].")).toBe("see [ent_abc123](ent_abc123).");
+	});
+
+	it("handles multiple refs on one line, keeping the separator text", () => {
+		expect(linkifyEntityRefs("[n_a1] Foo and [n_b2] Bar")).toBe("[Foo and](n_a1) [Bar](n_b2)");
+	});
+
+	it("leaves real markdown links, prose brackets, and headings untouched", () => {
+		const body = "### Plan\n**bold** [label](n_x1) and [x] done, [TODO] later, [1] footnote";
+		expect(linkifyEntityRefs(body)).toBe(body);
+	});
+
+	it("leaves fenced code blocks untouched", () => {
+		const body = "```\n[n_abc_1] not a citation\n```\n[n_abc_1] Real Title";
+		expect(linkifyEntityRefs(body)).toBe("```\n[n_abc_1] not a citation\n```\n[Real Title](n_abc_1)");
 	});
 });

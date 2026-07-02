@@ -18,7 +18,7 @@
  */
 
 import { COLLECTION_TYPE_URL } from "@brainstorm/sdk-types";
-import { friendlyTypeName } from "@brainstorm/sdk/system-entities";
+import { friendlyTypeName, isChildEntityType } from "@brainstorm/sdk/system-entities";
 import type { List } from "../types/list";
 import { ListSourceKind } from "../types/list-source";
 import {
@@ -152,15 +152,19 @@ export function buildVaultLists(
 		views.push(gridView(viewId, listId, columns));
 	}
 
-	// Combined list — every type at once. Useful as a single landing pane
-	// and so an empty-but-typed vault still has one selectable List.
-	if (orderedTypes.length > 0) {
-		const allTypes = orderedTypes.map(([t]) => t);
+	// Combined list — every top-level type at once. Useful as a single
+	// landing pane and so an empty-but-typed vault still has one selectable
+	// List. Parent-scoped child rows (Messages, Comments — F-318) live inside
+	// their containers and keep their dedicated type-List above, but are
+	// excluded here so they don't bury the vault's real documents.
+	const allTypes = orderedTypes.map(([t]) => t).filter((t) => !isChildEntityType(t));
+	if (allTypes.length > 0) {
+		const topLevel = entities.filter((e) => !isChildEntityType(e.type));
 		lists.push({
 			id: ALL_VAULT_LIST_ID,
 			name: "All vault items",
 			icon: null,
-			description: `${entities.length} ${entities.length === 1 ? "item" : "items"} across ${allTypes.length} ${allTypes.length === 1 ? "type" : "types"}`,
+			description: `${topLevel.length} ${topLevel.length === 1 ? "item" : "items"} across ${allTypes.length} ${allTypes.length === 1 ? "type" : "types"}`,
 			source: { kind: ListSourceKind.ByType, types: allTypes },
 			members: { include: [], exclude: [] },
 			views: [ALL_VAULT_VIEW_ID],
@@ -169,7 +173,7 @@ export function buildVaultLists(
 			createdAt: now,
 			updatedAt: now,
 		});
-		views.push(gridView(ALL_VAULT_VIEW_ID, ALL_VAULT_LIST_ID, deriveColumns(entities)));
+		views.push(gridView(ALL_VAULT_VIEW_ID, ALL_VAULT_LIST_ID, deriveColumns(topLevel)));
 	}
 
 	return { db, lists, views };

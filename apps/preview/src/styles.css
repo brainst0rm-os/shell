@@ -62,8 +62,14 @@ button {
 }
 
 /* Main column: the stage/inspector body over the filmstrip — the original
- * two-row layout, now nested beside the sidebar. */
+ * two-row layout, now nested beside the sidebar.
+ * `grid-column: 2` is load-bearing: the collapsed sidebar is `display: none`,
+ * which removes its grid item entirely, so an auto-placed main would slide
+ * into column 1 (`auto`) and shrink-wrap to content width (~400px of an
+ * 1100px window — F-317: left-hugging empty state + inspector pinned mid-
+ * window). Pinning main to the `1fr` track keeps it full-width either way. */
 .preview__main {
+	grid-column: 2;
 	min-width: 0;
 	min-height: 0;
 	display: grid;

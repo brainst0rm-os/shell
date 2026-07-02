@@ -45,6 +45,13 @@ describe("isSystemList", () => {
 		expect(isSystemList(TASKS, isVaultDerived)).toBe(false);
 	});
 
+	it("classifies conversation-child type-lists under System (F-318)", () => {
+		const messages = list("list_vault_msg", "Messages", ["brainstorm/Message/v1"]);
+		const comments = list("list_vault_cmt", "Comments", ["brainstorm/Comment/v1"]);
+		expect(isSystemList(messages, isVaultDerived)).toBe(true);
+		expect(isSystemList(comments, isVaultDerived)).toBe(true);
+	});
+
 	it("a user-created collection is NEVER system — even over a system type", () => {
 		const userOverSystem = list("list_user_x", "My triggers", ["brainstorm/Trigger/v1"]);
 		expect(isSystemList(userOverSystem, isVaultDerived)).toBe(false);

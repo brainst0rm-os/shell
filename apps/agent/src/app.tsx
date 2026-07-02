@@ -93,7 +93,12 @@ import {
 	generalizeConversationToWorkflow,
 } from "./logic/save-as-automation";
 import { persistWorkflowDraft } from "./logic/save-as-automation-persist";
-import { buildAiMessages, deriveConversationTitle, sortMessages } from "./logic/transcript";
+import {
+	buildAiMessages,
+	deriveConversationTitle,
+	linkifyEntityRefs,
+	sortMessages,
+} from "./logic/transcript";
 import { runAgentTurn, usedToolNames } from "./logic/turn";
 import { buildVaultDataContextBlock } from "./logic/vault-data-context";
 import { buildWorkspaceContextBlock, joinContextBlocks } from "./logic/workspace-context";
@@ -1310,7 +1315,7 @@ export function AgentApp(): ReactElement {
 									<div className="agent__msg-body">
 										{m.role === MessageRole.Assistant ? (
 											<Markdown
-												source={m.body}
+												source={linkifyEntityRefs(m.body)}
 												onEntityLink={(target) =>
 													target && !/\s/.test(target) ? () => openCitation(target) : null
 												}

@@ -388,8 +388,15 @@ export function dateChip(task: Task, now: number, overdue: boolean): HTMLSpanEle
 	const el = document.createElement("span");
 	el.className = "task-row__chip";
 	el.dataset.kind = overdue ? "date-overdue" : "date";
-	const labelKey = task.dueAt !== null ? "tasks.row.due" : "tasks.row.scheduled";
-	el.textContent = t(labelKey, { date: formatDateRelative(dateAnchor, now) });
+	// One visible format for every date chip — the bare relative date. The
+	// due-vs-scheduled distinction stays discoverable via tooltip + aria.
+	const date = formatDateRelative(dateAnchor, now);
+	el.textContent = date;
+	const semantics = t(task.dueAt !== null ? "tasks.row.due.aria" : "tasks.row.scheduled.aria", {
+		date,
+	});
+	el.title = semantics;
+	el.setAttribute("aria-label", semantics);
 	return el;
 }
 

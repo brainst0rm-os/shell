@@ -11,6 +11,8 @@ import {
 const NOTE = "io.brainstorm.notes/Note/v1";
 const TASK = "brainstorm/Task/v1";
 const VIEW = "brainstorm/CalendarView/v1";
+const MESSAGE = "brainstorm/Message/v1";
+const COMMENT = "brainstorm/Comment/v1";
 
 function row(id: string, type: string, deletedAt: number | null = null) {
 	return { id, type, deletedAt };
@@ -54,6 +56,11 @@ describe("unresolvedTypes", () => {
 			row("c", "brainstorm/Theme/v1"),
 			row("d", TASK),
 		];
+		expect(unresolvedTypes(entities, new Map())).toEqual([TASK]);
+	});
+
+	it("never queries conversation-child types — a Message is not top-level content (F-318)", () => {
+		const entities = [row("a", MESSAGE), row("b", COMMENT), row("c", TASK)];
 		expect(unresolvedTypes(entities, new Map())).toEqual([TASK]);
 	});
 });
@@ -126,6 +133,15 @@ describe("browsableTypeSet", () => {
 			[NOTE, { appId: "notes", label: "Notes" }],
 			["brainstorm/ListView/v1", { appId: "database", label: "Database" }],
 			["brainstorm/BrowsingSession/v1", { appId: "browser", label: "Browser" }],
+		]);
+		expect([...browsableTypeSet(cache)]).toEqual([NOTE]);
+	});
+
+	it("excludes conversation-child types even when the generic fallback viewer answers for them (F-318)", () => {
+		const cache = new Map<string, OpenerMeta | null>([
+			[NOTE, { appId: "notes", label: "Notes" }],
+			[MESSAGE, { appId: "preview", label: "Preview" }],
+			[COMMENT, { appId: "preview", label: "Preview" }],
 		]);
 		expect([...browsableTypeSet(cache)]).toEqual([NOTE]);
 	});

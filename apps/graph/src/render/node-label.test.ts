@@ -15,17 +15,32 @@ function entity(props: Record<string, unknown>, id = "abcdef0123456789"): Entity
 }
 
 describe("rawNodeLabel", () => {
-	it("prefers name, then title, then an id prefix", () => {
+	it("prefers name, then title", () => {
 		expect(rawNodeLabel(entity({ name: "Alpha", title: "Beta" }))).toBe("Alpha");
 		expect(rawNodeLabel(entity({ title: "Beta" }))).toBe("Beta");
-		expect(rawNodeLabel(entity({}))).toBe("abcdef01");
 	});
 
-	it("only nullish name falls back (mirrors the pre-extraction `?? id`)", () => {
-		// `?? title ?? id` — an empty string is present, not nullish, so it
-		// is kept verbatim exactly as both renderers did before extraction.
-		expect(rawNodeLabel(entity({ name: "", title: "Gamma" }))).toBe("");
-		expect(rawNodeLabel(entity({ title: null }))).toBe("abcdef01");
+	it("falls back to a human type caption, never a raw id fragment (F-320)", () => {
+		// The old `?? entity.id.slice(0, 8)` painted "ent_mr15" on every
+		// title-less node (the shared `ent_<base36-timestamp>` prefix is
+		// identical for every entity minted the same day). The fallback must
+		// read like a thing, not an internal.
+		const label = rawNodeLabel(entity({}));
+		expect(label).toBe("Note (untitled)");
+		expect(label).not.toContain("abcdef01");
+	});
+
+	it("skips empty / whitespace-only / non-string name and title", () => {
+		// An empty `name` no longer shadows a real `title` (the pre-F-320
+		// `??` chain kept "" verbatim and painted a blank label).
+		expect(rawNodeLabel(entity({ name: "", title: "Gamma" }))).toBe("Gamma");
+		expect(rawNodeLabel(entity({ name: "   ", title: null }))).toBe("Note (untitled)");
+		expect(rawNodeLabel(entity({ name: 42, title: { rich: true } }))).toBe("Note (untitled)");
+	});
+
+	it("derives the caption's type name from the entity type id", () => {
+		const task = { ...entity({}), type: "brainstorm/Task/v1" } as EntityRow;
+		expect(rawNodeLabel(task)).toBe("Task (untitled)");
 	});
 });
 
@@ -60,5 +75,17 @@ describe("nodeLabel truncation (Pixi label-clip regression)", () => {
 	it("keeps a boundary-length name (exactly the cap) verbatim", () => {
 		const exact = "z".repeat(NODE_LABEL_MAX_CHARS);
 		expect(nodeLabel(entity({ name: exact }))).toBe(exact);
+	});
+
+	it("truncates from the END only — the output is always a prefix (F-320)", () => {
+		// Guards the leading-clip class ("Note" must never surface as "ote"):
+		// whatever the cap does, the painted text starts with the name's own
+		// first characters and the ellipsis sits at the tail.
+		for (const name of ["Note", "Content Calendar", `Prefix ${"y".repeat(200)}`]) {
+			const out = nodeLabel(entity({ name }));
+			const body = out.endsWith("…") ? out.slice(0, -1) : out;
+			expect(name.startsWith(body)).toBe(true);
+			expect(out.startsWith(name[0] as string)).toBe(true);
+		}
 	});
 });

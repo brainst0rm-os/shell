@@ -1589,7 +1589,9 @@ function LocalBadge({
 }): ReactElement | null {
 	if (!controller || !snap || snap.localRootId === null) return null;
 	const node = controller.getState().scene.renderNodes.find((n) => n.id === snap.localRootId);
-	const label = node ? rawNodeLabel(node.entity) : snap.localRootId.slice(0, 8);
+	// The root can vanish from the scene mid-view (deleted / filtered out);
+	// never surface its raw id fragment in that window (F-320).
+	const label = node ? rawNodeLabel(node.entity) : t("local.rootGone");
 	const depthText = plural(snap.localDepth, "local.hops", "local.hopsPlural");
 
 	return (

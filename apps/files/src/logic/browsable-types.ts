@@ -15,6 +15,7 @@
  * testable.
  */
 
+import { isChildEntityType } from "@brainstorm/sdk/system-entities";
 import { FILE_TYPE, FOLDER_TYPE, entityTypeName } from "../types/entity";
 
 /** Type-name families that are app-internal state / view config / logs /
@@ -59,6 +60,15 @@ export function isAppInternalType(type: string): boolean {
 	return INTERNAL_NAME_SUFFIXES.some((suffix) => name !== suffix && name.endsWith(suffix));
 }
 
+/** Hidden from the universal browser: app-internal plumbing, plus
+ *  parent-scoped child content (Messages, Comments — F-318). Child rows are
+ *  real user content but live inside their container, and the generic
+ *  fallback viewer answers `intents.suggest` for ANY typed entity, so the
+ *  opener registry alone would let them flood the top level. */
+function isHiddenFromBrowser(type: string): boolean {
+	return isChildEntityType(type) || isAppInternalType(type);
+}
+
 /** The default opener app for a type, or `null` when the registry has none
  *  (the type is not browsable). A resolved-but-unbrowsable type maps to
  *  `null` so it is never re-queried. */
@@ -83,7 +93,7 @@ export function unresolvedTypes(entities: readonly EntityLike[], cache: OpenerCa
 		// `isAppInternalType` runs at most once per distinct, unresolved type
 		// rather than once per row.
 		if (cache.has(type) || out.has(type)) continue;
-		if (isAppInternalType(type)) continue; // never browsable — don't waste an IPC query
+		if (isHiddenFromBrowser(type)) continue; // never browsable — don't waste an IPC query
 		out.add(type);
 	}
 	return [...out];
@@ -94,7 +104,7 @@ export function unresolvedTypes(entities: readonly EntityLike[], cache: OpenerCa
 export function browsableTypeSet(cache: OpenerCache): Set<string> {
 	const out = new Set<string>();
 	for (const [type, opener] of cache) {
-		if (opener !== null && !isAppInternalType(type)) out.add(type);
+		if (opener !== null && !isHiddenFromBrowser(type)) out.add(type);
 	}
 	return out;
 }

@@ -346,9 +346,7 @@ describe("AutomationsApp", () => {
 		const row = container.querySelector('[data-testid="host-status"]');
 		expect(row).toBeTruthy();
 		expect(row?.classList.contains("au-host--self")).toBe(true);
-		expect(row?.querySelector(".au-host__label")?.textContent).toBe(
-			"This device is the automation host.",
-		);
+		expect(row?.querySelector(".au-host__label")?.textContent).toBe("Schedules run on this device.");
 		// THIS device hosts — no Claim affordance.
 		expect(row?.querySelector(".au-host__claim")).toBeNull();
 		await unmount();
@@ -368,10 +366,11 @@ describe("AutomationsApp", () => {
 		await flush();
 		const row = container.querySelector('[data-testid="host-status"]');
 		expect(row?.querySelector(".au-host__label")?.textContent).toBe(
-			"No device hosts automations yet — claim it to run schedules here.",
+			"Schedules need one of your devices to run on.",
 		);
 		const claim = row?.querySelector<HTMLButtonElement>(".au-host__claim");
 		expect(claim).toBeTruthy();
+		expect(claim?.textContent).toBe("Use this device");
 		expect(shell.claimCalls).toBe(0);
 		await act(async () => {
 			claim?.click();
@@ -383,7 +382,7 @@ describe("AutomationsApp", () => {
 		const after = container.querySelector('[data-testid="host-status"]');
 		expect(after?.classList.contains("au-host--self")).toBe(true);
 		expect(after?.querySelector(".au-host__label")?.textContent).toBe(
-			"This device is the automation host.",
+			"Schedules run on this device.",
 		);
 		expect(after?.querySelector(".au-host__claim")).toBeNull();
 		await unmount();
@@ -404,7 +403,7 @@ describe("AutomationsApp", () => {
 		const row = container.querySelector('[data-testid="host-status"]');
 		expect(row?.classList.contains("au-host--other")).toBe(true);
 		expect(row?.querySelector(".au-host__label")?.textContent).toBe(
-			"Another device hosts automations.",
+			"Schedules run on another device.",
 		);
 		expect(row?.querySelector(".au-host__claim")).toBeTruthy();
 		await unmount();

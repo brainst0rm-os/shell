@@ -123,6 +123,24 @@ describe("glance-only chips", () => {
 		expect(chip?.tagName).toBe("SPAN");
 	});
 
+	it("due and scheduled chips share ONE visible format (bare date); semantics live in tooltip + aria", () => {
+		const NOW = new Date(2026, 5, 20, 10, 0, 0, 0).getTime();
+		const JUN_27 = new Date(2026, 5, 27, 9, 0, 0, 0).getTime();
+		const chipOf = (row: HTMLElement) =>
+			row.querySelector<HTMLElement>('.task-row__chip[data-kind^="date"]');
+
+		const due = chipOf(mount(task({ dueAt: JUN_27 }), { now: NOW }).row);
+		const scheduled = chipOf(mount(task({ id: "task-2", scheduledAt: JUN_27 }), { now: NOW }).row);
+
+		// Same visible text — no "Due " prefix on one and a bare date on the other.
+		expect(due?.textContent).toBe(scheduled?.textContent);
+		expect(due?.textContent).not.toContain("Due");
+		// The due-vs-scheduled distinction stays, via tooltip + aria-label.
+		expect(due?.title).toBe(`Due ${due?.textContent}`);
+		expect(due?.getAttribute("aria-label")).toBe(due?.title);
+		expect(scheduled?.title).toBe(`Scheduled ${scheduled?.textContent}`);
+	});
+
 	it("omits the project chip when projectId is null", () => {
 		const { row } = mount(task());
 		expect(row.querySelector('.task-row__chip[data-kind="project"]')).toBeNull();

@@ -17,6 +17,8 @@
  * when possible AND at the render layer always).
  */
 
+import { typeDisplayName } from "@brainstorm/sdk/system-entities";
+import { t } from "../i18n/t";
 import type { EntityRow } from "../logic/in-memory-graph";
 
 /** Hard character ceiling for a painted node label. A 48-glyph name is
@@ -25,14 +27,19 @@ import type { EntityRow } from "../logic/in-memory-graph";
  *  the pixel-precise second line of defence for whatever survives. */
 export const NODE_LABEL_MAX_CHARS = 48;
 
-/** The entity's display string before truncation: `name` → `title` → a
- *  short id prefix so a node is never anonymous. Mirrors the exact
- *  resolution both renderers used pre-extraction (`(name ?? title) ?? id`),
- *  so this change is *only* the missing truncation, never a label shift. */
+/** The entity's display string before truncation: first non-empty string
+ *  among `name` → `title`, else a human type caption ("Note (untitled)").
+ *  The old fallback painted `entity.id.slice(0, 8)` — but ids are
+ *  `ent_<base36-timestamp>…`, so every title-less entity minted the same
+ *  day collapsed to one identical internal fragment ("ent_mr15" ×7 on the
+ *  canvas, F-320). Matches how Files captions untitled rows
+ *  ("(untitled) · Note"), sized for a one-line node caption. */
 export function rawNodeLabel(entity: EntityRow): string {
 	const props = entity.properties as Record<string, unknown>;
-	const raw = (props.name ?? props.title) as string | undefined;
-	return raw ?? entity.id.slice(0, 8);
+	for (const raw of [props.name, props.title]) {
+		if (typeof raw === "string" && raw.trim().length > 0) return raw;
+	}
+	return t("node.untitled", { type: typeDisplayName(entity.type) });
 }
 
 /** Resolve + hard-truncate a node label to at most `NODE_LABEL_MAX_CHARS`

@@ -217,6 +217,39 @@ describe("buildVaultLists", () => {
 		expect(all?.description).toContain("3 items across 2 types");
 	});
 
+	it("All vault items excludes conversation-child types — Messages stay in their channels (F-318)", () => {
+		const polluted: VaultSnapshotInput = {
+			entities: [
+				entity("n1", "io.brainstorm.notes/Note/v1", { title: "Real doc" }),
+				entity("n2", "io.brainstorm.notes/Note/v1", { title: "Another doc" }),
+				entity("m1", "brainstorm/Message/v1", { conversation: "c", role: "user", body: "hi" }),
+				entity("m2", "brainstorm/Message/v1", { conversation: "c", role: "user", body: "yo" }),
+				entity("m3", "brainstorm/Message/v1", { conversation: "c", role: "user", body: "ok" }),
+			],
+			links: [],
+		};
+		const { lists } = buildVaultLists(polluted, NOW);
+		const all = lists.find((l) => l.id === ALL_VAULT_LIST_ID);
+		expect(all?.source).toEqual({
+			kind: ListSourceKind.ByType,
+			types: ["io.brainstorm.notes/Note/v1"],
+		});
+		expect(all?.description).toContain("2 items across 1 type");
+		// The dedicated Messages type-list still exists (deliberate drill-in).
+		expect(lists.some((l) => l.id === "list_vault_brainstorm-message-v1")).toBe(true);
+	});
+
+	it("skips the All vault items List when the vault holds only child-typed rows", () => {
+		const onlyMessages: VaultSnapshotInput = {
+			entities: [
+				entity("m1", "brainstorm/Message/v1", { conversation: "c", role: "user", body: "hi" }),
+			],
+			links: [],
+		};
+		const { lists } = buildVaultLists(onlyMessages, NOW);
+		expect(lists.find((l) => l.id === ALL_VAULT_LIST_ID)).toBeUndefined();
+	});
+
 	it("returns nothing for an empty vault", () => {
 		const empty = buildVaultLists({ entities: [], links: [] }, NOW);
 		expect(empty.lists).toEqual([]);

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { FILE_TYPE, FOLDER_TYPE, ROOT_FOLDER_ID } from "../types/entity";
+import { type OpenerMeta, browsableTypeSet } from "./browsable-types";
 import { type VaultEntityInput, buildVaultFileTree } from "./vault-tree";
 
 function folder(id: string, name: string, members: string[] = []): VaultEntityInput {
@@ -158,5 +159,37 @@ describe("buildVaultFileTree", () => {
 		expect(docs?.properties.members).toEqual(["fil_inner", "task_y"]);
 		expect((root?.properties.members as string[]).includes("note_orphan")).toBe(true);
 		expect((root?.properties.members as string[]).includes("calview_1")).toBe(false);
+	});
+
+	it("chat Message rows never surface as top-level items; untitled Notes still do (F-318)", () => {
+		// The generic fallback viewer answers `intents.suggest` for ANY typed
+		// entity, so the opener cache resolves Message too — the type filter is
+		// what must keep conversation children out of the browser.
+		const cache = new Map<string, OpenerMeta | null>([
+			["io.brainstorm.notes/Note/v1", { appId: "notes", label: "Notes" }],
+			["brainstorm/Message/v1", { appId: "preview", label: "Preview" }],
+		]);
+		const message = (id: string): VaultEntityInput => ({
+			id,
+			type: "brainstorm/Message/v1",
+			properties: { conversation: "chan_1", role: "user", body: "hi", createdAt: "2026-07-01" },
+			createdAt: 1,
+			updatedAt: 2,
+			deletedAt: null,
+		});
+		const untitledNote: VaultEntityInput = {
+			id: "note_1",
+			type: "io.brainstorm.notes/Note/v1",
+			properties: {},
+			createdAt: 1,
+			updatedAt: 2,
+			deletedAt: null,
+		};
+		const entities = [untitledNote, message("msg_1"), message("msg_2"), message("msg_3")];
+		const tree = buildVaultFileTree(entities, ROOT_FOLDER_ID, NOW, browsableTypeSet(cache));
+		const ids = tree.map((e) => e.id);
+		expect(ids.filter((id) => id.startsWith("msg_"))).toEqual([]);
+		expect(ids).toContain("note_1");
+		expect(tree.find((e) => e.id === "note_1")?.properties.name).toBe("(untitled)");
 	});
 });

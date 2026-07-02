@@ -140,8 +140,12 @@ const DEFAULTS = {
 	"tasks.row.toggle.aria": "Toggle complete",
 	"tasks.row.icon.aria": "Change icon",
 	"tasks.row.overdue.aria": "Overdue",
-	"tasks.row.due": "Due {date}",
-	"tasks.row.scheduled": "{date}",
+	// The row date chip shows ONE visible format — the bare relative date —
+	// whether the anchor is a due or a scheduled date (a "Due 27 Jun" chip
+	// next to a bare "26 Jun" chip read as two different things). The
+	// due/scheduled semantics live in the chip's tooltip + aria-label.
+	"tasks.row.due.aria": "Due {date}",
+	"tasks.row.scheduled.aria": "Scheduled {date}",
 	"tasks.row.name.editAria": "Rename task",
 	"tasks.row.chip.priority.set": "Set priority",
 	"tasks.row.chip.priority.aria": "Change priority",

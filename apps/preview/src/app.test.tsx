@@ -7,6 +7,8 @@
  * `<select>` / bespoke dropdown).
  */
 
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { openAnchoredMenu } from "@brainstorm/sdk/object-menu";
 import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -189,6 +191,44 @@ describe("PreviewApp", () => {
 		await act(async () => thumbs[2]?.click());
 		expect(window.__previewHost?.getCursor()).toBe(2);
 		expect(container.querySelector(".preview__filename")?.textContent).toBe("c.png");
+		await unmount();
+	});
+});
+
+/** F-317 layout regression. jsdom computes no grid layout, so the pane
+ *  geometry is pinned at the stylesheet level: the collapsed sidebar is
+ *  `display: none`, which removes its grid item — an auto-placed
+ *  `.preview__main` then slides into the shrink-wrapping `auto` column and
+ *  the whole pane collapses to content width (empty state hugging the left
+ *  edge, inspector "docked" mid-window). Verified in a real browser via the
+ *  repro in the F-317 fix; these assertions keep the two load-bearing
+ *  declarations from regressing. */
+describe("PreviewApp layout contract (F-317)", () => {
+	const css = readFileSync(join(__dirname, "styles.css"), "utf8");
+	const rule = (selector: string): string => {
+		const start = css.indexOf(`\n${selector} {`);
+		expect(start, `styles.css must declare \`${selector}\``).toBeGreaterThan(-1);
+		return css.slice(css.indexOf("{", start) + 1, css.indexOf("}", start));
+	};
+
+	it("pins .preview__main to the 1fr grid column so a hidden sidebar can't shrink-wrap it", () => {
+		expect(rule(".preview__main")).toContain("grid-column: 2");
+	});
+
+	it("docks the inspector to the right edge of the pane (fleet glass-overlay pattern)", () => {
+		const inspector = rule(".preview__inspector");
+		expect(inspector).toContain("inset-inline-end: 0");
+		expect(inspector).toContain("position: absolute");
+	});
+
+	it("renders the sidebar then main as the grid children, inspector inside the body", async () => {
+		const { container, unmount } = await renderInto(<PreviewApp />);
+		await flush();
+		const root = container.querySelector(".preview");
+		expect(root?.children).toHaveLength(2);
+		expect(root?.children[0]?.classList.contains("preview__sidebar")).toBe(true);
+		expect(root?.children[1]?.classList.contains("preview__main")).toBe(true);
+		expect(container.querySelector(".preview__body > .preview__inspector")).not.toBeNull();
 		await unmount();
 	});
 });

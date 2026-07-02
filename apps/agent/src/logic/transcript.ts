@@ -57,6 +57,43 @@ export function buildAiMessages(
 	return out;
 }
 
+/** An entity-id-shaped token: lowercase alnum segments joined by underscores
+ *  (`n_mqz1aegg_2qmlcl`, `ent_abc123`, `mkt_n_positioning`). At least one
+ *  underscore, so prose brackets (`[x]`, `[TODO]`, `[1]`) never match. */
+const ENTITY_REF = /\[([a-z][a-z0-9]*(?:_[a-z0-9]+)+)\](?!\()[ \t]*([^\n[]*)/g;
+
+/**
+ * Display-time normalization for the citation shapes models actually emit.
+ * The retrieval context block lists vault objects as `- [<id>] <title>`
+ * (`buildRetrievalContextBlock`), and smaller models echo that bracket format
+ * verbatim in their prose instead of the `[label](id)` markdown-link protocol —
+ * so the transcript showed raw node ids (F-319). Rewrite `[<id>] <title>` to
+ * `[<title>](<id>)` so the shared `<Markdown>` entity-link resolver renders a
+ * clickable title and the id never reaches the user's eyes. A bare `[<id>]`
+ * with no trailing title keeps the id as its own label (the same fallback as
+ * `citationsToLinks`). Fenced code blocks pass through untouched. Pure — safe
+ * to apply identically to historical and freshly generated messages.
+ */
+export function linkifyEntityRefs(body: string): string {
+	const lines = body.replace(/\r\n?/g, "\n").split("\n");
+	let inFence = false;
+	const out = lines.map((line) => {
+		if (/^```/.test(line)) {
+			inFence = !inFence;
+			return line;
+		}
+		if (inFence) return line;
+		return line.replace(ENTITY_REF, (_match, id: string, trailing: string) => {
+			const title = trailing.trim();
+			// Bare punctuation after the bracket is not a title — keep it as prose.
+			if (!/[a-z0-9]/i.test(title)) return `[${id}](${id})${trailing}`;
+			const tail = trailing.slice(trailing.trimEnd().length);
+			return `[${title}](${id})${tail}`;
+		});
+	});
+	return out.join("\n");
+}
+
 const MAX_TITLE_LEN = 60;
 
 /** A conversation title from the first user turn — first non-empty line,

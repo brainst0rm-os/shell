@@ -12,7 +12,7 @@
  * lists whose every source type is infrastructure.
  */
 
-import { isSystemEntityType } from "@brainstorm/sdk/system-entities";
+import { isChildEntityType, isSystemEntityType } from "@brainstorm/sdk/system-entities";
 import type { List } from "../types/list";
 import { ListSourceKind } from "../types/list-source";
 
@@ -25,13 +25,16 @@ export type SidebarNavRow =
 	| { kind: SidebarRowKind.List; list: List }
 	| { kind: SidebarRowKind.SystemHeader; count: number; open: boolean };
 
-/** A vault-derived type-list whose every source type is infrastructure. */
+/** A vault-derived type-list whose every source type is infrastructure or
+ *  parent-scoped child content (Messages, Comments — F-318): both read as
+ *  plumbing next to the user's own collections, so both drop under the
+ *  System disclosure. Grouping only — the lists stay fully browsable. */
 export function isSystemList(list: List, isVaultDerived: (id: string) => boolean): boolean {
 	if (!isVaultDerived(list.id)) return false;
 	const source = list.source;
 	if (!source || source.kind !== ListSourceKind.ByType) return false;
 	if (source.types.length === 0) return false;
-	return source.types.every((type) => isSystemEntityType(type));
+	return source.types.every((type) => isSystemEntityType(type) || isChildEntityType(type));
 }
 
 export function partitionSidebarLists(

@@ -89,6 +89,20 @@ describe("<MonthGrid>", () => {
 		expect(slots).toHaveLength(42);
 	});
 
+	it("hands renderCell a row-major ordinal index 0..41", () => {
+		act(() => {
+			root.render(
+				<MonthGrid
+					focusMs={JAN_15_2026}
+					todayMs={JAN_15_2026}
+					renderCell={(cell) => <span className="idx">{cell.index}</span>}
+				/>,
+			);
+		});
+		const indices = Array.from(container.querySelectorAll(".idx"), (el) => Number(el.textContent));
+		expect(indices).toEqual(Array.from({ length: 42 }, (_, i) => i));
+	});
+
 	it("renders the date as a <button> only when onDateClick is provided and fires it", () => {
 		act(() => {
 			root.render(<MonthGrid focusMs={JAN_15_2026} todayMs={JAN_15_2026} />);
