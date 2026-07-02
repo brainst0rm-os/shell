@@ -10,6 +10,7 @@
  */
 
 import {
+	AddressBook,
 	Archive,
 	ArrowClockwise,
 	ArrowCounterClockwise,
@@ -99,6 +100,7 @@ const ICON_REGISTRY: Record<IconName, PhosphorIcon> = {
 	[IconName.App]: SquaresFour,
 	[IconName.Entity]: Cube,
 	[IconName.View]: FileText,
+	[IconName.AddressBook]: AddressBook,
 	[IconName.SignOut]: SignOut,
 	[IconName.Sparkle]: Sparkle,
 	[IconName.Chat]: ChatCircle,

@@ -173,6 +173,7 @@ import {
 	resetCompileCache,
 } from "./logic/compile-cache";
 import { copyListBlockRef } from "./logic/copy-list-block-ref";
+import { readEntityIcon } from "./logic/entity-icon";
 import {
 	FILTER_OPERATORS,
 	type FilterCompareTo,
@@ -3485,20 +3486,6 @@ function mutateEntityProperty(
  *  service is still capability-gated there). */
 export function isRecordLocked(entity: EntityRow): boolean {
 	return entity.properties?.locked === true;
-}
-
-/** The object's OWN icon (`properties.icon`), validated to the universal
- *  `Icon` shape — never the type glyph. Per-object-icons-everywhere: the
- *  type glyph is fallback-only (foundations/39-universal-icons.md). */
-export function readEntityIcon(entity: EntityRow): Icon | null {
-	const raw = entity.properties.icon;
-	if (!raw || typeof raw !== "object") return null;
-	const c = raw as { kind?: unknown; value?: unknown };
-	if (typeof c.value !== "string" || c.value.length === 0) return null;
-	if (c.kind === IconKind.Pack || c.kind === IconKind.Emoji || c.kind === IconKind.Image) {
-		return c as Icon;
-	}
-	return null;
 }
 
 /** Write `patch` into an entity's `properties`: optimistic in-memory

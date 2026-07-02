@@ -227,12 +227,18 @@ function todaySurface(tasks: readonly Task[], now: number, endOfToday: number): 
 			tasks: sortByDueOrScheduled(overdue),
 		});
 	}
-	sections.push({
-		key: "today.today",
-		titleKey: "tasks.section.today",
-		titleParams: { count: today.length },
-		tasks: sortByDueOrScheduled(today),
-	});
+	// Only emit the Today section when it has rows: a bare "Today · 0" header
+	// sitting under a populated Overdue section reads as a broken/unfinished
+	// group. The genuinely-empty surface (both sections empty) is caught by the
+	// renderer's `count === 0` empty-state, not by a lone empty header.
+	if (today.length > 0) {
+		sections.push({
+			key: "today.today",
+			titleKey: "tasks.section.today",
+			titleParams: { count: today.length },
+			tasks: sortByDueOrScheduled(today),
+		});
+	}
 
 	return {
 		surface: TaskSurface.Today,

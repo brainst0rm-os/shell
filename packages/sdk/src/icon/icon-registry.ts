@@ -51,6 +51,8 @@ export enum IconName {
 	App = "app",
 	Entity = "entity",
 	View = "view",
+	// People/contacts surfaces — the address-book glyph (Contacts empty state).
+	AddressBook = "address-book",
 	SignOut = "sign-out",
 	Sparkle = "sparkle",
 	Chat = "chat",
@@ -150,6 +152,7 @@ export const ICON_ASSET: Record<IconName, string> = {
 	[IconName.App]: "squares-four",
 	[IconName.Entity]: "cube",
 	[IconName.View]: "file-text",
+	[IconName.AddressBook]: "address-book",
 	[IconName.SignOut]: "sign-out",
 	[IconName.Sparkle]: "sparkle",
 	[IconName.Chat]: "chat-circle",

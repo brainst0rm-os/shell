@@ -138,6 +138,21 @@ function securityLabel(state: TabSecurityState): string {
 	}
 }
 
+/** The connection badge's glyph. A blank/new-tab (`Local`) page has no remote
+ *  origin, so there's nothing to indicate — the badge is dropped entirely
+ *  rather than rendered as a meaningless dot. */
+function securityIconFor(state: TabSecurityState): IconName | null {
+	switch (state) {
+		case TabSecurityState.Secure:
+			return IconName.Lock;
+		case TabSecurityState.Insecure:
+		case TabSecurityState.Mixed:
+			return IconName.Warning;
+		case TabSecurityState.Local:
+			return null;
+	}
+}
+
 export function BrowserApp(): ReactElement {
 	const webView = useRef<WebViewClient | null>(getWebView()).current;
 	const entities = useRef<EntitiesClient | null>(getEntities()).current;
@@ -931,6 +946,8 @@ export function BrowserApp(): ReactElement {
 		return () => window.removeEventListener("brainstorm:tab-command", onCommand);
 	}, [onNewTab, onClose, active]);
 
+	const securityState = active?.securityState ?? TabSecurityState.Local;
+	const securityIcon = securityIconFor(securityState);
 	const blockedTrackers = active?.blockedTrackerCount ?? 0;
 	const clipPhase = clipPhaseFor(clipAttempt, active?.id ?? null);
 	const clipEnabled = entities !== null && canClip(active?.url, clipPhase);
@@ -983,12 +1000,16 @@ export function BrowserApp(): ReactElement {
 				>
 					<Icon name={IconName.History} size={16} />
 				</button>
-				<span
-					className={`browser__security browser__security--${active?.securityState ?? "local"}`}
-					role="img"
-					data-bs-tooltip={securityLabel(active?.securityState ?? TabSecurityState.Local)}
-					aria-label={securityLabel(active?.securityState ?? TabSecurityState.Local)}
-				/>
+				{securityIcon !== null && (
+					<span
+						className={`browser__security browser__security--${securityState}`}
+						role="img"
+						data-bs-tooltip={securityLabel(securityState)}
+						aria-label={securityLabel(securityState)}
+					>
+						<Icon name={securityIcon} size={14} />
+					</span>
+				)}
 				<div className="browser__omnibox-wrap">
 					<input
 						ref={omniboxRef}

@@ -91,6 +91,19 @@ describe("compileSurface — Today", () => {
 		expect(result.sections.map((s) => s.key)).toEqual(["today.today"]);
 	});
 
+	it("omits the empty Today section when everything is overdue (no bare header)", () => {
+		// Regression for the "OVERDUE · 6 then a bare TODAY header with no rows"
+		// defect: a Today view with overdue tasks but nothing due today must not
+		// emit the today.today section — an empty group header reads as broken.
+		const tasks: Task[] = [
+			task({ id: "od1", dueAt: NOW - DAY }),
+			task({ id: "od2", dueAt: NOW - 2 * DAY }),
+		];
+		const result = compileSurface(tasks, TaskSurface.Today, { now: NOW });
+		expect(result.sections.map((s) => s.key)).toEqual(["today.overdue"]);
+		expect(result.count).toBe(2);
+	});
+
 	it("an open task scheduled for a past day is Overdue, not Today (no silent roll-over into Today)", () => {
 		const tasks: Task[] = [
 			// Scheduled days ago, still open, no due date — must surface as Overdue.
