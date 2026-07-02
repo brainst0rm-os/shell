@@ -9,6 +9,7 @@ import {
 	firstVaultSelection,
 	friendlyTypeName,
 	relationTargetTypesFromEntities,
+	selectionNeedsSystemReveal,
 	typeSlug,
 } from "./vault-lists";
 
@@ -217,6 +218,39 @@ describe("buildVaultLists", () => {
 		expect(all?.description).toContain("3 items across 2 types");
 	});
 
+	it("All vault items excludes conversation-child types — Messages stay in their channels (F-318)", () => {
+		const polluted: VaultSnapshotInput = {
+			entities: [
+				entity("n1", "io.brainstorm.notes/Note/v1", { title: "Real doc" }),
+				entity("n2", "io.brainstorm.notes/Note/v1", { title: "Another doc" }),
+				entity("m1", "brainstorm/Message/v1", { conversation: "c", role: "user", body: "hi" }),
+				entity("m2", "brainstorm/Message/v1", { conversation: "c", role: "user", body: "yo" }),
+				entity("m3", "brainstorm/Message/v1", { conversation: "c", role: "user", body: "ok" }),
+			],
+			links: [],
+		};
+		const { lists } = buildVaultLists(polluted, NOW);
+		const all = lists.find((l) => l.id === ALL_VAULT_LIST_ID);
+		expect(all?.source).toEqual({
+			kind: ListSourceKind.ByType,
+			types: ["io.brainstorm.notes/Note/v1"],
+		});
+		expect(all?.description).toContain("2 items across 1 type");
+		// The dedicated Messages type-list still exists (deliberate drill-in).
+		expect(lists.some((l) => l.id === "list_vault_brainstorm-message-v1")).toBe(true);
+	});
+
+	it("skips the All vault items List when the vault holds only child-typed rows", () => {
+		const onlyMessages: VaultSnapshotInput = {
+			entities: [
+				entity("m1", "brainstorm/Message/v1", { conversation: "c", role: "user", body: "hi" }),
+			],
+			links: [],
+		};
+		const { lists } = buildVaultLists(onlyMessages, NOW);
+		expect(lists.find((l) => l.id === ALL_VAULT_LIST_ID)).toBeUndefined();
+	});
+
 	it("returns nothing for an empty vault", () => {
 		const empty = buildVaultLists({ entities: [], links: [] }, NOW);
 		expect(empty.lists).toEqual([]);
@@ -238,7 +272,90 @@ describe("buildVaultLists", () => {
 			links: [],
 		};
 		const { lists } = buildVaultLists(one, NOW);
-		expect(lists[0]?.description).toContain("1 item ·");
+		expect(lists[0]?.description).toBe("1 item · brainstorm/Doc/v1");
+	});
+});
+
+describe("firstVaultSelection prefers a visible list (F-318 fallout)", () => {
+	it("skips a child-typed system list even when it is the most populous", () => {
+		// Chat-heavy vault: Messages outnumber the user's Notes, so the
+		// old lists[0] default landed on the Messages list — hidden under
+		// the sidebar's collapsed System disclosure.
+		const chatty: VaultSnapshotInput = {
+			entities: [
+				entity("m1", "brainstorm/Message/v1", { conversation: "c", body: "hi" }),
+				entity("m2", "brainstorm/Message/v1", { conversation: "c", body: "yo" }),
+				entity("m3", "brainstorm/Message/v1", { conversation: "c", body: "ok" }),
+				entity("n1", "io.brainstorm.notes/Note/v1", { title: "Real doc" }),
+			],
+			links: [],
+		};
+		const built = buildVaultLists(chatty, NOW);
+		expect(built.lists[0]?.id).toBe("list_vault_brainstorm-message-v1"); // the trap
+		expect(firstVaultSelection(built)).toEqual({
+			listId: "list_vault_io-brainstorm-notes-note-v1",
+			viewId: "view_vault_io-brainstorm-notes-note-v1_grid",
+		});
+	});
+
+	it("falls back to the All-vault list when every type-list is system-classified", () => {
+		const plumbingOnly: VaultSnapshotInput = {
+			entities: [
+				entity("h1", "brainstorm/BrowsingHistory/v1", { url: "a" }),
+				entity("h2", "brainstorm/BrowsingHistory/v1", { url: "b" }),
+			],
+			links: [],
+		};
+		expect(firstVaultSelection(buildVaultLists(plumbingOnly, NOW))).toEqual({
+			listId: ALL_VAULT_LIST_ID,
+			viewId: "view_vault_all_grid",
+		});
+	});
+
+	it("child-only vault still resolves — to the Messages list itself", () => {
+		// No All-vault list exists (child types are excluded from it), so
+		// the system list is genuinely the only thing selectable.
+		const onlyMessages: VaultSnapshotInput = {
+			entities: [entity("m1", "brainstorm/Message/v1", { conversation: "c", body: "hi" })],
+			links: [],
+		};
+		expect(firstVaultSelection(buildVaultLists(onlyMessages, NOW))).toEqual({
+			listId: "list_vault_brainstorm-message-v1",
+			viewId: "view_vault_brainstorm-message-v1_grid",
+		});
+	});
+});
+
+describe("selectionNeedsSystemReveal", () => {
+	const vaultDerived = (id: string) => id.startsWith("list_vault_");
+	const mixed: VaultSnapshotInput = {
+		entities: [
+			entity("m1", "brainstorm/Message/v1", { conversation: "c", body: "hi" }),
+			entity("n1", "io.brainstorm.notes/Note/v1", { title: "Doc" }),
+		],
+		links: [],
+	};
+
+	it("true when the active selection resolves to a system-classified list", () => {
+		const { lists } = buildVaultLists(mixed, NOW);
+		expect(selectionNeedsSystemReveal(lists, "list_vault_brainstorm-message-v1", vaultDerived)).toBe(
+			true,
+		);
+	});
+
+	it("false for a user-visible type-list and for an unknown id", () => {
+		const { lists } = buildVaultLists(mixed, NOW);
+		expect(
+			selectionNeedsSystemReveal(lists, "list_vault_io-brainstorm-notes-note-v1", vaultDerived),
+		).toBe(false);
+		expect(selectionNeedsSystemReveal(lists, "list_missing", vaultDerived)).toBe(false);
+	});
+
+	it("false for a non-vault-derived (user-created) list, whatever its types", () => {
+		const { lists } = buildVaultLists(mixed, NOW);
+		expect(selectionNeedsSystemReveal(lists, "list_vault_brainstorm-message-v1", () => false)).toBe(
+			false,
+		);
 	});
 });
 

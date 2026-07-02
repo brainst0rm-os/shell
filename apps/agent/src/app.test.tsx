@@ -171,3 +171,89 @@ describe("AgentApp composer context", () => {
 		expect(chip.getAttribute("aria-label")).toBe("Open Q3 Spec");
 	});
 });
+
+describe("AgentApp stored transcript rendering (F-319)", () => {
+	const STORED_BODY = [
+		"Based on your notes, here is a summary:",
+		"",
+		"### Summary of Northbound Q3 Plan",
+		"",
+		"1. **Documents:**",
+		"   - [n_abc123] Northbound Q3 plan 32834",
+		"   - [n_def456] Northbound Q3 plan 21788",
+		"",
+		"If you need more, let me know!",
+	].join("\n");
+
+	function installWithAssistantMessage(): void {
+		const snapshot = {
+			entities: [
+				{
+					id: "conv_1",
+					type: "brainstorm/Conversation/v1",
+					properties: { title: "Northbound Q3" },
+					createdAt: 1,
+					updatedAt: 1,
+					deletedAt: null,
+					ownerAppId: "io.brainstorm.agent",
+				},
+				{
+					id: "msg_1",
+					type: "brainstorm/Message/v1",
+					properties: {
+						conversation: "conv_1",
+						role: "assistant",
+						body: STORED_BODY,
+						createdAt: "2026-06-30T00:00:00.000Z",
+						seq: 1,
+					},
+					createdAt: 2,
+					updatedAt: 2,
+					deletedAt: null,
+					ownerAppId: "io.brainstorm.agent",
+				},
+			],
+			links: [],
+		};
+		window.brainstorm = {
+			capabilities: ["entities.read:*"],
+			services: {
+				vaultEntities: {
+					list: async () => snapshot,
+					onChange: () => ({ unsubscribe: () => undefined }),
+				},
+			},
+		} as unknown as typeof window.brainstorm;
+	}
+
+	it("renders a stored assistant message as formatted markdown, not raw source", async () => {
+		installWithAssistantMessage();
+		handle = await renderInto(<AgentApp />);
+		await flush();
+		await flush();
+		const body = handle.container.querySelector(".agent__msg--assistant .agent__msg-body");
+		expect(body).not.toBeNull();
+		// Formatted DOM: a real heading + real bold, never the raw markers.
+		expect(body?.querySelector("h3")?.textContent).toBe("Summary of Northbound Q3 Plan");
+		expect(body?.textContent).not.toContain("###");
+		const bolds = Array.from(body?.querySelectorAll("strong") ?? []).map((b) => b.textContent);
+		expect(bolds).toContain("Documents:");
+		expect(body?.textContent).not.toContain("**");
+	});
+
+	it("renders `[n_…] Title` citations as entity links, never the raw node id", async () => {
+		installWithAssistantMessage();
+		handle = await renderInto(<AgentApp />);
+		await flush();
+		await flush();
+		const body = handle.container.querySelector(".agent__msg--assistant .agent__msg-body");
+		expect(body).not.toBeNull();
+		expect(body?.textContent).not.toContain("[n_abc123]");
+		expect(body?.textContent).not.toContain("n_abc123");
+		const links = Array.from(body?.querySelectorAll(".bs-markdown__entity-link") ?? []).map(
+			(l) => l.textContent,
+		);
+		expect(links).toContain("Northbound Q3 plan 32834");
+		expect(links).toContain("Northbound Q3 plan 21788");
+	});
+});

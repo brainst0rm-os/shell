@@ -36,6 +36,7 @@ export const CONTACTS_I18N = {
 
 	"placeholder.title": "No contact selected",
 	"placeholder.blurb": "Choose a person from the list, or create a new contact.",
+	"placeholder.blurb.listHidden": "Show the contact list to browse people, or create a new contact.",
 
 	"compose.title": "New contact",
 	"compose.name.label": "Name",

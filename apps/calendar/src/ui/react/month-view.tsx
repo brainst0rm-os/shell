@@ -144,15 +144,12 @@ export function MonthView({ compiled, weekStartsOn, callbacks }: MonthViewProps)
 	};
 
 	// Both `compiled.cells` and the SDK grid are 42 cells in chronological
-	// row-major order — pair them by ordinal index. The SDK calls `renderCell`
-	// once per cell in that order during render, so a counter reset before the
-	// grid renders pairs them without depending on test fixtures using real
-	// epoch-ms day starts (the month-view test seeds `dayStart: i`).
-	const cellCounter = useRef(0);
-	cellCounter.current = 0;
-
-	const renderCell = (_gridCell: MonthGridReactCell): ReactNode => {
-		const cellIndex = cellCounter.current++;
+	// row-major order — pair them by the grid cell's own ordinal `index`.
+	// (A call-order counter reset per render is NOT safe: StrictMode / any
+	// child-only re-render invokes `renderCell` again without re-running this
+	// body, which blanked every cell — F-316's investigation.)
+	const renderCell = (gridCell: MonthGridReactCell): ReactNode => {
+		const cellIndex = gridCell.index;
 		const compiledCell = compiled.cells[cellIndex];
 		if (!compiledCell) return null;
 

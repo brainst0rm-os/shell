@@ -127,6 +127,9 @@ export const GRAPH_I18N = {
 	"menu.region": "Node actions",
 	"menu.enterLocalView": "Focus neighbourhood",
 	"menu.exitLocalView": "Exit local view",
+	// Node captions (canvas labels, link menus, exports)
+	"node.untitled": "{type} (untitled)",
+
 	"inspector.label": "Selected node",
 	"inspector.nameField": "Name",
 	"inspector.multi.one": "{count} node selected",
@@ -157,6 +160,7 @@ export const GRAPH_I18N = {
 
 	// Local view badge
 	"local.label": "Local · {label}",
+	"local.rootGone": "(missing entity)",
 	"local.depthAria": "Local view depth in hops",
 	"local.fewerHops": "Fewer hops",
 	"local.decreaseDepth": "Decrease depth",

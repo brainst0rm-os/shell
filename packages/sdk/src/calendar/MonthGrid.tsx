@@ -27,6 +27,10 @@ const DEFAULT_WEEK_START = WeekStartsOn.Sunday;
  *  rather than appending into a DOM `contentSlot`. */
 export type MonthGridReactCell = GridCell & {
 	isSelected: boolean;
+	/** Row-major ordinal 0..41 within the 6×7 grid — the stable join key for
+	 *  hosts pairing cells with their own chronologically-ordered day arrays
+	 *  (a render-order counter is not re-render/StrictMode safe). */
+	index: number;
 };
 
 export type MonthGridProps = {
@@ -101,10 +105,11 @@ export function MonthGrid({
 				</div>
 			) : null}
 			<div className="bs-cal-month__grid">
-				{rows.flat().map((raw) => {
+				{rows.flat().map((raw, index) => {
 					const cell: MonthGridReactCell = {
 						...raw,
 						isSelected: selected != null && isSameDay(raw.dateEpochMs, selected),
+						index,
 					};
 					const onCellClick = onEmptyCellClick
 						? (ev: ReactMouseEvent) => {

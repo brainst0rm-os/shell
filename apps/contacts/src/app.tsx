@@ -52,6 +52,7 @@ import { getBrainstorm } from "./runtime";
 import { COMPANY_TYPE, PERSON_TYPE, type Person, type VaultEntityLike } from "./types/person";
 import { ComposeContact } from "./ui/compose-contact";
 import { contactObjectMenuContext } from "./ui/contact-menu";
+import { NoSelection } from "./ui/no-selection";
 import { type Location, PersonDetail, type RelatedRef } from "./ui/person-detail";
 import { PersonSidebar } from "./ui/person-list";
 import { exportContactsToVCard, importContactsFromVCard } from "./ui/vcard-actions";
@@ -731,13 +732,7 @@ export function ContactsApp(): ReactElement {
 							)}
 						</div>
 					) : (
-						<div className="contacts__placeholder">
-							<div className="contacts__placeholder-avatar" aria-hidden="true">
-								<Icon name={IconName.Entity} size={28} />
-							</div>
-							<h2 className="contacts__placeholder-title">{t("placeholder.title")}</h2>
-							<p className="contacts__placeholder-blurb">{t("placeholder.blurb")}</p>
-						</div>
+						<NoSelection listOpen={sidebarOpen} onCreate={() => setComposeOpen(true)} />
 					)}
 				</main>
 			</div>

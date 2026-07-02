@@ -6,6 +6,7 @@ import {
 	DropEffect,
 	type ObjectDragPayload,
 } from "@brainstorm/sdk-types";
+import { StrictMode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { CompiledMonthView, MonthDayCell } from "../../logic/compile-view";
 import { EVENT_SOURCE_KEY, type ScheduledItem } from "../../logic/scheduled-item";
@@ -106,6 +107,39 @@ describe("month-view multi-day ribbons", () => {
 
 		// The span is NOT also repeated as a chip in the cells.
 		expect(root.querySelector(".cal-month__item")).toBeNull();
+	});
+
+	// F-316 regression: cell content was paired to compiled cells via a
+	// call-order counter reset in MonthView's render body. StrictMode (how
+	// main.tsx mounts the app) double-invokes the child MonthGrid render,
+	// so the second pass read counter positions 42..83 → every cell got
+	// `undefined` and the whole month rendered with NO events/ribbons.
+	it("renders ribbons and chips under StrictMode (double-render safe)", async () => {
+		const DAY = 86_400_000;
+		const base = 1_700_000_000_000;
+		const span = makeItem("span-1", { title: "Offsite", start: base, end: base + 2 * DAY });
+		const timed = makeItem("timed-1", { title: "Standup" });
+		const cells: MonthDayCell[] = Array.from({ length: 42 }, (_, i) => {
+			if ([2, 3, 4].includes(i)) return makeCell(i, i + 1, { allDayItems: [span] });
+			if (i === 9) return makeCell(i, i + 1, { timedItems: [timed] });
+			return makeCell(i, (i % 31) + 1);
+		});
+		const compiled: CompiledMonthView = {
+			kind: CalendarViewKind.Month,
+			rangeStart: 0,
+			rangeEnd: 0,
+			cells,
+		};
+		handle = await renderInto(
+			<StrictMode>
+				<MonthView compiled={compiled} weekStartsOn={WeekStartsOn.Monday} callbacks={cbs()} />
+			</StrictMode>,
+		);
+		const root = handle.container;
+		expect(root.querySelectorAll(".cal-month__ribbon").length).toBe(3);
+		expect(root.querySelectorAll(".cal-month__ribbon-title").length).toBe(1);
+		const chip = root.querySelector(".cal-chip--compact .cal-chip__title");
+		expect(chip?.textContent).toBe("Standup");
 	});
 });
 

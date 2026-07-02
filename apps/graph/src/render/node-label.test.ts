@@ -6,26 +6,68 @@
  * now share.
  */
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { EntityRow } from "../logic/in-memory-graph";
 import { NODE_LABEL_MAX_CHARS, nodeLabel, rawNodeLabel } from "./node-label";
+
+// Spy-wrap `typeDisplayName` (behavior unchanged) so the memoization test
+// can prove the untitled caption is computed once per type id, not per call
+// — the caption sits on the per-frame pan/zoom label path.
+vi.mock("@brainstorm/sdk/system-entities", async (importOriginal) => {
+	const actual = await importOriginal<typeof import("@brainstorm/sdk/system-entities")>();
+	return { ...actual, typeDisplayName: vi.fn(actual.typeDisplayName) };
+});
+import { typeDisplayName } from "@brainstorm/sdk/system-entities";
 
 function entity(props: Record<string, unknown>, id = "abcdef0123456789"): EntityRow {
 	return { id, type: "io.brainstorm.notes/Note/v1", properties: props } as EntityRow;
 }
 
 describe("rawNodeLabel", () => {
-	it("prefers name, then title, then an id prefix", () => {
+	it("prefers name, then title", () => {
 		expect(rawNodeLabel(entity({ name: "Alpha", title: "Beta" }))).toBe("Alpha");
 		expect(rawNodeLabel(entity({ title: "Beta" }))).toBe("Beta");
-		expect(rawNodeLabel(entity({}))).toBe("abcdef01");
 	});
 
-	it("only nullish name falls back (mirrors the pre-extraction `?? id`)", () => {
-		// `?? title ?? id` — an empty string is present, not nullish, so it
-		// is kept verbatim exactly as both renderers did before extraction.
-		expect(rawNodeLabel(entity({ name: "", title: "Gamma" }))).toBe("");
-		expect(rawNodeLabel(entity({ title: null }))).toBe("abcdef01");
+	it("falls back to a human type caption, never a raw id fragment (F-320)", () => {
+		// The old `?? entity.id.slice(0, 8)` painted "ent_mr15" on every
+		// title-less node (the shared `ent_<base36-timestamp>` prefix is
+		// identical for every entity minted the same day). The fallback must
+		// read like a thing, not an internal.
+		const label = rawNodeLabel(entity({}));
+		expect(label).toBe("Note (untitled)");
+		expect(label).not.toContain("abcdef01");
+	});
+
+	it("skips empty / whitespace-only / non-string name and title", () => {
+		// An empty `name` no longer shadows a real `title` (the pre-F-320
+		// `??` chain kept "" verbatim and painted a blank label).
+		expect(rawNodeLabel(entity({ name: "", title: "Gamma" }))).toBe("Gamma");
+		expect(rawNodeLabel(entity({ name: "   ", title: null }))).toBe("Note (untitled)");
+		expect(rawNodeLabel(entity({ name: 42, title: { rich: true } }))).toBe("Note (untitled)");
+	});
+
+	it("derives the caption's type name from the entity type id", () => {
+		const task = { ...entity({}), type: "brainstorm/Task/v1" } as EntityRow;
+		expect(rawNodeLabel(task)).toBe("Task (untitled)");
+	});
+
+	it("memoizes the untitled caption per type id — computed once, not per frame", () => {
+		// pixi-renderer calls nodeLabel per labeled node per pan/zoom frame;
+		// the fallback's typeDisplayName (split + 2 regexes + title-case) +
+		// t() interpolation must not run in that loop. A fresh type id keeps
+		// this test independent of captions other tests already warmed.
+		const probe = { ...entity({}), type: "brainstorm/MemoProbe/v1" } as EntityRow;
+		vi.mocked(typeDisplayName).mockClear();
+		const first = rawNodeLabel(probe);
+		expect(first).toBe("MemoProbe (untitled)");
+		for (let i = 0; i < 5; i += 1) expect(rawNodeLabel(probe)).toBe(first);
+		expect(typeDisplayName).toHaveBeenCalledTimes(1);
+
+		// A different type id is its own cache entry, still localized.
+		const other = { ...entity({}), type: "brainstorm/content_calendar/v1" } as EntityRow;
+		expect(rawNodeLabel(other)).toBe("Content calendar (untitled)");
+		expect(typeDisplayName).toHaveBeenCalledTimes(2);
 	});
 });
 
@@ -60,5 +102,17 @@ describe("nodeLabel truncation (Pixi label-clip regression)", () => {
 	it("keeps a boundary-length name (exactly the cap) verbatim", () => {
 		const exact = "z".repeat(NODE_LABEL_MAX_CHARS);
 		expect(nodeLabel(entity({ name: exact }))).toBe(exact);
+	});
+
+	it("truncates from the END only — the output is always a prefix (F-320)", () => {
+		// Guards the leading-clip class ("Note" must never surface as "ote"):
+		// whatever the cap does, the painted text starts with the name's own
+		// first characters and the ellipsis sits at the tail.
+		for (const name of ["Note", "Content Calendar", `Prefix ${"y".repeat(200)}`]) {
+			const out = nodeLabel(entity({ name }));
+			const body = out.endsWith("…") ? out.slice(0, -1) : out;
+			expect(name.startsWith(body)).toBe(true);
+			expect(out.startsWith(name[0] as string)).toBe(true);
+		}
 	});
 });

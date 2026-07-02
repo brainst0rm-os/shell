@@ -32,14 +32,15 @@ export const AUTOMATIONS_I18N = {
 
 	// 11b.15 — automation-host designation. One device runs the scheduler
 	// for a vault; the rest can take over. The status row sits atop the
-	// Workflows view.
-	"host.thisDevice": "This device is the automation host.",
-	"host.otherDevice": "Another device hosts automations.",
-	"host.unset": "No device hosts automations yet — claim it to run schedules here.",
-	"host.claim": "Claim",
-	"host.takeOver": "Take over",
-	"host.claimed": "This device now hosts automations.",
-	"host.claimFailed": "Couldn't claim hosting.",
+	// Workflows view. Copy stays in plain user language — "schedules run on
+	// a device", never "host"/"claim" scheduler jargon (F-321).
+	"host.thisDevice": "Schedules run on this device.",
+	"host.otherDevice": "Schedules run on another device.",
+	"host.unset": "Schedules need one of your devices to run on.",
+	"host.claim": "Use this device",
+	"host.takeOver": "Use this device instead",
+	"host.claimed": "Schedules now run on this device.",
+	"host.claimFailed": "Couldn't switch schedules to this device.",
 
 	// Date anchors (passed to the shared relative-date formatter).
 	"date.today": "Today",
